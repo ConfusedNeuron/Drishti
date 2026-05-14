@@ -1,0 +1,602 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Portfolio Risk Copilot - Product Requirements Document</title>
+  <style>
+    :root {
+      --bg: #f5f7fa;
+      --paper: #ffffff;
+      --ink: #17202a;
+      --muted: #5d6d7e;
+      --line: #d7dee8;
+      --primary: #145c72;
+      --primary-2: #1f7a8c;
+      --accent: #b85c38;
+      --ok: #1d7a46;
+      --warn: #a76500;
+      --danger: #a33b3b;
+      --soft-blue: #e7f2f6;
+      --soft-green: #e8f5ee;
+      --soft-amber: #fff2dc;
+      --soft-red: #fae9e8;
+      --shadow: 0 18px 42px rgba(23, 32, 42, 0.10);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.58;
+    }
+
+    a { color: var(--primary); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .page {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 32px 20px 64px;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, #0d3f4d 0%, #145c72 54%, #2f5f63 100%);
+      color: #fff;
+      border-radius: 8px;
+      padding: 44px;
+      box-shadow: var(--shadow);
+    }
+
+    .eyebrow {
+      margin: 0 0 10px;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #cce8ef;
+      font-weight: 700;
+    }
+
+    h1, h2, h3 { line-height: 1.18; margin: 0; }
+    h1 { font-size: 42px; max-width: 900px; }
+    h2 { font-size: 26px; margin-bottom: 16px; color: #123845; }
+    h3 { font-size: 18px; margin-bottom: 8px; color: #173b46; }
+
+    .subtitle {
+      margin: 18px 0 0;
+      max-width: 900px;
+      font-size: 18px;
+      color: #eef8fb;
+    }
+
+    .meta {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-top: 28px;
+    }
+
+    .meta div {
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      background: rgba(255, 255, 255, 0.10);
+      border-radius: 8px;
+      padding: 12px;
+    }
+
+    .meta strong {
+      display: block;
+      font-size: 12px;
+      color: #cce8ef;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 4px;
+    }
+
+    .nav {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 22px 0;
+      padding: 12px;
+      border: 1px solid var(--line);
+      background: var(--paper);
+      border-radius: 8px;
+      position: sticky;
+      top: 0;
+      z-index: 5;
+    }
+
+    .nav a {
+      padding: 8px 12px;
+      border-radius: 6px;
+      color: #173b46;
+      background: #eef4f7;
+      font-weight: 650;
+      font-size: 14px;
+    }
+
+    .nav a.active {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    section {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 28px;
+      margin-top: 18px;
+      box-shadow: 0 8px 22px rgba(23, 32, 42, 0.05);
+    }
+
+    .grid-2, .grid-3, .grid-4 {
+      display: grid;
+      gap: 16px;
+    }
+    .grid-2 { grid-template-columns: repeat(2, 1fr); }
+    .grid-3 { grid-template-columns: repeat(3, 1fr); }
+    .grid-4 { grid-template-columns: repeat(4, 1fr); }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 18px;
+      background: #fbfcfe;
+    }
+
+    .card strong {
+      display: block;
+      color: #122f38;
+      margin-bottom: 5px;
+    }
+
+    .callout {
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      padding: 16px 18px;
+      margin: 16px 0;
+    }
+
+    .prototype { background: var(--soft-blue); border-color: #b8d8e4; }
+    .production { background: var(--soft-green); border-color: #bddfc9; }
+    .warning { background: var(--soft-amber); border-color: #efd096; }
+    .danger { background: var(--soft-red); border-color: #e8b6b2; }
+
+    .label {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: #eaf0f3;
+      color: #24434c;
+      font-size: 12px;
+      font-weight: 750;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+    }
+
+    ul, ol { padding-left: 22px; margin: 10px 0 0; }
+    li { margin: 6px 0; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 14px;
+      overflow: hidden;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    th, td {
+      border: 1px solid var(--line);
+      padding: 11px 12px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: #eaf0f3;
+      color: #173b46;
+    }
+
+    code {
+      background: #eef3f6;
+      color: #173b46;
+      border: 1px solid #dbe5ea;
+      border-radius: 5px;
+      padding: 1px 5px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.92em;
+    }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .flow div {
+      min-height: 88px;
+      border: 1px solid #c8d7de;
+      background: #f7fbfc;
+      border-radius: 8px;
+      padding: 12px;
+      position: relative;
+    }
+
+    .flow div:not(:last-child)::after {
+      content: ">";
+      position: absolute;
+      right: -9px;
+      top: 34px;
+      color: var(--primary);
+      font-weight: 800;
+    }
+
+    .footer {
+      margin-top: 24px;
+      color: var(--muted);
+      font-size: 13px;
+      text-align: center;
+    }
+
+    @media (max-width: 900px) {
+      .hero { padding: 28px; }
+      h1 { font-size: 32px; }
+      .meta, .grid-2, .grid-3, .grid-4, .flow { grid-template-columns: 1fr; }
+      .flow div:not(:last-child)::after { display: none; }
+      .nav { position: static; }
+    }
+
+    @media print {
+      body { background: #fff; color: #000; }
+      .page { max-width: none; padding: 0; }
+      .hero, section, .nav { box-shadow: none; }
+      .nav { position: static; }
+      a { color: #000; text-decoration: underline; }
+      section { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="hero">
+      <p class="eyebrow">Financial Risk Management Project</p>
+      <h1>Portfolio Risk Copilot - Product Requirements Document</h1>
+      <p class="subtitle">A local-first risk analytics platform that imports a Zerodha portfolio, computes market risk, explains commodity spillover exposure, adds news context, and demonstrates an AI copilot through MCP.</p>
+      <div class="meta">
+        <div><strong>Version</strong>V1 PRD</div>
+        <div><strong>Mode</strong>Course prototype first</div>
+        <div><strong>Audience</strong>FRM faculty, students, retail investors</div>
+        <div><strong>Boundary</strong>Risk analytics, not investment advice</div>
+      </div>
+    </header>
+
+    <nav class="nav" aria-label="Document navigation">
+      <a class="active" href="prd.html">PRD</a>
+      <a href="specs.html">Specs</a>
+      <a href="highleveldesign.html">High-Level Design</a>
+      <a href="lowleveldesign.html">Low-Level Design</a>
+    </nav>
+
+    <section id="vision">
+      <h2>1. Product Vision</h2>
+      <p>Portfolio Risk Copilot helps a Zerodha user understand where portfolio market risk is coming from. The product turns a holdings list into a risk dashboard and a natural-language explanation layer, while keeping calculations deterministic and auditable.</p>
+      <div class="callout warning">
+        <span class="label">Positioning</span>
+        <strong>The product must never be framed as a buy/sell recommendation engine.</strong>
+        It reports exposure, loss estimates, stress sensitivity, concentration, commodity spillover, and news-linked risk flags. The final user-facing language is educational and diagnostic.
+      </div>
+      <div class="grid-3">
+        <div class="card">
+          <strong>Core promise</strong>
+          Show total market risk first, then explain the drivers behind that risk.
+        </div>
+        <div class="card">
+          <strong>Project novelty</strong>
+          Combine portfolio VaR/ES with commodity spillover, RSS news context, and MCP-based AI interaction.
+        </div>
+        <div class="card">
+          <strong>Demo strategy</strong>
+          Run locally, connect a live Zerodha account if available, and fall back to sample/CSV data instantly.
+        </div>
+      </div>
+    </section>
+
+    <section id="problem">
+      <h2>2. Problem Statement</h2>
+      <p>Retail investors often know their holdings and unrealized P&amp;L but do not know their market risk. Standard broker views usually emphasize prices, positions, and orders; they rarely answer questions such as: "How much can this portfolio lose in a bad market?", "Which stock drives the risk?", or "Is this portfolio exposed to crude oil shocks?"</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Current gap</th>
+            <th>Risk copilot response</th>
+            <th>FRM concept demonstrated</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Holdings are shown as a list, not a risk system.</td>
+            <td>Convert holdings into weights, returns, volatility, VaR, ES, and stress losses.</td>
+            <td>Market risk measurement and portfolio aggregation.</td>
+          </tr>
+          <tr>
+            <td>Investors may mistake diversification by number of stocks for true diversification.</td>
+            <td>Compute concentration, sector exposure, correlation, and component VaR.</td>
+            <td>Diversification, correlation risk, and marginal contribution.</td>
+          </tr>
+          <tr>
+            <td>Commodity shocks affect Indian sectors with lagged effects but are not visible in holdings screens.</td>
+            <td>Model crude/gold/copper/gas spillover into sector and portfolio risk.</td>
+            <td>Factor risk, lead-lag analysis, spillover, stress testing.</td>
+          </tr>
+          <tr>
+            <td>News is noisy and hard to connect to portfolio risk.</td>
+            <td>Tag RSS headlines by sector/ticker and summarize risk context.</td>
+            <td>Qualitative risk overlay and event risk.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="users">
+      <h2>3. Target Users</h2>
+      <div class="grid-3">
+        <div class="card">
+          <strong>Primary demo user</strong>
+          Professor or student with a Zerodha account who wants a real portfolio risk diagnosis during the presentation.
+        </div>
+        <div class="card">
+          <strong>Fallback user</strong>
+          Class audience viewing a realistic sample portfolio when live auth is unavailable.
+        </div>
+        <div class="card">
+          <strong>Production user</strong>
+          Retail investor who wants educational risk analytics without receiving trade recommendations.
+        </div>
+      </div>
+    </section>
+
+    <section id="scope">
+      <h2>4. MVP Scope</h2>
+      <div class="grid-2">
+        <div class="callout prototype">
+          <span class="label">In scope for prototype</span>
+          <ul>
+            <li>Local web dashboard with Python backend.</li>
+            <li>Zerodha import where credentials/access are available.</li>
+            <li>CSV/manual/sample portfolio fallback.</li>
+            <li>Deep modeling for equity and ETF holdings.</li>
+            <li>Historical VaR, Expected Shortfall, stress tests, concentration, sector risk.</li>
+            <li>Commodity spillover diagnostics using public or cached factor data.</li>
+            <li>RSS headline risk context from free feeds.</li>
+            <li>Dual MCP demo: Zerodha Kite MCP plus custom Risk MCP.</li>
+          </ul>
+        </div>
+        <div class="callout danger">
+          <span class="label">Out of scope for prototype</span>
+          <ul>
+            <li>Order placement or portfolio rebalancing instructions.</li>
+            <li>Buy/sell/hold recommendations.</li>
+            <li>Full F&amp;O Greeks and margin risk.</li>
+            <li>Mutual fund look-through risk decomposition.</li>
+            <li>Paid news subscriptions or full article scraping.</li>
+            <li>Multi-user production account management.</li>
+            <li>Public redistribution of exchange market data.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="features">
+      <h2>5. Feature Requirements</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th>Requirement</th>
+            <th>Priority</th>
+            <th>Success criteria</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Portfolio import</td>
+            <td>Load holdings from Zerodha, CSV, or sample data. Normalize symbol, quantity, price, value, asset type, and sector.</td>
+            <td>Must have</td>
+            <td>Demo never blocks because of missing live account access.</td>
+          </tr>
+          <tr>
+            <td>Total market risk dashboard</td>
+            <td>Show portfolio value, VaR, ES, volatility, drawdown, concentration, sector exposure, and top contributors.</td>
+            <td>Must have</td>
+            <td>User can identify biggest risk driver in under one minute.</td>
+          </tr>
+          <tr>
+            <td>Commodity spillover</td>
+            <td>Estimate lagged exposure to crude, Brent, gold, copper, and gas factors.</td>
+            <td>Should have</td>
+            <td>Dashboard reports factor sensitivity and affected sectors/holdings.</td>
+          </tr>
+          <tr>
+            <td>News risk context</td>
+            <td>Ingest RSS headlines, tag by sector/ticker/keyword, and surface relevant risk flags.</td>
+            <td>Should have</td>
+            <td>Headlines enhance explanation without becoming the primary calculation source.</td>
+          </tr>
+          <tr>
+            <td>AI copilot</td>
+            <td>Answer portfolio risk questions using structured outputs from the risk engine and MCP tools.</td>
+            <td>Should have</td>
+            <td>Copilot explains risk and avoids advice language.</td>
+          </tr>
+          <tr>
+            <td>Production path</td>
+            <td>Document the changes required for hosted multi-user usage.</td>
+            <td>Must have</td>
+            <td>Faculty can see prototype choices and real production constraints separately.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="user-journey">
+      <h2>6. Demo User Journey</h2>
+      <div class="flow" aria-label="Demo flow">
+        <div><strong>1. Open app</strong><br>Presenter starts the local dashboard.</div>
+        <div><strong>2. Import</strong><br>Connect Zerodha or load sample/CSV portfolio.</div>
+        <div><strong>3. Analyze</strong><br>Backend computes market risk and factor diagnostics.</div>
+        <div><strong>4. Explain</strong><br>Dashboard shows risk drivers and news context.</div>
+        <div><strong>5. Ask AI</strong><br>Copilot answers using MCP tools and structured context.</div>
+      </div>
+      <ol>
+        <li>The presenter asks a professor/student for voluntary Zerodha access.</li>
+        <li>If no one volunteers, the presenter loads a prepared sample portfolio.</li>
+        <li>The app maps holdings to sectors and obtains cached/public price history.</li>
+        <li>The risk engine produces the dashboard and downloadable memo.</li>
+        <li>The presenter asks the copilot: <code>What is the biggest risk in this portfolio?</code></li>
+      </ol>
+    </section>
+
+    <section id="metrics">
+      <h2>7. Success Metrics</h2>
+      <div class="grid-4">
+        <div class="card">
+          <strong>Reliability</strong>
+          Demo can complete with live import, CSV import, or sample data.
+        </div>
+        <div class="card">
+          <strong>Risk clarity</strong>
+          Top risk drivers are visible without reading raw tables.
+        </div>
+        <div class="card">
+          <strong>Academic depth</strong>
+          VaR, ES, stress testing, correlation, and spillover concepts are all demonstrated.
+        </div>
+        <div class="card">
+          <strong>Safety</strong>
+          The app never instructs users to trade.
+        </div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Metric</th>
+            <th>Prototype target</th>
+            <th>Production target</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Time to first risk dashboard</td>
+            <td>Under 60 seconds with sample data</td>
+            <td>Under 30 seconds after account link</td>
+          </tr>
+          <tr>
+            <td>Fallback coverage</td>
+            <td>100% demo path with sample data</td>
+            <td>Graceful degradation for auth, price, and news failures</td>
+          </tr>
+          <tr>
+            <td>Recommendation safety</td>
+            <td>Zero buy/sell wording in generated outputs</td>
+            <td>Policy checks and audit logs for generated explanations</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="risks">
+      <h2>8. Product Risks And Mitigations</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Risk</th>
+            <th>Impact</th>
+            <th>Mitigation</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Zerodha access unavailable during presentation</td>
+            <td>Live demo could stall</td>
+            <td>Keep sample and CSV import as first-class paths.</td>
+          </tr>
+          <tr>
+            <td>Personal/free API does not provide all desired market data</td>
+            <td>Historical calculations may fail if dependent on paid endpoints</td>
+            <td>Use public/cached historical prices; document paid Kite Connect as production enhancement.</td>
+          </tr>
+          <tr>
+            <td>LLM hallucinates risk conclusions</td>
+            <td>Incorrect explanation or advice-like wording</td>
+            <td>Give only structured risk engine outputs to the LLM and enforce "not advice" response policy.</td>
+          </tr>
+          <tr>
+            <td>Commodity relation is statistically weak for some portfolios</td>
+            <td>Spillover module may overclaim</td>
+            <td>Report confidence, lag window, and "not significant" states explicitly.</td>
+          </tr>
+          <tr>
+            <td>Regulatory/compliance concerns</td>
+            <td>Production launch could require SEBI/legal review</td>
+            <td>Position as education and analytics; avoid personalized trade recommendations.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="production">
+      <h2>9. Prototype Vs Production</h2>
+      <div class="grid-2">
+        <div class="callout prototype">
+          <span class="label">Prototype</span>
+          <ul>
+            <li>Runs locally on presenter machine.</li>
+            <li>One account/session at a time.</li>
+            <li>Local SQLite or file cache.</li>
+            <li>No persistent token storage.</li>
+            <li>Manual <code>.env</code> secrets.</li>
+            <li>Public/cached data for price history.</li>
+            <li>Sample data guarantees demo continuity.</li>
+          </ul>
+        </div>
+        <div class="callout production">
+          <span class="label">Production</span>
+          <ul>
+            <li>Hosted frontend and backend.</li>
+            <li>Encrypted token storage with short retention.</li>
+            <li>Consent screen, privacy policy, and user account management.</li>
+            <li>Rate-limit-aware queues and background jobs.</li>
+            <li>Paid Kite Connect plan if live/historical data is needed at scale.</li>
+            <li>No public redistribution of exchange market data.</li>
+            <li>Audit logs and policy checks for AI output.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="references">
+      <h2>10. Reference Inputs</h2>
+      <p>The implementation should verify the latest official docs before integrating live services.</p>
+      <ul>
+        <li><a href="https://kite.trade/docs/connect/v3/portfolio/">Kite Connect Portfolio API</a></li>
+        <li><a href="https://kite.trade/docs/connect/v3/market-quotes/">Kite Connect Market Quotes API</a></li>
+        <li><a href="https://kite.trade/docs/connect/v3/historical/">Kite Connect Historical Data API</a></li>
+        <li><a href="https://kite.trade/docs/connect/v3/websocket/">Kite Connect WebSocket API</a></li>
+        <li><a href="https://github.com/zerodha/kite-mcp-server">Zerodha Kite MCP Server</a></li>
+        <li><a href="https://support.zerodha.com/category/trading-and-markets/kite-web-and-mobile/kite-api/articles/what-are-the-charges-for-kite-apis">Zerodha Kite API Charges</a></li>
+        <li><a href="https://www.sebi.gov.in/rss.html">SEBI RSS</a></li>
+        <li><a href="https://www.nseindia.com/rss-feed">NSE RSS</a></li>
+      </ul>
+    </section>
+
+    <p class="footer">Portfolio Risk Copilot PRD - local-first course prototype with production-ready boundaries.</p>
+  </main>
+</body>
+</html>

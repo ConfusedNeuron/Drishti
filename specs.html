@@ -1,0 +1,767 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Portfolio Risk Copilot - Functional And Technical Specifications</title>
+  <style>
+    :root {
+      --bg: #f5f7fa;
+      --paper: #ffffff;
+      --ink: #17202a;
+      --muted: #5d6d7e;
+      --line: #d7dee8;
+      --primary: #145c72;
+      --primary-2: #1f7a8c;
+      --accent: #b85c38;
+      --ok: #1d7a46;
+      --warn: #a76500;
+      --danger: #a33b3b;
+      --soft-blue: #e7f2f6;
+      --soft-green: #e8f5ee;
+      --soft-amber: #fff2dc;
+      --soft-red: #fae9e8;
+      --shadow: 0 18px 42px rgba(23, 32, 42, 0.10);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.58;
+    }
+
+    a { color: var(--primary); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .page {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 32px 20px 64px;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, #0d3f4d 0%, #145c72 54%, #2f5f63 100%);
+      color: #fff;
+      border-radius: 8px;
+      padding: 44px;
+      box-shadow: var(--shadow);
+    }
+
+    .eyebrow {
+      margin: 0 0 10px;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #cce8ef;
+      font-weight: 700;
+    }
+
+    h1, h2, h3 { line-height: 1.18; margin: 0; }
+    h1 { font-size: 42px; max-width: 950px; }
+    h2 { font-size: 26px; margin-bottom: 16px; color: #123845; }
+    h3 { font-size: 18px; margin-bottom: 8px; color: #173b46; }
+
+    .subtitle {
+      margin: 18px 0 0;
+      max-width: 900px;
+      font-size: 18px;
+      color: #eef8fb;
+    }
+
+    .meta {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-top: 28px;
+    }
+
+    .meta div {
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      background: rgba(255, 255, 255, 0.10);
+      border-radius: 8px;
+      padding: 12px;
+    }
+
+    .meta strong {
+      display: block;
+      font-size: 12px;
+      color: #cce8ef;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 4px;
+    }
+
+    .nav {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 22px 0;
+      padding: 12px;
+      border: 1px solid var(--line);
+      background: var(--paper);
+      border-radius: 8px;
+      position: sticky;
+      top: 0;
+      z-index: 5;
+    }
+
+    .nav a {
+      padding: 8px 12px;
+      border-radius: 6px;
+      color: #173b46;
+      background: #eef4f7;
+      font-weight: 650;
+      font-size: 14px;
+    }
+
+    .nav a.active {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    section {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 28px;
+      margin-top: 18px;
+      box-shadow: 0 8px 22px rgba(23, 32, 42, 0.05);
+    }
+
+    .grid-2, .grid-3, .grid-4 {
+      display: grid;
+      gap: 16px;
+    }
+    .grid-2 { grid-template-columns: repeat(2, 1fr); }
+    .grid-3 { grid-template-columns: repeat(3, 1fr); }
+    .grid-4 { grid-template-columns: repeat(4, 1fr); }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 18px;
+      background: #fbfcfe;
+    }
+
+    .callout {
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      padding: 16px 18px;
+      margin: 16px 0;
+    }
+
+    .prototype { background: var(--soft-blue); border-color: #b8d8e4; }
+    .production { background: var(--soft-green); border-color: #bddfc9; }
+    .warning { background: var(--soft-amber); border-color: #efd096; }
+    .danger { background: var(--soft-red); border-color: #e8b6b2; }
+
+    .label {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: #eaf0f3;
+      color: #24434c;
+      font-size: 12px;
+      font-weight: 750;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+    }
+
+    ul, ol { padding-left: 22px; margin: 10px 0 0; }
+    li { margin: 6px 0; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 14px;
+      overflow: hidden;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    th, td {
+      border: 1px solid var(--line);
+      padding: 11px 12px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: #eaf0f3;
+      color: #173b46;
+    }
+
+    code, pre {
+      background: #eef3f6;
+      color: #173b46;
+      border: 1px solid #dbe5ea;
+      border-radius: 5px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    code {
+      padding: 1px 5px;
+      font-size: 0.92em;
+    }
+
+    pre {
+      padding: 16px;
+      overflow: auto;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .pipeline {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .pipeline div {
+      min-height: 96px;
+      border: 1px solid #c8d7de;
+      background: #f7fbfc;
+      border-radius: 8px;
+      padding: 12px;
+      position: relative;
+    }
+
+    .pipeline div:not(:last-child)::after {
+      content: ">";
+      position: absolute;
+      right: -9px;
+      top: 38px;
+      color: var(--primary);
+      font-weight: 800;
+    }
+
+    .footer {
+      margin-top: 24px;
+      color: var(--muted);
+      font-size: 13px;
+      text-align: center;
+    }
+
+    @media (max-width: 1000px) {
+      .hero { padding: 28px; }
+      h1 { font-size: 32px; }
+      .meta, .grid-2, .grid-3, .grid-4, .pipeline { grid-template-columns: 1fr; }
+      .pipeline div:not(:last-child)::after { display: none; }
+      .nav { position: static; }
+    }
+
+    @media print {
+      body { background: #fff; color: #000; }
+      .page { max-width: none; padding: 0; }
+      .hero, section, .nav { box-shadow: none; }
+      .nav { position: static; }
+      a { color: #000; text-decoration: underline; }
+      section { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="hero">
+      <p class="eyebrow">Functional And Technical Specifications</p>
+      <h1>Portfolio Risk Copilot - Specs</h1>
+      <p class="subtitle">Detailed feature, data, analytics, UI, and acceptance specifications for the local-first Zerodha portfolio risk prototype.</p>
+      <div class="meta">
+        <div><strong>Version</strong>V1 Specs</div>
+        <div><strong>Primary stack</strong>Python backend + web dashboard</div>
+        <div><strong>Asset scope</strong>Equity and ETF deep modeling</div>
+        <div><strong>Data strategy</strong>Live import + public/cache fallback</div>
+      </div>
+    </header>
+
+    <nav class="nav" aria-label="Document navigation">
+      <a href="prd.html">PRD</a>
+      <a class="active" href="specs.html">Specs</a>
+      <a href="highleveldesign.html">High-Level Design</a>
+      <a href="lowleveldesign.html">Low-Level Design</a>
+    </nav>
+
+    <section id="overview">
+      <h2>1. Specification Overview</h2>
+      <p>The system imports or simulates a Zerodha portfolio, normalizes holdings, fetches or loads historical market data, calculates market risk, augments the result with commodity spillover and news context, then presents results through a dashboard and AI copilot.</p>
+      <div class="pipeline" aria-label="Data pipeline">
+        <div><strong>Import</strong><br>Zerodha, CSV, or sample holdings.</div>
+        <div><strong>Normalize</strong><br>Symbols, quantities, prices, sectors, asset classes.</div>
+        <div><strong>Enrich</strong><br>Historical prices, factor series, RSS headlines.</div>
+        <div><strong>Compute</strong><br>VaR, ES, stress, contribution, spillover.</div>
+        <div><strong>Explain</strong><br>Risk narratives and MCP tool outputs.</div>
+        <div><strong>Present</strong><br>Dashboard, memo, and copilot answers.</div>
+      </div>
+    </section>
+
+    <section id="data-sources">
+      <h2>2. Data Sources</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Data type</th>
+            <th>Prototype source</th>
+            <th>Production source</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Holdings and positions</td>
+            <td>Zerodha login, Kite MCP, CSV, or sample file</td>
+            <td>Kite Connect OAuth/session flow</td>
+            <td>Only equity/ETF modeled deeply in V1.</td>
+          </tr>
+          <tr>
+            <td>Historical equity prices</td>
+            <td>Public/cached data, local fixture, optional paid Kite data</td>
+            <td>Licensed market data or paid Kite Connect plan where allowed</td>
+            <td>Must track data freshness and source.</td>
+          </tr>
+          <tr>
+            <td>Live/latest prices</td>
+            <td>Portfolio import price, cached quote, or delayed quote</td>
+            <td>Kite quote endpoints or WebSocket if paid plan is used</td>
+            <td>Do not publicly redistribute exchange data.</td>
+          </tr>
+          <tr>
+            <td>Commodity factors</td>
+            <td>Public/cached crude, Brent, gold, copper, natural gas series</td>
+            <td>Licensed feed or approved public APIs with caching</td>
+            <td>Use returns and volatility shocks, not raw price comparisons.</td>
+          </tr>
+          <tr>
+            <td>News</td>
+            <td>Free RSS feeds such as SEBI/NSE and market news RSS where allowed</td>
+            <td>RSS plus licensed news provider if commercialized</td>
+            <td>MVP stores headline, source, timestamp, link, and tags only.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="data-models">
+      <h2>3. Core Data Models</h2>
+      <div class="grid-2">
+        <div>
+          <h3>Holding</h3>
+          <pre><code>{
+  "symbol": "RELIANCE",
+  "exchange": "NSE",
+  "instrument_token": 738561,
+  "asset_type": "EQUITY",
+  "quantity": 12,
+  "average_price": 2430.50,
+  "last_price": 2510.20,
+  "market_value": 30122.40,
+  "sector": "Oil, Gas & Consumable Fuels",
+  "modeled": true
+}</code></pre>
+        </div>
+        <div>
+          <h3>Portfolio Snapshot</h3>
+          <pre><code>{
+  "portfolio_id": "demo-2026-05",
+  "as_of": "2026-05-14T10:30:00+05:30",
+  "source": "zerodha|csv|sample",
+  "total_value": 845000.00,
+  "modeled_value": 812500.00,
+  "holdings": [],
+  "unsupported_summary": []
+}</code></pre>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div>
+          <h3>Risk Summary</h3>
+          <pre><code>{
+  "confidence": 0.99,
+  "horizon_days": 10,
+  "var_amount": 64500.00,
+  "expected_shortfall": 91200.00,
+  "annualized_volatility": 0.218,
+  "max_drawdown": -0.284,
+  "top_contributors": [],
+  "data_quality": "ok|stale|partial"
+}</code></pre>
+        </div>
+        <div>
+          <h3>News Risk Item</h3>
+          <pre><code>{
+  "headline": "Oil prices rise after supply concern",
+  "source": "RSS_FEED_NAME",
+  "published_at": "2026-05-14T09:00:00+05:30",
+  "link": "https://example.com/news",
+  "matched_symbols": ["ONGC", "BPCL"],
+  "matched_sectors": ["Oil & Gas"],
+  "risk_flags": ["commodity", "margin_pressure"]
+}</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <section id="functional">
+      <h2>4. Functional Requirements</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Requirement</th>
+            <th>Acceptance criteria</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>FR-01</td>
+            <td>Import portfolio from Zerodha, CSV, or sample fixture.</td>
+            <td>At least one path works without external network during demo.</td>
+          </tr>
+          <tr>
+            <td>FR-02</td>
+            <td>Normalize securities into modeled equity/ETF and unsupported buckets.</td>
+            <td>Unsupported instruments are visible and excluded from deep metrics.</td>
+          </tr>
+          <tr>
+            <td>FR-03</td>
+            <td>Fetch or load historical daily prices for modeled holdings.</td>
+            <td>Risk engine receives aligned return matrix with missing data report.</td>
+          </tr>
+          <tr>
+            <td>FR-04</td>
+            <td>Calculate portfolio risk metrics.</td>
+            <td>Dashboard shows VaR, ES, volatility, drawdown, concentration, and contribution.</td>
+          </tr>
+          <tr>
+            <td>FR-05</td>
+            <td>Run stress scenarios.</td>
+            <td>Each scenario outputs estimated loss, affected sectors, and largest contributors.</td>
+          </tr>
+          <tr>
+            <td>FR-06</td>
+            <td>Analyze commodity spillover.</td>
+            <td>System reports strongest factor, lag, direction, and confidence/significance indicator.</td>
+          </tr>
+          <tr>
+            <td>FR-07</td>
+            <td>Summarize RSS headline risk.</td>
+            <td>System shows source, link, sector/ticker tags, and risk category.</td>
+          </tr>
+          <tr>
+            <td>FR-08</td>
+            <td>Answer copilot questions using structured risk context.</td>
+            <td>Copilot cites calculated metrics and avoids advice wording.</td>
+          </tr>
+          <tr>
+            <td>FR-09</td>
+            <td>Generate a presentation-ready risk memo.</td>
+            <td>Memo includes total risk, drivers, stress losses, commodity exposure, news flags, and caveats.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="risk-engine">
+      <h2>5. Risk Engine Specification</h2>
+      <div class="grid-2">
+        <div class="card">
+          <h3>Return calculation</h3>
+          <ul>
+            <li>Use adjusted close where available; otherwise document close-price limitation.</li>
+            <li>Compute simple returns for interpretability and optionally log returns for robustness checks.</li>
+            <li>Align all return series by trading date and report dropped/missing observations.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Portfolio aggregation</h3>
+          <ul>
+            <li>Weight each holding by current market value divided by modeled portfolio value.</li>
+            <li>Daily portfolio return equals weighted sum of holding returns.</li>
+            <li>Unsupported assets are excluded from modeled risk and shown separately.</li>
+          </ul>
+        </div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Metric</th>
+            <th>Method</th>
+            <th>Output</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Historical VaR</td>
+            <td>Empirical quantile of portfolio return distribution at 95% and 99% confidence.</td>
+            <td>1-day and square-root-time 10-day VaR amount and percentage.</td>
+          </tr>
+          <tr>
+            <td>Expected Shortfall</td>
+            <td>Average of returns worse than VaR threshold.</td>
+            <td>Tail loss amount and percentage.</td>
+          </tr>
+          <tr>
+            <td>Rolling volatility</td>
+            <td>Rolling standard deviation annualized with trading-day factor.</td>
+            <td>Trend chart and latest volatility value.</td>
+          </tr>
+          <tr>
+            <td>Drawdown</td>
+            <td>Cumulative portfolio value path versus running peak.</td>
+            <td>Maximum drawdown and current drawdown.</td>
+          </tr>
+          <tr>
+            <td>Component VaR</td>
+            <td>Approximate contribution from each holding using covariance and portfolio weights.</td>
+            <td>Top risk contributors by amount and percentage contribution.</td>
+          </tr>
+          <tr>
+            <td>Stress testing</td>
+            <td>Apply scenario shock vector to holdings/sectors/factors.</td>
+            <td>Scenario loss, affected sectors, top loss contributors.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="commodity">
+      <h2>6. Commodity Spillover Specification</h2>
+      <p>The commodity module is a risk-driver layer, not a replacement for total portfolio risk. It answers whether commodity shocks are historically associated with portfolio or sector movements after short lags.</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Step</th>
+            <th>Prototype method</th>
+            <th>Production extension</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Factor construction</td>
+            <td>Daily returns and volatility z-scores for crude, Brent, gold, copper, natural gas.</td>
+            <td>Licensed/validated commodity feed, currency adjustment, Indian market calendar alignment.</td>
+          </tr>
+          <tr>
+            <td>Lag scan</td>
+            <td>Test lags 1, 2, 3, 5, and 10 trading days against sector/portfolio returns.</td>
+            <td>Rolling window lag stability, regime detection, confidence bands.</td>
+          </tr>
+          <tr>
+            <td>Regression</td>
+            <td>Portfolio/sector return as function of lagged commodity returns and volatility shocks.</td>
+            <td>Regularized multi-factor model and residual diagnostics.</td>
+          </tr>
+          <tr>
+            <td>Risk score</td>
+            <td>Combine absolute beta, significance, sector exposure, and recent shock magnitude.</td>
+            <td>Backtested early-warning score with alert thresholds.</td>
+          </tr>
+        </tbody>
+      </table>
+      <pre><code>commodity_sensitivity_score =
+  sector_weight
+  * normalized_abs_lag_beta
+  * recent_factor_shock_zscore
+  * confidence_multiplier</code></pre>
+    </section>
+
+    <section id="news">
+      <h2>7. News Risk Specification</h2>
+      <div class="callout warning">
+        <span class="label">MVP rule</span>
+        Store and display headline metadata only: headline, link, source, timestamp, matched sector/ticker, and risk tags. Do not scrape full article bodies in V1.
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Risk tag</th>
+            <th>Keyword examples</th>
+            <th>Possible portfolio implication</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Commodity</td>
+            <td>crude, Brent, oil, gold, copper, gas, supply</td>
+            <td>Margin pressure, input cost change, sector volatility.</td>
+          </tr>
+          <tr>
+            <td>Regulatory</td>
+            <td>SEBI, RBI, circular, penalty, disclosure, compliance</td>
+            <td>Event risk for financials, brokers, listed companies.</td>
+          </tr>
+          <tr>
+            <td>Macro</td>
+            <td>inflation, repo, rupee, rates, GDP, fiscal</td>
+            <td>Broad market and interest-sensitive sector risk.</td>
+          </tr>
+          <tr>
+            <td>Earnings</td>
+            <td>results, profit, margin, revenue, guidance</td>
+            <td>Single-stock volatility and gap risk.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="ui">
+      <h2>8. Dashboard Specification</h2>
+      <div class="grid-3">
+        <div class="card">
+          <h3>Overview</h3>
+          <ul>
+            <li>Total portfolio value.</li>
+            <li>Modeled value percentage.</li>
+            <li>99% 10-day VaR and ES.</li>
+            <li>Data freshness indicator.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Risk drivers</h3>
+          <ul>
+            <li>Top component VaR holdings.</li>
+            <li>Sector concentration.</li>
+            <li>Correlation heatmap.</li>
+            <li>Largest drawdown periods.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Context</h3>
+          <ul>
+            <li>Commodity sensitivity cards.</li>
+            <li>Stress scenario comparison.</li>
+            <li>RSS risk flags.</li>
+            <li>Copilot Q&amp;A panel.</li>
+          </ul>
+        </div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>State</th>
+            <th>UI behavior</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>No portfolio loaded</td>
+            <td>Show three clear actions: connect Zerodha, upload CSV, load sample portfolio.</td>
+          </tr>
+          <tr>
+            <td>Partial data</td>
+            <td>Show risk metrics for modeled holdings and a warning for excluded instruments.</td>
+          </tr>
+          <tr>
+            <td>Stale market data</td>
+            <td>Display last-updated timestamp and continue using cached data with warning.</td>
+          </tr>
+          <tr>
+            <td>Failed auth/API</td>
+            <td>Show human-readable error and fallback actions without exposing secrets.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="non-functional">
+      <h2>9. Non-Functional Requirements</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Category</th>
+            <th>Requirement</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Performance</td>
+            <td>Sample portfolio dashboard should render in under 60 seconds on a normal laptop.</td>
+          </tr>
+          <tr>
+            <td>Reliability</td>
+            <td>Demo must work with no live Zerodha account and no external network after sample data is prepared.</td>
+          </tr>
+          <tr>
+            <td>Privacy</td>
+            <td>Prototype should not persist access tokens or upload raw holdings to a hosted service by default.</td>
+          </tr>
+          <tr>
+            <td>Auditability</td>
+            <td>Every risk output should include calculation method, input date range, and data quality status.</td>
+          </tr>
+          <tr>
+            <td>Safety</td>
+            <td>Copilot must refuse buy/sell/hold recommendations and redirect to risk explanation.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="roadmap">
+      <h2>10. Phase-Wise Roadmap</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Phase</th>
+            <th>Deliverable</th>
+            <th>Exit criteria</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Phase 0</td>
+            <td>Documentation, sample portfolio, data dictionary, source strategy.</td>
+            <td>PRD, specs, HLD, and LLD are approved.</td>
+          </tr>
+          <tr>
+            <td>Phase 1</td>
+            <td>Portfolio import, normalization, cached prices, basic dashboard.</td>
+            <td>Sample portfolio shows value, weights, sector exposure.</td>
+          </tr>
+          <tr>
+            <td>Phase 2</td>
+            <td>VaR, ES, stress tests, contribution, drawdown, volatility.</td>
+            <td>Risk outputs validated against synthetic test portfolios.</td>
+          </tr>
+          <tr>
+            <td>Phase 3</td>
+            <td>Commodity spillover and RSS news risk context.</td>
+            <td>Risk dashboard explains at least one factor/sector driver.</td>
+          </tr>
+          <tr>
+            <td>Phase 4</td>
+            <td>Dual MCP and AI copilot demo.</td>
+            <td>Copilot answers using tool outputs and avoids advice language.</td>
+          </tr>
+          <tr>
+            <td>Phase 5</td>
+            <td>Production-readiness plan.</td>
+            <td>Hosting, security, token storage, compliance, and cost changes documented.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="acceptance">
+      <h2>11. Acceptance Test Scenarios</h2>
+      <ul>
+        <li>CSV import loads a portfolio and produces a modeled/unsupported split.</li>
+        <li>Sample portfolio produces 95% and 99% VaR plus ES without internet access.</li>
+        <li>Missing price data produces a warning, not a crash.</li>
+        <li>Commodity module reports "not significant" when lag relationships are weak.</li>
+        <li>RSS failure displays stale/unavailable news state without affecting core risk calculations.</li>
+        <li>Copilot answers "What is my biggest risk?" using top component VaR and concentration outputs.</li>
+        <li>Copilot refuses "Should I buy more of stock X?" and offers risk context instead.</li>
+      </ul>
+    </section>
+
+    <p class="footer">Portfolio Risk Copilot Specs - deterministic calculations first, AI explanation second.</p>
+  </main>
+</body>
+</html>

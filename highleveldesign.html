@@ -1,0 +1,649 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Portfolio Risk Copilot - High-Level Design</title>
+  <style>
+    :root {
+      --bg: #f5f7fa;
+      --paper: #ffffff;
+      --ink: #17202a;
+      --muted: #5d6d7e;
+      --line: #d7dee8;
+      --primary: #145c72;
+      --primary-2: #1f7a8c;
+      --accent: #b85c38;
+      --ok: #1d7a46;
+      --warn: #a76500;
+      --danger: #a33b3b;
+      --soft-blue: #e7f2f6;
+      --soft-green: #e8f5ee;
+      --soft-amber: #fff2dc;
+      --soft-red: #fae9e8;
+      --shadow: 0 18px 42px rgba(23, 32, 42, 0.10);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.58;
+    }
+
+    a { color: var(--primary); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .page {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 32px 20px 64px;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, #0d3f4d 0%, #145c72 54%, #2f5f63 100%);
+      color: #fff;
+      border-radius: 8px;
+      padding: 44px;
+      box-shadow: var(--shadow);
+    }
+
+    .eyebrow {
+      margin: 0 0 10px;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #cce8ef;
+      font-weight: 700;
+    }
+
+    h1, h2, h3 { line-height: 1.18; margin: 0; }
+    h1 { font-size: 42px; max-width: 950px; }
+    h2 { font-size: 26px; margin-bottom: 16px; color: #123845; }
+    h3 { font-size: 18px; margin-bottom: 8px; color: #173b46; }
+
+    .subtitle {
+      margin: 18px 0 0;
+      max-width: 900px;
+      font-size: 18px;
+      color: #eef8fb;
+    }
+
+    .meta {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-top: 28px;
+    }
+
+    .meta div {
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      background: rgba(255, 255, 255, 0.10);
+      border-radius: 8px;
+      padding: 12px;
+    }
+
+    .meta strong {
+      display: block;
+      font-size: 12px;
+      color: #cce8ef;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 4px;
+    }
+
+    .nav {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 22px 0;
+      padding: 12px;
+      border: 1px solid var(--line);
+      background: var(--paper);
+      border-radius: 8px;
+      position: sticky;
+      top: 0;
+      z-index: 5;
+    }
+
+    .nav a {
+      padding: 8px 12px;
+      border-radius: 6px;
+      color: #173b46;
+      background: #eef4f7;
+      font-weight: 650;
+      font-size: 14px;
+    }
+
+    .nav a.active {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    section {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 28px;
+      margin-top: 18px;
+      box-shadow: 0 8px 22px rgba(23, 32, 42, 0.05);
+    }
+
+    .grid-2, .grid-3, .grid-4 {
+      display: grid;
+      gap: 16px;
+    }
+    .grid-2 { grid-template-columns: repeat(2, 1fr); }
+    .grid-3 { grid-template-columns: repeat(3, 1fr); }
+    .grid-4 { grid-template-columns: repeat(4, 1fr); }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 18px;
+      background: #fbfcfe;
+    }
+
+    .callout {
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      padding: 16px 18px;
+      margin: 16px 0;
+    }
+
+    .prototype { background: var(--soft-blue); border-color: #b8d8e4; }
+    .production { background: var(--soft-green); border-color: #bddfc9; }
+    .warning { background: var(--soft-amber); border-color: #efd096; }
+    .danger { background: var(--soft-red); border-color: #e8b6b2; }
+
+    .label {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: #eaf0f3;
+      color: #24434c;
+      font-size: 12px;
+      font-weight: 750;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+    }
+
+    ul, ol { padding-left: 22px; margin: 10px 0 0; }
+    li { margin: 6px 0; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 14px;
+      overflow: hidden;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    th, td {
+      border: 1px solid var(--line);
+      padding: 11px 12px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: #eaf0f3;
+      color: #173b46;
+    }
+
+    code, pre {
+      background: #eef3f6;
+      color: #173b46;
+      border: 1px solid #dbe5ea;
+      border-radius: 5px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    code {
+      padding: 1px 5px;
+      font-size: 0.92em;
+    }
+
+    pre {
+      padding: 16px;
+      overflow: auto;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .diagram {
+      display: grid;
+      gap: 14px;
+      margin-top: 16px;
+    }
+
+    .layer {
+      border: 1px solid #c8d7de;
+      background: #f7fbfc;
+      border-radius: 8px;
+      padding: 16px;
+    }
+
+    .layer-title {
+      font-weight: 800;
+      color: #123845;
+      margin-bottom: 10px;
+    }
+
+    .nodes {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    .node {
+      border: 1px solid #d2dce2;
+      background: #ffffff;
+      border-radius: 7px;
+      padding: 12px;
+      min-height: 72px;
+    }
+
+    .footer {
+      margin-top: 24px;
+      color: var(--muted);
+      font-size: 13px;
+      text-align: center;
+    }
+
+    @media (max-width: 1000px) {
+      .hero { padding: 28px; }
+      h1 { font-size: 32px; }
+      .meta, .grid-2, .grid-3, .grid-4, .nodes { grid-template-columns: 1fr; }
+      .nav { position: static; }
+    }
+
+    @media print {
+      body { background: #fff; color: #000; }
+      .page { max-width: none; padding: 0; }
+      .hero, section, .nav { box-shadow: none; }
+      .nav { position: static; }
+      a { color: #000; text-decoration: underline; }
+      section { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="hero">
+      <p class="eyebrow">High-Level Design</p>
+      <h1>Portfolio Risk Copilot - System Architecture</h1>
+      <p class="subtitle">Architecture, component boundaries, external integrations, MCP role, data flow, and the path from a local course prototype to a hosted product.</p>
+      <div class="meta">
+        <div><strong>Architecture</strong>Local-first modular app</div>
+        <div><strong>AI pattern</strong>Tool-grounded copilot</div>
+        <div><strong>Data flow</strong>Import -> enrich -> compute -> explain</div>
+        <div><strong>Hosting</strong>Local demo now, cloud later</div>
+      </div>
+    </header>
+
+    <nav class="nav" aria-label="Document navigation">
+      <a href="prd.html">PRD</a>
+      <a href="specs.html">Specs</a>
+      <a class="active" href="highleveldesign.html">High-Level Design</a>
+      <a href="lowleveldesign.html">Low-Level Design</a>
+    </nav>
+
+    <section id="architecture">
+      <h2>1. Architecture Overview</h2>
+      <p>The system is split into four major layers: user interface, application API, analytics services, and external integrations. The key design rule is that the risk engine owns numerical truth; the AI copilot only explains structured results.</p>
+      <div class="diagram" aria-label="Architecture layers">
+        <div class="layer">
+          <div class="layer-title">Presentation Layer</div>
+          <div class="nodes">
+            <div class="node"><strong>Web Dashboard</strong><br>Portfolio, risk, stress, news, commodity panels.</div>
+            <div class="node"><strong>Copilot UI</strong><br>Natural-language questions and risk memo generation.</div>
+            <div class="node"><strong>CSV/Sample Loader</strong><br>Reliable fallback for demo.</div>
+            <div class="node"><strong>Report View</strong><br>Presentation-ready risk summary.</div>
+          </div>
+        </div>
+        <div class="layer">
+          <div class="layer-title">Application API Layer</div>
+          <div class="nodes">
+            <div class="node"><strong>Auth Controller</strong><br>Zerodha redirect and session handling.</div>
+            <div class="node"><strong>Portfolio Controller</strong><br>Import, normalize, store current snapshot.</div>
+            <div class="node"><strong>Risk Controller</strong><br>Run risk calculations and return structured outputs.</div>
+            <div class="node"><strong>Copilot Controller</strong><br>Prepare context and call LLM/MCP tools.</div>
+          </div>
+        </div>
+        <div class="layer">
+          <div class="layer-title">Analytics And Data Layer</div>
+          <div class="nodes">
+            <div class="node"><strong>Risk Engine</strong><br>VaR, ES, stress, contribution, drawdown.</div>
+            <div class="node"><strong>Spillover Engine</strong><br>Commodity lag scan and sensitivity scoring.</div>
+            <div class="node"><strong>News Engine</strong><br>RSS ingestion, tagging, risk flags.</div>
+            <div class="node"><strong>Local Cache</strong><br>SQLite/files for prices, factors, news, fixtures.</div>
+          </div>
+        </div>
+        <div class="layer">
+          <div class="layer-title">External Integration Layer</div>
+          <div class="nodes">
+            <div class="node"><strong>Zerodha/Kite</strong><br>Holdings, positions, instruments, quotes.</div>
+            <div class="node"><strong>Kite MCP</strong><br>AI-client-accessible Zerodha tools.</div>
+            <div class="node"><strong>Risk MCP</strong><br>Custom tool server for portfolio risk analytics.</div>
+            <div class="node"><strong>LLM Provider</strong><br>NVIDIA/OpenAI-compatible or local option.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="component-responsibilities">
+      <h2>2. Component Responsibilities</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Component</th>
+            <th>Responsibilities</th>
+            <th>Does not do</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Dashboard frontend</td>
+            <td>Render import choices, risk cards, charts, tables, copilot panel, fallback states.</td>
+            <td>Calculate authoritative risk metrics.</td>
+          </tr>
+          <tr>
+            <td>Backend API</td>
+            <td>Coordinate import, validation, cache lookup, calculation requests, and response formatting.</td>
+            <td>Store secrets in source code or expose raw access tokens.</td>
+          </tr>
+          <tr>
+            <td>Risk engine</td>
+            <td>Compute deterministic financial risk metrics from normalized inputs.</td>
+            <td>Generate trade recommendations.</td>
+          </tr>
+          <tr>
+            <td>Commodity engine</td>
+            <td>Estimate commodity factor sensitivity and lagged spillover signals.</td>
+            <td>Claim causality when only correlation/regression is measured.</td>
+          </tr>
+          <tr>
+            <td>News engine</td>
+            <td>Fetch RSS metadata, tag risk categories, link headlines to sectors/holdings.</td>
+            <td>Scrape full articles or act as the primary risk model.</td>
+          </tr>
+          <tr>
+            <td>Copilot</td>
+            <td>Explain risk outputs, answer questions, generate a memo from structured context.</td>
+            <td>Invent calculations or issue buy/sell instructions.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="data-flow">
+      <h2>3. Primary Data Flow</h2>
+      <pre><code>User
+  -> Dashboard import action
+  -> Backend portfolio controller
+  -> Zerodha / CSV / Sample loader
+  -> Holding normalizer and sector mapper
+  -> Price/factor/news cache lookup
+  -> Risk engine + commodity engine + news engine
+  -> Structured risk response
+  -> Dashboard cards/charts
+  -> Optional copilot question
+  -> Risk MCP tools / LLM explanation
+  -> Safe risk answer</code></pre>
+      <div class="callout warning">
+        <span class="label">Design principle</span>
+        The AI path is downstream from the analytics path. If the LLM provider is unavailable, the dashboard and deterministic risk memo should still work.
+      </div>
+    </section>
+
+    <section id="zerodha-flow">
+      <h2>4. Zerodha Integration Flow</h2>
+      <div class="grid-2">
+        <div class="callout prototype">
+          <span class="label">Prototype flow</span>
+          <ol>
+            <li>User clicks "Connect Zerodha" or chooses sample/CSV.</li>
+            <li>Backend redirects to Zerodha login if live import is used.</li>
+            <li>Callback receives request token and creates short-lived access session.</li>
+            <li>Backend fetches holdings/positions and immediately normalizes them.</li>
+            <li>Token is kept only for the active local session, then discarded.</li>
+          </ol>
+        </div>
+        <div class="callout production">
+          <span class="label">Production flow</span>
+          <ol>
+            <li>User sees consent screen explaining exact data access.</li>
+            <li>OAuth/session state is protected against CSRF and replay.</li>
+            <li>Access tokens are encrypted and retained only as long as needed.</li>
+            <li>Refresh/background jobs respect API rate limits and market data terms.</li>
+            <li>Every account-link and data-access event is auditable.</li>
+          </ol>
+        </div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>External API</th>
+            <th>Use in design</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>GET /portfolio/holdings</code></td>
+            <td>Primary source for current equity/ETF holdings.</td>
+          </tr>
+          <tr>
+            <td><code>GET /portfolio/positions</code></td>
+            <td>Detect intraday or overnight positions; deep modeling deferred in V1 if non-equity/F&amp;O.</td>
+          </tr>
+          <tr>
+            <td><code>GET /instruments</code></td>
+            <td>Map trading symbols to instrument tokens and metadata.</td>
+          </tr>
+          <tr>
+            <td><code>GET /quote</code>, <code>/quote/ohlc</code>, <code>/quote/ltp</code></td>
+            <td>Latest prices where available and permitted.</td>
+          </tr>
+          <tr>
+            <td><code>GET /instruments/historical/:instrument_token/:interval</code></td>
+            <td>Historical candles if paid/allowed path is available.</td>
+          </tr>
+          <tr>
+            <td><code>wss://ws.kite.trade</code></td>
+            <td>Production/paid enhancement for live market updates.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="mcp">
+      <h2>5. MCP Architecture</h2>
+      <p>The demo uses two MCP stories: Zerodha's Kite MCP for account/market connectivity in an AI environment, and a custom Risk MCP server for project-specific analytics.</p>
+      <div class="grid-2">
+        <div class="card">
+          <h3>Kite MCP</h3>
+          <ul>
+            <li>Demonstrates that broker data can be exposed to AI tools with controlled permissions.</li>
+            <li>Useful for live portfolio or market questions in an MCP-capable client.</li>
+            <li>Kept separate from the dashboard's reliability path.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Risk MCP</h3>
+          <ul>
+            <li>Exposes this project's risk functions as tools.</li>
+            <li>Calls deterministic analytics modules.</li>
+            <li>Returns structured JSON for LLM explanation and memo generation.</li>
+          </ul>
+        </div>
+      </div>
+      <pre><code>AI Client / Copilot
+  -> Kite MCP: read Zerodha portfolio/market context
+  -> Risk MCP: calculate VaR, ES, stress, spillover, news risk
+  -> LLM: convert structured outputs into safe explanation</code></pre>
+    </section>
+
+    <section id="deployment">
+      <h2>6. Deployment View</h2>
+      <div class="grid-2">
+        <div class="callout prototype">
+          <span class="label">Local course demo</span>
+          <ul>
+            <li>Frontend and backend run on localhost.</li>
+            <li>SQLite/files store cached prices, factors, news, and sample portfolios.</li>
+            <li>Secrets live in local <code>.env</code>.</li>
+            <li>Only presenter machine sees raw portfolio data.</li>
+            <li>Risk MCP runs as a local process.</li>
+            <li>LLM use can be disabled, local, or configured through a temporary API key.</li>
+          </ul>
+        </div>
+        <div class="callout production">
+          <span class="label">Hosted product</span>
+          <ul>
+            <li>Frontend hosted separately from backend API.</li>
+            <li>Backend deployed as a persistent service with background workers.</li>
+            <li>Postgres/Supabase or equivalent database with tenant separation.</li>
+            <li>Secrets managed through cloud secret manager.</li>
+            <li>Encrypted tokens, consent logs, audit trails, and deletion workflow.</li>
+            <li>Risk MCP secured behind authenticated tool access.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="security">
+      <h2>7. Security And Compliance View</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Concern</th>
+            <th>Prototype handling</th>
+            <th>Production handling</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>User consent</td>
+            <td>Presenter verbally explains what will be accessed.</td>
+            <td>Consent screen with explicit data scopes and retention policy.</td>
+          </tr>
+          <tr>
+            <td>Token storage</td>
+            <td>No persistent token storage; local active session only.</td>
+            <td>Encrypted token storage, expiry, revocation, and short retention.</td>
+          </tr>
+          <tr>
+            <td>Market data terms</td>
+            <td>Use local/cached/public data; avoid public redistribution.</td>
+            <td>Licensed data strategy and exchange/broker term review.</td>
+          </tr>
+          <tr>
+            <td>Investment advice</td>
+            <td>Disclaimers and copilot policy to avoid recommendations.</td>
+            <td>Legal/SEBI review before monetized personalized usage.</td>
+          </tr>
+          <tr>
+            <td>LLM data exposure</td>
+            <td>Send summarized risk context only, preferably with user-controlled key.</td>
+            <td>Data minimization, provider contracts, redaction, audit logs.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="scalability">
+      <h2>8. Scalability And Cost View</h2>
+      <div class="grid-3">
+        <div class="card">
+          <h3>Zero-cost prototype</h3>
+          <ul>
+            <li>Local machine only.</li>
+            <li>Sample/cached prices.</li>
+            <li>RSS headline metadata.</li>
+            <li>Optional free-tier LLM key.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Low-cost beta</h3>
+          <ul>
+            <li>Static frontend hosting.</li>
+            <li>Small backend server.</li>
+            <li>Postgres free/low tier.</li>
+            <li>Manual rate-limit controls.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Real product</h3>
+          <ul>
+            <li>Paid market data plan where needed.</li>
+            <li>Queue workers for refreshes.</li>
+            <li>Encrypted secret management.</li>
+            <li>Monitoring and compliance review.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="failure">
+      <h2>9. Failure Handling Strategy</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Failure</th>
+            <th>User-facing behavior</th>
+            <th>System behavior</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Zerodha auth fails</td>
+            <td>Show reconnect, CSV upload, and sample portfolio options.</td>
+            <td>Do not retry indefinitely; log sanitized error.</td>
+          </tr>
+          <tr>
+            <td>Price data missing</td>
+            <td>Show partial modeling warning and excluded symbols.</td>
+            <td>Compute on available modeled holdings only.</td>
+          </tr>
+          <tr>
+            <td>RSS feed unavailable</td>
+            <td>Show "news context unavailable" state.</td>
+            <td>Do not block risk calculations.</td>
+          </tr>
+          <tr>
+            <td>LLM unavailable</td>
+            <td>Show deterministic risk memo instead of chat answer.</td>
+            <td>Skip provider call and keep dashboard functional.</td>
+          </tr>
+          <tr>
+            <td>MCP server unavailable</td>
+            <td>Show copilot tool error and keep dashboard active.</td>
+            <td>Restart local MCP process or disable AI tool path.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="references">
+      <h2>10. External References</h2>
+      <ul>
+        <li><a href="https://kite.trade/docs/connect/v3/portfolio/">Kite Connect Portfolio API</a></li>
+        <li><a href="https://kite.trade/docs/connect/v3/market-quotes/">Kite Connect Market Quotes API</a></li>
+        <li><a href="https://kite.trade/docs/connect/v3/historical/">Kite Connect Historical Data API</a></li>
+        <li><a href="https://kite.trade/docs/connect/v3/websocket/">Kite Connect WebSocket API</a></li>
+        <li><a href="https://github.com/zerodha/kite-mcp-server">Zerodha Kite MCP Server</a></li>
+        <li><a href="https://support.zerodha.com/category/trading-and-markets/kite-web-and-mobile/kite-api/articles/what-are-the-charges-for-kite-apis">Zerodha Kite API Charges</a></li>
+      </ul>
+    </section>
+
+    <p class="footer">Portfolio Risk Copilot HLD - clean boundaries between broker access, analytics, AI tools, and hosted-product concerns.</p>
+  </main>
+</body>
+</html>
