@@ -3,939 +3,1112 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Portfolio Risk Copilot - Low-Level Design</title>
+  <title>Drishti - Low-Level Design</title>
   <style>
     :root {
-      --bg: #f5f7fa;
-      --paper: #ffffff;
-      --ink: #17202a;
-      --muted: #5d6d7e;
-      --line: #d7dee8;
-      --primary: #145c72;
-      --primary-2: #1f7a8c;
-      --accent: #b85c38;
-      --ok: #1d7a46;
-      --warn: #a76500;
-      --danger: #a33b3b;
-      --soft-blue: #e7f2f6;
-      --soft-green: #e8f5ee;
-      --soft-amber: #fff2dc;
-      --soft-red: #fae9e8;
-      --shadow: 0 18px 42px rgba(23, 32, 42, 0.10);
+      --bg:#f5f7fa;--paper:#ffffff;--ink:#17202a;--muted:#5d6d7e;--line:#d7dee8;
+      --primary:#145c72;--primary-2:#1f7a8c;--accent:#b85c38;--ok:#1d7a46;
+      --warn:#a76500;--danger:#a33b3b;--soft-blue:#e7f2f6;--soft-green:#e8f5ee;
+      --soft-amber:#fff2dc;--soft-red:#fae9e8;--shadow:0 18px 42px rgba(23,32,42,.10);
+      --bql:#1a1a2e;--bql-text:#e0e0ff;
     }
-
-    * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      background: var(--bg);
-      color: var(--ink);
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      line-height: 1.58;
-    }
-
-    a { color: var(--primary); text-decoration: none; }
-    a:hover { text-decoration: underline; }
-
-    .page {
-      max-width: 1180px;
-      margin: 0 auto;
-      padding: 32px 20px 64px;
-    }
-
-    .hero {
-      background: linear-gradient(135deg, #0d3f4d 0%, #145c72 54%, #2f5f63 100%);
-      color: #fff;
-      border-radius: 8px;
-      padding: 44px;
-      box-shadow: var(--shadow);
-    }
-
-    .eyebrow {
-      margin: 0 0 10px;
-      font-size: 13px;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: #cce8ef;
-      font-weight: 700;
-    }
-
-    h1, h2, h3 { line-height: 1.18; margin: 0; }
-    h1 { font-size: 42px; max-width: 950px; }
-    h2 { font-size: 26px; margin-bottom: 16px; color: #123845; }
-    h3 { font-size: 18px; margin-bottom: 8px; color: #173b46; }
-
-    .subtitle {
-      margin: 18px 0 0;
-      max-width: 900px;
-      font-size: 18px;
-      color: #eef8fb;
-    }
-
-    .meta {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
-      margin-top: 28px;
-    }
-
-    .meta div {
-      border: 1px solid rgba(255, 255, 255, 0.24);
-      background: rgba(255, 255, 255, 0.10);
-      border-radius: 8px;
-      padding: 12px;
-    }
-
-    .meta strong {
-      display: block;
-      font-size: 12px;
-      color: #cce8ef;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      margin-bottom: 4px;
-    }
-
-    .nav {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin: 22px 0;
-      padding: 12px;
-      border: 1px solid var(--line);
-      background: var(--paper);
-      border-radius: 8px;
-      position: sticky;
-      top: 0;
-      z-index: 5;
-    }
-
-    .nav a {
-      padding: 8px 12px;
-      border-radius: 6px;
-      color: #173b46;
-      background: #eef4f7;
-      font-weight: 650;
-      font-size: 14px;
-    }
-
-    .nav a.active {
-      background: var(--primary);
-      color: #fff;
-    }
-
-    section {
-      background: var(--paper);
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 28px;
-      margin-top: 18px;
-      box-shadow: 0 8px 22px rgba(23, 32, 42, 0.05);
-    }
-
-    .grid-2, .grid-3, .grid-4 {
-      display: grid;
-      gap: 16px;
-    }
-    .grid-2 { grid-template-columns: repeat(2, 1fr); }
-    .grid-3 { grid-template-columns: repeat(3, 1fr); }
-    .grid-4 { grid-template-columns: repeat(4, 1fr); }
-
-    .card {
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 18px;
-      background: #fbfcfe;
-    }
-
-    .callout {
-      border-radius: 8px;
-      border: 1px solid var(--line);
-      padding: 16px 18px;
-      margin: 16px 0;
-    }
-
-    .prototype { background: var(--soft-blue); border-color: #b8d8e4; }
-    .production { background: var(--soft-green); border-color: #bddfc9; }
-    .warning { background: var(--soft-amber); border-color: #efd096; }
-    .danger { background: var(--soft-red); border-color: #e8b6b2; }
-
-    .label {
-      display: inline-flex;
-      align-items: center;
-      padding: 3px 8px;
-      border-radius: 999px;
-      background: #eaf0f3;
-      color: #24434c;
-      font-size: 12px;
-      font-weight: 750;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-bottom: 8px;
-    }
-
-    ul, ol { padding-left: 22px; margin: 10px 0 0; }
-    li { margin: 6px 0; }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 14px;
-      overflow: hidden;
-      border-radius: 8px;
-      font-size: 14px;
-    }
-
-    th, td {
-      border: 1px solid var(--line);
-      padding: 11px 12px;
-      text-align: left;
-      vertical-align: top;
-    }
-
-    th {
-      background: #eaf0f3;
-      color: #173b46;
-    }
-
-    code, pre {
-      background: #eef3f6;
-      color: #173b46;
-      border: 1px solid #dbe5ea;
-      border-radius: 5px;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    }
-
-    code {
-      padding: 1px 5px;
-      font-size: 0.92em;
-    }
-
-    pre {
-      padding: 16px;
-      overflow: auto;
-      font-size: 13px;
-      line-height: 1.45;
-    }
-
-    .method {
-      border-left: 4px solid var(--primary);
-      padding: 12px 14px;
-      background: #f7fbfc;
-      margin: 12px 0;
-      border-radius: 0 8px 8px 0;
-    }
-
-    .footer {
-      margin-top: 24px;
-      color: var(--muted);
-      font-size: 13px;
-      text-align: center;
-    }
-
-    @media (max-width: 1000px) {
-      .hero { padding: 28px; }
-      h1 { font-size: 32px; }
-      .meta, .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
-      .nav { position: static; }
-    }
-
-    @media print {
-      body { background: #fff; color: #000; }
-      .page { max-width: none; padding: 0; }
-      .hero, section, .nav { box-shadow: none; }
-      .nav { position: static; }
-      a { color: #000; text-decoration: underline; }
-      section { break-inside: avoid; }
-    }
+    *{box-sizing:border-box;}
+    body{margin:0;background:var(--bg);color:var(--ink);
+      font-family:Inter,ui-sans-serif,system-ui,-apple-system,sans-serif;line-height:1.58;}
+    a{color:var(--primary);text-decoration:none;}a:hover{text-decoration:underline;}
+    .page{max-width:1180px;margin:0 auto;padding:32px 20px 64px;}
+    .hero{background:linear-gradient(135deg,#0d3f4d 0%,#145c72 54%,#2f5f63 100%);
+      color:#fff;border-radius:8px;padding:44px;box-shadow:var(--shadow);}
+    .eyebrow{margin:0 0 10px;font-size:13px;text-transform:uppercase;
+      letter-spacing:.08em;color:#cce8ef;font-weight:700;}
+    h1,h2,h3{line-height:1.18;margin:0;}
+    h1{font-size:42px;max-width:950px;}
+    h2{font-size:26px;margin-bottom:16px;color:#123845;}
+    h3{font-size:18px;margin-bottom:8px;color:#173b46;}
+    .subtitle{margin:18px 0 0;max-width:900px;font-size:18px;color:#eef8fb;}
+    .meta{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:28px;}
+    .meta div{border:1px solid rgba(255,255,255,.24);background:rgba(255,255,255,.10);
+      border-radius:8px;padding:12px;}
+    .meta strong{display:block;font-size:12px;color:#cce8ef;text-transform:uppercase;
+      letter-spacing:.06em;margin-bottom:4px;}
+    .nav{display:flex;gap:10px;flex-wrap:wrap;margin:22px 0;padding:12px;
+      border:1px solid var(--line);background:var(--paper);border-radius:8px;
+      position:sticky;top:0;z-index:5;}
+    .nav a{padding:8px 12px;border-radius:6px;color:#173b46;background:#eef4f7;
+      font-weight:650;font-size:14px;}
+    .nav a.active{background:var(--primary);color:#fff;}
+    section{background:var(--paper);border:1px solid var(--line);border-radius:8px;
+      padding:28px;margin-top:18px;box-shadow:0 8px 22px rgba(23,32,42,.05);}
+    .grid-2,.grid-3,.grid-4{display:grid;gap:16px;}
+    .grid-2{grid-template-columns:repeat(2,1fr);}
+    .grid-3{grid-template-columns:repeat(3,1fr);}
+    .grid-4{grid-template-columns:repeat(4,1fr);}
+    .card{border:1px solid var(--line);border-radius:8px;padding:18px;background:#fbfcfe;}
+    .card strong{display:block;color:#122f38;margin-bottom:5px;}
+    .callout{border-radius:8px;border:1px solid var(--line);padding:16px 18px;margin:16px 0;}
+    .prototype{background:var(--soft-blue);border-color:#b8d8e4;}
+    .production{background:var(--soft-green);border-color:#bddfc9;}
+    .warning{background:var(--soft-amber);border-color:#efd096;}
+    .danger{background:var(--soft-red);border-color:#e8b6b2;}
+    .label{display:inline-flex;align-items:center;padding:3px 8px;border-radius:999px;
+      background:#eaf0f3;color:#24434c;font-size:12px;font-weight:750;
+      text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;}
+    ul,ol{padding-left:22px;margin:10px 0 0;}li{margin:6px 0;}
+    table{width:100%;border-collapse:collapse;margin-top:14px;overflow:hidden;
+      border-radius:8px;font-size:14px;}
+    th,td{border:1px solid var(--line);padding:11px 12px;text-align:left;vertical-align:top;}
+    th{background:#eaf0f3;color:#173b46;}
+    code,pre{background:#eef3f6;color:#173b46;border:1px solid #dbe5ea;border-radius:5px;
+      font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;}
+    code{padding:1px 5px;font-size:.92em;}
+    pre{padding:16px;overflow:auto;font-size:13px;line-height:1.5;}
+    pre.bql{background:var(--bql);color:var(--bql-text);border-color:#333366;}
+    pre.bql .kw{color:#7dd3fc;}
+    pre.bql .fn{color:#86efac;}
+    pre.bql .str{color:#fca5a5;}
+    pre.bql .cm{color:#6b7280;font-style:italic;}
+    .method{border-left:4px solid var(--primary);padding:12px 14px;
+      background:#f7fbfc;margin:12px 0;border-radius:0 8px 8px 0;}
+    .endpoint{border-left:4px solid var(--accent);padding:12px 14px;
+      background:#fdf8f6;margin:10px 0;border-radius:0 8px 8px 0;}
+    .ep-method{display:inline-block;padding:2px 8px;border-radius:4px;
+      font-size:12px;font-weight:800;font-family:ui-monospace,monospace;margin-right:8px;}
+    .get{background:#dbeafe;color:#1e3a8a;}
+    .post{background:#d1fae5;color:#064e3b;}
+    .delete{background:#fee2e2;color:#7f1d1d;}
+    .tier-badge{display:inline-block;padding:2px 8px;border-radius:4px;
+      font-size:11px;font-weight:700;margin-left:8px;vertical-align:middle;}
+    .tier-bquant{background:#1a1a2e;color:#e0e0ff;}
+    .tier-blpapi{background:#0d3f4d;color:#cce8ef;}
+    .tier-local{background:#eaf0f3;color:#173b46;}
+    .footer{margin-top:24px;color:var(--muted);font-size:13px;text-align:center;}
+    @media(max-width:1000px){
+      .hero{padding:28px;}h1{font-size:32px;}
+      .meta,.grid-2,.grid-3,.grid-4{grid-template-columns:1fr;}
+      .nav{position:static;}}
+    @media print{
+      body{background:#fff;color:#000;}.page{max-width:none;padding:0;}
+      .hero,section,.nav{box-shadow:none;}.nav{position:static;}
+      a{color:#000;text-decoration:underline;}section{break-inside:avoid;}}
   </style>
 </head>
 <body>
-  <main class="page">
-    <header class="hero">
-      <p class="eyebrow">Low-Level Design</p>
-      <h1>Portfolio Risk Copilot - APIs, Functions, Contracts</h1>
-      <p class="subtitle">Endpoint contracts, service functions, MCP tools, data schemas, calculations, caching, failure modes, and test cases for implementation.</p>
-      <div class="meta">
-        <div><strong>API style</strong>REST + MCP tools</div>
-        <div><strong>Core backend</strong>Python services</div>
-        <div><strong>Storage</strong>Local SQLite/files first</div>
-        <div><strong>LLM role</strong>Explainer, not calculator</div>
+<main class="page">
+  <header class="hero">
+    <p class="eyebrow">Low-Level Design — Drishti</p>
+    <h1>APIs, Functions, Contracts, and Data Specifications</h1>
+    <p class="subtitle">Complete endpoint registry, Bloomberg BLPAPI and BQuant integration, service function contracts, factor research calculations, ML model specifications, backtesting framework, cache design, and test plan.</p>
+    <div class="meta">
+      <div><strong>Data tier 1</strong>BQuant + BQL — research notebooks</div>
+      <div><strong>Data tier 2</strong>BLPAPI — local app data pipeline</div>
+      <div><strong>Backend</strong>Python / FastAPI, SQLite cache</div>
+      <div><strong>LLM role</strong>Explainer only, not calculator</div>
+    </div>
+  </header>
+
+  <nav class="nav" aria-label="Document navigation">
+    <a href="prd.html">PRD</a>
+    <a href="specs.html">Specs</a>
+    <a href="highleveldesign.html">High-Level Design</a>
+    <a class="active" href="lowleveldesign.html">Low-Level Design</a>
+  </nav>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <section id="two-tier">
+    <h2>1. Two-Tier Data Architecture</h2>
+    <div class="callout warning">
+      <span class="label">Key design principle</span>
+      <strong>BQuant is the research environment. BLPAPI is the app data pipeline.</strong>
+      They are complementary, not alternatives. Research artifacts produced in BQuant (fitted HMM parameters, signal rankings, regime history) are exported as JSON/Parquet and consumed by the local app.
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <strong>Tier 1 — BQuant <span class="tier-badge tier-bquant">BQuant</span></strong>
+        <ul>
+          <li>Bloomberg-hosted Jupyter environment with BQL access.</li>
+          <li>Runs cross-sectional IC research over NIFTY universe.</li>
+          <li>Fits HMM regime model, walk-forward signal backtests, Granger causality.</li>
+          <li>Exports: <code>regime_history.parquet</code>, <code>hmm_params.json</code>, <code>signal_ranking.json</code>, <code>factor_ic_results.json</code>.</li>
+          <li>BQL syntax — cleaner for research-style queries over large universes.</li>
+        </ul>
       </div>
-    </header>
+      <div class="card">
+        <strong>Tier 2 — BLPAPI + Local App <span class="tier-badge tier-blpapi">BLPAPI</span></strong>
+        <ul>
+          <li>Python BLPAPI session running against Bloomberg terminal on FRTL network.</li>
+          <li>Pulls adjusted daily prices, commodity futures, macro series, sector indices.</li>
+          <li>Caches all data locally in SQLite / Parquet under <code>data/cache/bloomberg/</code>.</li>
+          <li>Feeds risk engine, VaR backtester, spillover module, and copilot context.</li>
+          <li>BDH / BDP / BDS request patterns — documented in full below.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
 
-    <nav class="nav" aria-label="Document navigation">
-      <a href="prd.html">PRD</a>
-      <a href="specs.html">Specs</a>
-      <a href="highleveldesign.html">High-Level Design</a>
-      <a class="active" href="lowleveldesign.html">Low-Level Design</a>
-    </nav>
-
-    <section id="module-map">
-      <h2>1. Suggested Backend Module Map</h2>
-      <pre><code>portfolio-risk-copilot/
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <section id="module-map">
+    <h2>2. Backend Module Map</h2>
+    <pre><code>drishti/
   app/
     api/
-      auth_routes.py
-      portfolio_routes.py
-      risk_routes.py
-      commodity_routes.py
-      news_routes.py
-      copilot_routes.py
+      auth_routes.py          # Zerodha OAuth endpoints
+      portfolio_routes.py     # Import, normalize, current snapshot
+      data_routes.py          # Bloomberg pull, cache status, refresh
+      risk_routes.py          # VaR, ES, stress, contribution, drawdown
+      backtest_routes.py      # Kupiec, Christoffersen, violation rate
+      factor_routes.py        # IC, Granger, walk-forward, cross-sectional
+      ml_routes.py            # Regime detection, VaR breach prediction
+      commodity_routes.py     # Spillover, sensitivity, factor latest
+      news_routes.py          # RSS ingestion, risk tagging
+      copilot_routes.py       # Ask, memo generation
+      report_routes.py        # Risk memo, factor report, backtest summary
+
     services/
-      zerodha_client.py
-      portfolio_importer.py
-      portfolio_normalizer.py
-      market_data_service.py
-      risk_engine.py
-      stress_engine.py
-      commodity_spillover.py
-      news_risk_service.py
-      copilot_service.py
-      report_service.py
+      bloomberg/
+        blpapi_client.py        # Session, BDH/BDP/BDS, error handling, rate control
+        bloomberg_cache.py      # Parquet/SQLite store, cache-first logic, freshness
+        equity_loader.py        # Adjusted close, volume for equity symbols
+        commodity_loader.py     # Front-month continuous futures series
+        macro_loader.py         # FX, rates, VIX, macro indicators
+        reference_loader.py     # BDP: sector, market cap, name, currency
+        ticker_registry.py      # Zerodha symbol → Bloomberg ticker mapping
+
+      bquant/
+        artifact_loader.py      # Load exported BQuant artifacts (JSON/Parquet)
+        regime_loader.py        # Load hmm_params.json, regime_history.parquet
+        signal_loader.py        # Load signal_ranking.json, factor_ic_results.json
+
+      zerodha/
+        kite_client.py          # Kite Connect session wrapper
+        portfolio_importer.py   # Holdings/positions API calls
+        csv_importer.py         # CSV and sample portfolio loader
+
+      portfolio/
+        portfolio_normalizer.py   # Field mapping, Bloomberg ticker lookup, sector assign
+        sector_mapper.py          # Symbol → GICS sector (Bloomberg BDP fallback: manual map)
+        universe_builder.py       # Build NIFTY 50/500 research universe from Bloomberg
+
+      risk/
+        var_engine.py             # Historical VaR, parametric VaR, Monte Carlo VaR
+        es_engine.py              # Expected Shortfall
+        stress_engine.py          # Scenario shock application
+        contribution_engine.py    # Component VaR, marginal contribution
+        drawdown_engine.py        # Max drawdown, current drawdown, underwater chart
+        volatility_engine.py      # Rolling std, EWMA vol, annualization
+
+      backtest/
+        var_backtester.py         # Kupiec LR test, Christoffersen test, violation rate
+        walk_forward.py           # Rolling window walk-forward backtesting framework
+        metrics.py                # Sharpe, hit rate, max DD of PnL series
+
+      factor/
+        ic_calculator.py          # Information Coefficient, ICIR, t-stat
+        granger_tester.py         # Granger causality test across lags
+        cross_sectional.py        # IC across NIFTY universe by date
+        signal_ranker.py          # Rank factors by IC/t-stat/walk-forward Sharpe
+        factor_builder.py         # Build commodity/macro return series from cache
+
+      ml/
+        regime_detector.py        # HMM 2-state fitting (hmmlearn), walk-forward predict
+        breach_classifier.py      # XGBoost classifier for VaR breach prediction
+        feature_engineer.py       # Rolling features: vol, skew, momentum, regime signals
+        regime_conditioned_var.py # VaR split by regime label
+
+      commodity/
+        spillover_engine.py       # Lagged regression, sensitivity score
+        lag_scanner.py            # Test lags 1,2,3,5,10 for each commodity-sector pair
+
+      news/
+        rss_ingester.py           # Fetch RSS feeds, parse metadata
+        news_tagger.py            # Keyword matching → risk tags, sector/ticker links
+
+      copilot/
+        copilot_service.py        # Orchestrate MCP tool calls and LLM response
+        context_builder.py        # Select structured risk/factor context for LLM
+        memo_generator.py         # Deterministic risk memo (no LLM required)
+
+      report/
+        report_service.py         # PDF/HTML risk report and factor research summary
+
     mcp/
-      risk_mcp_server.py
-      tools.py
+      risk_mcp_server.py          # MCP server entry point
+      tools.py                    # Tool definitions exposed to AI clients
+
     storage/
-      cache.py
-      repositories.py
+      repositories.py             # Portfolio snapshot, risk result, news CRUD
+      bloomberg_cache.py          # Cache read/write with freshness tracking
+
     schemas/
-      portfolio.py
-      risk.py
-      news.py
-      copilot.py
+      portfolio.py                # Holding, PortfolioSnapshot, UnsupportedSummary
+      risk.py                     # RiskMetric, VaRResult, StressResult, ContributionResult
+      backtest.py                 # BacktestResult, ViolationRecord, KupiecResult
+      factor.py                   # ICResult, GrangerResult, SignalRanking, WalkForwardResult
+      ml.py                       # RegimeLabel, RegimeConditionedVaR, BreachPrediction
+      bloomberg.py                # BloombergRequest, CacheEntry, TickerMapping
+      news.py                     # NewsRiskItem, RSSFeed
+      copilot.py                  # CopilotRequest, CopilotResponse, MemoRequest
+
   data/
-    samples/
+    samples/                      # Pre-built sample portfolios (JSON)
     cache/
+      bloomberg/
+        equities/                 # Per-symbol Parquet files (RELIANCE_IN_Equity.parquet)
+        commodities/              # CO1_Comdty.parquet, GC1_Comdty.parquet, etc.
+        macro/                    # USDINR_Curncy.parquet, GIND10YR_Index.parquet
+        indices/                  # NIFTY_Index.parquet, sector indices
+        reference/                # BDP metadata (sector, mktcap) as JSON
+      bquant_artifacts/           # Exported from BQuant: hmm_params.json, etc.
+      computed/                   # Cached risk results, factor IC tables
     mappings/
+      bloomberg_tickers.json      # Zerodha symbol → Bloomberg ticker
+      sector_map.json             # Symbol → GICS sector (manual fallback)
+      nifty50_universe.json       # NIFTY 50 member list with Bloomberg tickers
+
+  notebooks/                      # BQuant notebooks (checked in without output)
+    01_data_pull.ipynb
+    02_factor_ic_research.ipynb
+    03_granger_causality.ipynb
+    04_hmm_regime_detection.ipynb
+    05_walk_forward_backtest.ipynb
+    06_cross_sectional_signals.ipynb
+    07_var_backtesting.ipynb
+
   tests/
-    test_risk_engine.py
+    test_blpapi_client.py
+    test_bloomberg_cache.py
+    test_var_engine.py
+    test_backtest.py
+    test_factor_ic.py
+    test_granger.py
+    test_hmm_regime.py
     test_imports.py
-    test_spillover.py
     test_copilot_policy.py</code></pre>
-      <div class="callout prototype">
-        <span class="label">Prototype default</span>
-        Use local files or SQLite under <code>data/cache</code>. Avoid persistent token storage. Keep the application runnable on one laptop for the course demo.
-      </div>
-    </section>
+  </section>
 
-    <section id="external-api">
-      <h2>2. External Zerodha API Calls</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Call</th>
-            <th>Purpose</th>
-            <th>Prototype handling</th>
-            <th>Production changes</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><code>GET /portfolio/holdings</code></td>
-            <td>Fetch user's long-term holdings.</td>
-            <td>Used when live Zerodha access is available.</td>
-            <td>Add encrypted token handling, consent, auditing.</td>
-          </tr>
-          <tr>
-            <td><code>GET /portfolio/positions</code></td>
-            <td>Fetch intraday/overnight positions.</td>
-            <td>Detect and summarize; deep F&amp;O risk deferred.</td>
-            <td>Add separate derivatives risk engine if product scope expands.</td>
-          </tr>
-          <tr>
-            <td><code>GET /instruments</code></td>
-            <td>Resolve instrument tokens and metadata.</td>
-            <td>Cache locally after download.</td>
-            <td>Scheduled refresh and versioned instrument master.</td>
-          </tr>
-          <tr>
-            <td><code>GET /quote</code>, <code>/quote/ohlc</code>, <code>/quote/ltp</code></td>
-            <td>Get latest tradable prices.</td>
-            <td>Optional; cache values and show timestamp.</td>
-            <td>Rate-limit-aware quote batching.</td>
-          </tr>
-          <tr>
-            <td><code>GET /instruments/historical/:instrument_token/:interval</code></td>
-            <td>Historical candles for returns and risk.</td>
-            <td>Use only if available; otherwise public/cached source.</td>
-            <td>Paid/approved plan or licensed source with clear data terms.</td>
-          </tr>
-          <tr>
-            <td><code>wss://ws.kite.trade</code></td>
-            <td>Streaming live market data.</td>
-            <td>Out of scope.</td>
-            <td>Use for live monitoring if paid plan and terms allow.</td>
-          </tr>
-        </tbody>
-      </table>
-    </section>
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <section id="bloomberg-blpapi">
+    <h2>3. Bloomberg BLPAPI Integration</h2>
 
-    <section id="internal-endpoints">
-      <h2>3. Internal Backend Endpoints</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Endpoint</th>
-            <th>Request</th>
-            <th>Response</th>
-            <th>Notes</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><code>GET /api/auth/zerodha/login</code></td>
-            <td>None</td>
-            <td><code>302</code> redirect URL</td>
-            <td>Starts Zerodha auth flow.</td>
-          </tr>
-          <tr>
-            <td><code>GET /api/auth/zerodha/callback</code></td>
-            <td><code>request_token</code>, <code>state</code></td>
-            <td>Session status and redirect to dashboard</td>
-            <td>Validate state; never log secrets.</td>
-          </tr>
-          <tr>
-            <td><code>POST /api/portfolio/import/csv</code></td>
-            <td>CSV file or parsed rows</td>
-            <td>Normalized portfolio snapshot</td>
-            <td>Accepts demo fallback data.</td>
-          </tr>
-          <tr>
-            <td><code>POST /api/portfolio/import/sample</code></td>
-            <td><code>{ "sample_id": "nifty-demo" }</code></td>
-            <td>Portfolio snapshot</td>
-            <td>Must work offline.</td>
-          </tr>
-          <tr>
-            <td><code>GET /api/portfolio/current</code></td>
-            <td>Session cookie/local session id</td>
-            <td>Current portfolio snapshot</td>
-            <td>Returns source and data quality.</td>
-          </tr>
-          <tr>
-            <td><code>POST /api/risk/summary</code></td>
-            <td>Portfolio id and options</td>
-            <td>Total risk dashboard payload</td>
-            <td>Calls risk, stress, contribution modules.</td>
-          </tr>
-          <tr>
-            <td><code>POST /api/risk/var</code></td>
-            <td>Confidence, horizon, method</td>
-            <td>VaR amount, percentage, metadata</td>
-            <td>Default method: historical.</td>
-          </tr>
-          <tr>
-            <td><code>POST /api/risk/expected-shortfall</code></td>
-            <td>Confidence, horizon</td>
-            <td>ES amount, tail observations</td>
-            <td>Uses returns worse than VaR threshold.</td>
-          </tr>
-          <tr>
-            <td><code>POST /api/risk/stress-test</code></td>
-            <td>Scenario id or custom shocks</td>
-            <td>Scenario loss and contributors</td>
-            <td>Supports COVID/rate/election/crude/INR scenarios.</td>
-          </tr>
-          <tr>
-            <td><code>POST /api/risk/contribution</code></td>
-            <td>Portfolio id, method</td>
-            <td>Component risk table</td>
-            <td>Top contributor view for dashboard and copilot.</td>
-          </tr>
-          <tr>
-            <td><code>POST /api/commodity/spillover</code></td>
-            <td>Factors, lags, portfolio id</td>
-            <td>Sensitivity score, lag findings, confidence</td>
-            <td>Reports weak/non-significant results honestly.</td>
-          </tr>
-          <tr>
-            <td><code>GET /api/news/rss-risk</code></td>
-            <td>Optional symbols/sectors</td>
-            <td>Risk-tagged headline list</td>
-            <td>Does not scrape full article body.</td>
-          </tr>
-          <tr>
-            <td><code>POST /api/copilot/ask</code></td>
-            <td>Question and selected context</td>
-            <td>Safe explanation, citations to metrics</td>
-            <td>LLM uses structured outputs only.</td>
-          </tr>
-        </tbody>
-      </table>
-    </section>
+    <h3>3.1 Session Setup</h3>
+    <pre><code>import blpapi
 
-    <section id="endpoint-contracts">
-      <h2>4. Important API Contracts</h2>
-      <h3>Risk Summary Request</h3>
-      <pre><code>POST /api/risk/summary
-{
+def create_bloomberg_session(host="localhost", port=8194) -> blpapi.Session:
+    opts = blpapi.SessionOptions()
+    opts.setServerHost(host)
+    opts.setServerPort(port)
+    session = blpapi.Session(opts)
+    if not session.start():
+        raise ConnectionError("Bloomberg session failed to start")
+    if not session.openService("//blp/refdata"):
+        raise ConnectionError("Could not open //blp/refdata service")
+    return session</code></pre>
+
+    <h3>3.2 BDH — Historical Data Requests</h3>
+    <pre><code>def bdh(session, securities, fields, start_date, end_date,
+        adj_split=True, adj_normal=True, periodicity="DAILY") -> pd.DataFrame:
+    """Pull historical data for one or more securities."""
+    svc = session.getService("//blp/refdata")
+    req = svc.createRequest("HistoricalDataRequest")
+    for sec in securities:
+        req.getElement("securities").appendValue(sec)
+    for fld in fields:
+        req.getElement("fields").appendValue(fld)
+    req.set("startDate", start_date)          # "YYYYMMDD"
+    req.set("endDate", end_date)
+    req.set("periodicitySelection", periodicity)
+    req.set("adjustmentSplit", adj_split)
+    req.set("adjustmentNormal", adj_normal)   # dividend adjustment
+    session.sendRequest(req)
+    # ... parse event loop, return pd.DataFrame indexed by date</code></pre>
+
+    <h3>3.3 BDP — Reference / Point-in-Time Data</h3>
+    <pre><code>def bdp(session, securities, fields) -> pd.DataFrame:
+    """Pull reference data (non-time-series) for a list of securities."""
+    svc = session.getService("//blp/refdata")
+    req = svc.createRequest("ReferenceDataRequest")
+    for sec in securities:
+        req.getElement("securities").appendValue(sec)
+    for fld in fields:
+        req.getElement("fields").appendValue(fld)
+    session.sendRequest(req)
+    # ... parse and return dict keyed by security</code></pre>
+
+    <h3>3.4 Bloomberg Ticker Reference</h3>
+    <table>
+      <thead>
+        <tr><th>Category</th><th>Bloomberg Ticker</th><th>Field</th><th>Notes</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Indian equity (example)</td><td><code>RELIANCE IN Equity</code></td><td><code>PX_ADJ_CLOSE</code>, <code>PX_VOLUME</code></td><td>Append <code> IN Equity</code> to NSE symbol</td></tr>
+        <tr><td>Nifty 50 Index</td><td><code>NIFTY Index</code></td><td><code>PX_LAST</code></td><td>Benchmark for beta, correlation</td></tr>
+        <tr><td>Nifty Bank</td><td><code>NSEBANK Index</code></td><td><code>PX_LAST</code></td><td>Sector index</td></tr>
+        <tr><td>Nifty IT</td><td><code>NSEIT Index</code></td><td><code>PX_LAST</code></td><td>Sector index</td></tr>
+        <tr><td>Nifty Metal</td><td><code>NSEMETAL Index</code></td><td><code>PX_LAST</code></td><td>Commodity-sensitive sector</td></tr>
+        <tr><td>Nifty Oil &amp; Gas</td><td><code>NSEOILGS Index</code></td><td><code>PX_LAST</code></td><td>Primary Brent/WTI spillover sector</td></tr>
+        <tr><td>Nifty FMCG</td><td><code>NSEFMCG Index</code></td><td><code>PX_LAST</code></td><td>Sector index</td></tr>
+        <tr><td>Nifty Auto</td><td><code>NSEAUTO Index</code></td><td><code>PX_LAST</code></td><td>Sector index</td></tr>
+        <tr><td>Nifty Pharma</td><td><code>NSEPHRM Index</code></td><td><code>PX_LAST</code></td><td>Sector index</td></tr>
+        <tr><td>Brent Crude (front-month)</td><td><code>CO1 Comdty</code></td><td><code>PX_LAST</code></td><td>Primary commodity factor</td></tr>
+        <tr><td>WTI Crude (front-month)</td><td><code>CL1 Comdty</code></td><td><code>PX_LAST</code></td><td>Correlated with Brent; use both</td></tr>
+        <tr><td>Gold (front-month)</td><td><code>GC1 Comdty</code></td><td><code>PX_LAST</code></td><td>Safe-haven / INR proxy factor</td></tr>
+        <tr><td>Copper (front-month)</td><td><code>HG1 Comdty</code></td><td><code>PX_LAST</code></td><td>Industrial activity proxy</td></tr>
+        <tr><td>Natural Gas (front-month)</td><td><code>NG1 Comdty</code></td><td><code>PX_LAST</code></td><td>Energy cost factor</td></tr>
+        <tr><td>USD/INR spot</td><td><code>USDINR Curncy</code></td><td><code>PX_LAST</code></td><td>Critical macro factor for Indian equities</td></tr>
+        <tr><td>India 10Y G-Sec yield</td><td><code>GIND10YR Index</code></td><td><code>PX_LAST</code></td><td>Rate risk factor</td></tr>
+        <tr><td>India VIX</td><td><code>INVIXN Index</code></td><td><code>PX_LAST</code></td><td>Implied volatility; HMM feature</td></tr>
+        <tr><td>Nifty 50 members (BDS)</td><td><code>NIFTY Index</code></td><td><code>INDX_MEMBERS</code></td><td>Pull via BDS for universe construction</td></tr>
+        <tr><td>GICS sector</td><td><code>{symbol} IN Equity</code></td><td><code>GICS_SECTOR_NAME</code></td><td>BDP — for sector mapping</td></tr>
+        <tr><td>Market cap</td><td><code>{symbol} IN Equity</code></td><td><code>CUR_MKT_CAP</code></td><td>BDP — for weighting</td></tr>
+      </tbody>
+    </table>
+
+    <h3>3.5 Cache Strategy</h3>
+    <table>
+      <thead><tr><th>Data type</th><th>Storage</th><th>Key</th><th>Refresh policy</th></tr></thead>
+      <tbody>
+        <tr><td>Equity adjusted close</td><td>Parquet per symbol</td><td><code>bloomberg/equities/{ticker}.parquet</code></td><td>Incremental: pull only missing date range</td></tr>
+        <tr><td>Commodity futures</td><td>Parquet per ticker</td><td><code>bloomberg/commodities/{ticker}.parquet</code></td><td>Incremental daily</td></tr>
+        <tr><td>Macro series</td><td>Parquet per ticker</td><td><code>bloomberg/macro/{ticker}.parquet</code></td><td>Weekly refresh or on demand</td></tr>
+        <tr><td>Sector indices</td><td>Parquet per index</td><td><code>bloomberg/indices/{ticker}.parquet</code></td><td>Incremental daily</td></tr>
+        <tr><td>Reference data (BDP)</td><td>JSON</td><td><code>bloomberg/reference/{symbol}.json</code></td><td>Monthly or on symbol add</td></tr>
+        <tr><td>BQuant artifacts</td><td>JSON / Parquet</td><td><code>bquant_artifacts/{artifact}.json</code></td><td>Manual export after each research run</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <section id="bquant">
+    <h2>4. BQuant Research Notebooks</h2>
+    <p>BQuant notebooks run on Bloomberg infrastructure with direct BQL access. They are the authoritative source for all factor research outputs. Results are exported as files and loaded by the local app.</p>
+
+    <h3>4.1 BQL Query Patterns</h3>
+    <pre class="bql"><code><span class="cm"># BQuant Notebook — Factor IC Research</span>
+<span class="kw">import</span> bql
+bq = bql.Service()
+
+<span class="cm"># Pull 3 years of adjusted daily returns for NIFTY 50 universe</span>
+univ = bq.univ.members(<span class="str">'NIFTY Index'</span>)
+ret_field = bq.data.px_last(
+    dates=bq.func.range(<span class="str">'-756d'</span>, <span class="str">'0d'</span>),
+    fill=<span class="str">'prev'</span>
+).pct_change()
+
+data = bq.execute(bql.Request(ret_field, univ))
+returns_df = bql.combined_df(data).unstack(<span class="str">'DATE'</span>).T
+
+<span class="cm"># Pull Brent crude returns (lagged factor)</span>
+brent_ret = bq.execute(bql.Request(
+    bq.data.px_last(dates=bq.func.range(<span class="str">'-756d'</span>, <span class="str">'0d'</span>), fill=<span class="str">'prev'</span>).pct_change(),
+    [<span class="str">'CO1 Comdty'</span>]
+))
+
+<span class="cm"># Pull USD/INR and India VIX as regime features</span>
+macro = bq.execute(bql.Request(
+    bq.data.px_last(dates=bq.func.range(<span class="str">'-756d'</span>, <span class="str">'0d'</span>), fill=<span class="str">'prev'</span>),
+    [<span class="str">'USDINR Curncy'</span>, <span class="str">'INVIXN Index'</span>, <span class="str">'GIND10YR Index'</span>]
+))</code></pre>
+
+    <h3>4.2 Notebook Responsibilities and Exports</h3>
+    <table>
+      <thead><tr><th>Notebook</th><th>What it computes</th><th>Exported artifact</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code>01_data_pull.ipynb</code></td>
+          <td>Pull all required series via BQL; validate, align to Indian trading calendar; export to Parquet for use in other notebooks.</td>
+          <td><code>equities_returns.parquet</code>, <code>commodity_returns.parquet</code>, <code>macro_series.parquet</code></td>
+        </tr>
+        <tr>
+          <td><code>02_factor_ic_research.ipynb</code></td>
+          <td>For each commodity factor × lag combination, compute cross-sectional IC daily. Report IC mean, ICIR (IC/std), t-stat, and % positive IC days.</td>
+          <td><code>factor_ic_results.json</code> — ranked factor-lag table</td>
+        </tr>
+        <tr>
+          <td><code>03_granger_causality.ipynb</code></td>
+          <td>Run Granger causality tests (lags 1–10) for each commodity factor vs. each sector index return. Report F-statistic and p-value.</td>
+          <td><code>granger_results.json</code> — commodity × sector × lag matrix</td>
+        </tr>
+        <tr>
+          <td><code>04_hmm_regime_detection.ipynb</code></td>
+          <td>Fit 2-state Gaussian HMM on rolling vol, VIX, and return features. Label each date as regime 0 (low vol) or regime 1 (high vol). Walk-forward fitting to avoid lookahead.</td>
+          <td><code>hmm_params.json</code>, <code>regime_history.parquet</code></td>
+        </tr>
+        <tr>
+          <td><code>05_walk_forward_backtest.ipynb</code></td>
+          <td>For the top-ranked factor signals, run walk-forward backtest: train IC on rolling 252-day window, trade next 21 days, compute OOS Sharpe.</td>
+          <td><code>walk_forward_results.json</code> — OOS Sharpe, cumulative return series</td>
+        </tr>
+        <tr>
+          <td><code>06_cross_sectional_signals.ipynb</code></td>
+          <td>Compute cross-sectional IC for each commodity factor across the full NIFTY 50 universe (not just the user's portfolio). Compare top-IC stocks to portfolio holdings.</td>
+          <td><code>cross_sectional_ic.json</code></td>
+        </tr>
+        <tr>
+          <td><code>07_var_backtesting.ipynb</code></td>
+          <td>Compute historical VaR violations using Bloomberg data. Run Kupiec LR test and Christoffersen independence test for both 95% and 99% confidence levels.</td>
+          <td><code>var_backtest_results.json</code></td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <section id="endpoints">
+    <h2>5. Internal API Endpoint Registry</h2>
+    <p>All endpoints return JSON. Error responses follow <code>{"error_code": "...", "message": "...", "details": {}}</code>.</p>
+
+    <h3>5.1 Auth Endpoints</h3>
+    <div class="endpoint">
+      <span class="ep-method get">GET</span><code>/api/auth/zerodha/login</code>
+      <p>Initiates Zerodha OAuth flow. Returns a 302 redirect to Zerodha login URL with <code>api_key</code> and <code>state</code> params.</p>
+      <strong>Response:</strong> <code>302 Location: https://kite.zerodha.com/connect/login?...</code>
+    </div>
+    <div class="endpoint">
+      <span class="ep-method get">GET</span><code>/api/auth/zerodha/callback?request_token=&state=</code>
+      <p>Receives request token from Zerodha. Validates state, exchanges for access token, stores in session memory only. Never logged.</p>
+      <strong>Response:</strong> <code>{"status": "authenticated", "session_id": "...", "expires_in": 3600}</code>
+    </div>
+    <div class="endpoint">
+      <span class="ep-method get">GET</span><code>/api/auth/status</code>
+      <strong>Response:</strong> <code>{"zerodha_connected": true|false, "session_age_seconds": 120}</code>
+    </div>
+    <div class="endpoint">
+      <span class="ep-method delete">DELETE</span><code>/api/auth/session</code>
+      <p>Clears session token from memory. Does not call Zerodha revocation endpoint in prototype.</p>
+    </div>
+
+    <h3>5.2 Portfolio Endpoints</h3>
+    <div class="endpoint">
+      <span class="ep-method post">POST</span><code>/api/portfolio/import/zerodha</code>
+      <p>Fetches holdings + positions from Zerodha, normalizes, maps to Bloomberg tickers, returns snapshot.</p>
+      <strong>Request:</strong> <code>{}</code> (uses session token)<br>
+      <strong>Response:</strong> <code>PortfolioSnapshot</code> schema — see Section 8.
+    </div>
+    <div class="endpoint">
+      <span class="ep-method post">POST</span><code>/api/portfolio/import/csv</code>
+      <p>Accepts multipart CSV upload. Validates columns, parses holdings, normalizes. Required columns: <code>symbol, quantity, average_price</code>.</p>
+      <strong>Request:</strong> <code>multipart/form-data — file: portfolio.csv</code><br>
+      <strong>Response:</strong> <code>PortfolioSnapshot</code>
+    </div>
+    <div class="endpoint">
+      <span class="ep-method post">POST</span><code>/api/portfolio/import/sample</code>
+      <strong>Request:</strong> <code>{"sample_id": "nifty-demo-2026"}</code><br>
+      <strong>Response:</strong> <code>PortfolioSnapshot</code>. Must succeed with no network access.
+    </div>
+    <div class="endpoint">
+      <span class="ep-method get">GET</span><code>/api/portfolio/current</code>
+      <strong>Response:</strong> Current session <code>PortfolioSnapshot</code> or <code>404</code> if no portfolio loaded.
+    </div>
+    <div class="endpoint">
+      <span class="ep-method get">GET</span><code>/api/portfolio/universe</code>
+      <p>Returns the NIFTY 50 research universe with Bloomberg tickers, sectors, and market caps loaded from reference cache.</p>
+      <strong>Response:</strong> <code>{"universe": "NIFTY50", "count": 50, "members": [{"symbol": "RELIANCE", "bbg_ticker": "RELIANCE IN Equity", "sector": "Energy", "mkt_cap_cr": 1850000}]}</code>
+    </div>
+
+    <h3>5.3 Bloomberg Data Endpoints</h3>
+    <div class="endpoint">
+      <span class="ep-method post">POST</span><code>/api/data/bloomberg/pull</code>
+      <p>Triggers incremental BLPAPI pull for specified tickers. Writes to local Parquet cache. Returns cache summary.</p>
+      <strong>Request:</strong> <code>{"tickers": ["RELIANCE IN Equity", "CO1 Comdty"], "start_date": "2021-01-01", "fields": ["PX_ADJ_CLOSE", "PX_VOLUME"]}</code><br>
+      <strong>Response:</strong> <code>{"pulled": 2, "cached_from": "2021-01-01", "cached_to": "2026-05-14", "missing": []}</code>
+    </div>
+    <div class="endpoint">
+      <span class="ep-method get">GET</span><code>/api/data/prices/{symbol}?start=&end=</code>
+      <p>Returns cached daily price series for a symbol. Cache-first; returns <code>stale: true</code> if data is older than 1 day.</p>
+      <strong>Response:</strong> <code>{"symbol": "RELIANCE", "bbg_ticker": "RELIANCE IN Equity", "stale": false, "series": [{"date": "2026-05-14", "close": 2510.20, "volume": 4820000}]}</code>
+    </div>
+    <div class="endpoint">
+      <span class="ep-method get">GET</span><code>/api/data/factors/{factor_id}</code>
+      <p>Returns cached factor return series. Valid factor IDs: <code>brent, wti, gold, copper, natgas, usdinr, gsec10y, indiavix</code>.</p>
+      <strong>Response:</strong> <code>{"factor_id": "brent", "bbg_ticker": "CO1 Comdty", "series": [...]}</code>
+    </div>
+    <div class="endpoint">
+      <span class="ep-method get">GET</span><code>/api/data/cache/status</code>
+      <strong>Response:</strong> <code>{"equities": {"count": 12, "oldest": "2021-01-04", "newest": "2026-05-14"}, "commodities": {"count": 5, "stale": false}, "macro": {"count": 3}, "bquant_artifacts": {"available": ["factor_ic_results.json", "regime_history.parquet", "walk_forward_results.json"]}}</code>
+    </div>
+    <div class="endpoint">
+      <span class="ep-method post">POST</span><code>/api/data/cache/refresh</code>
+      <p>Triggers full incremental refresh for all tickers in cache registry. Background job; returns job ID.</p>
+      <strong>Response:</strong> <code>{"job_id": "refresh-20260514-1030", "status": "queued"}</code>
+    </div>
+
+    <h3>5.4 Risk Endpoints</h3>
+    <div class="endpoint">
+      <span class="ep-method post">POST</span><code>/api/risk/summary</code>
+      <p>Master endpoint. Runs all risk modules in sequence and returns full dashboard payload.</p>
+      <strong>Request:</strong>
+      <pre><code>{
   "portfolio_id": "current",
-  "as_of": "latest",
   "confidence_levels": [0.95, 0.99],
   "horizons": [1, 10],
-  "include": ["var", "expected_shortfall", "stress", "contribution", "drawdown"]
+  "include": ["var_all_methods", "expected_shortfall", "stress",
+              "contribution", "drawdown", "volatility", "regime_conditioned_var"]
 }</code></pre>
-      <h3>Risk Summary Response</h3>
+      <strong>Response:</strong> See Section 7 — Full Risk Summary contract.
+    </div>
+    <div class="endpoint">
+      <span class="ep-method post">POST</span><code>/api/risk/var</code>
+      <p>Compute VaR using one or all methods.</p>
+      <strong>Request:</strong> <code>{"portfolio_id": "current", "confidence": 0.99, "horizon_days": 10, "method": "historical|parametric|montecarlo|all"}</code><br>
+      <strong>Response:</strong>
       <pre><code>{
-  "portfolio_id": "demo-2026-05",
-  "data_quality": {
-    "status": "partial",
-    "priced_symbols": 10,
-    "missing_symbols": ["UNSUPPORTED_FO"],
-    "price_history_start": "2021-01-01",
-    "price_history_end": "2026-05-13"
-  },
-  "metrics": {
-    "portfolio_value": 845000.00,
-    "modeled_value": 812500.00,
-    "var": [
-      {"confidence": 0.95, "horizon_days": 1, "amount": 21500.00, "percent": 0.0265},
-      {"confidence": 0.99, "horizon_days": 10, "amount": 64500.00, "percent": 0.0794}
-    ],
-    "expected_shortfall": [
-      {"confidence": 0.99, "horizon_days": 10, "amount": 91200.00, "percent": 0.1122}
-    ],
-    "annualized_volatility": 0.218,
-    "max_drawdown": -0.284
-  },
-  "top_contributors": [
-    {"symbol": "RELIANCE", "component_var": 18200.00, "share": 0.282}
-  ],
-  "warnings": ["Unsupported instruments excluded from deep risk model."]
+  "confidence": 0.99, "horizon_days": 10,
+  "historical": {"amount": 64500.0, "percent": 0.0794, "obs": 1258},
+  "parametric": {"amount": 61200.0, "percent": 0.0754, "assumes": "normal"},
+  "montecarlo": {"amount": 67800.0, "percent": 0.0835, "simulations": 10000}
 }</code></pre>
-      <h3>Copilot Request</h3>
-      <pre><code>POST /api/copilot/ask
-{
-  "question": "What is the biggest risk in this portfolio?",
+    </div>
+    <div class="endpoint">
+      <span class="ep-method post">POST</span><code>/api/risk/expected-shortfall</code>
+      <strong>Request:</strong> <code>{"portfolio_id": "current", "confidence": 0.99, "horizon_days": 10}</code><br>
+      <strong>Response:</strong> <code>{"confidence": 0.99, "horizon_days": 10, "es_amount": 91200.0, "es_percent": 0.1122, "tail_obs": 13, "tail_mean_return": -0.01122}</code>
+    </div>
+    <div class="endpoint">
+      <span class="ep-method post">POST</span><code>/api/risk/stress-test</code>
+      <strong>Request:</strong> <code>{"portfolio_id": "current", "scenario_id": "crude_shock_2022|covid_march2020|rate_hike_100bps|inr_depreciation_10pct|custom", "custom_shocks": {}}</code><br>
+      <strong>Response:</strong> <code>{"scenario": "crude_shock_2022", "portfolio_loss": -123400.0, "loss_percent": -0.146, "top_contributors": [{"symbol": "ONGC", "loss": -42100.0}], "affected_sectors": ["Oil & Gas", "Metals"]}</code>
+    </div>
+    <div class="endpoint">
+      <span class="ep-method post">POST</span><code>/api/risk/contribution</code>
+      <strong>Request:</strong> <code>{"portfolio_id": "current", "confidence": 0.99, "method": "component_var"}</code><br>
+      <strong>Response:</strong> <code>{"holdings": [{"symbol": "RELIANCE", "weight": 0.18, "component_var": 18200.0, "var_share": 0.282, "marginal_var": 0.0214}]}</code>
+    </div>
+    <div class="endpoint">
+      <span class="ep-method post">POST</span><code>/api/risk/drawdown</code>
+      <strong>Response:</strong> <code>{"max_drawdown": -0.284, "max_dd_start": "2022-01-18", "max_dd_end": "2022-06-17", "current_drawdown": -0.043, "recovery_days": null}</code>
+    </div>
+    <div class="endpoint">
+      <span class="ep-method post">POST</span><code>/api/risk/volatility/rolling</code>
+      <strong>Request:</strong> <code>{"portfolio_id": "current", "window": 21, "annualize": true}</code><br>
+      <strong>Response:</strong> <code>{"current_vol": 0.218, "series": [{"date": "...", "vol": 0.21}]}</code>
+    </div>
+    <div class="endpoint">
+      <span class="ep-method post">POST</span><code>/api/risk/correlation</code>
+      <strong>Response:</strong> Correlation matrix for portfolio holdings as JSON array-of-arrays with symbol labels.
+    </div>
+    <div class="endpoint">
+      <span class="ep-method post">POST</span><code>/api/risk/var/regime-conditioned</code>
+      <p>Returns VaR split by HMM regime. Loads <code>regime_history.parquet</code> from BQuant artifacts.</p>
+      <strong>Response:</strong>
+      <pre><code>{
+  "current_regime": 0, "current_regime_label": "low_vol",
+  "regime_0": {"label": "low_vol", "historical_var_99_10d": 51200.0, "obs": 892},
+  "regime_1": {"label": "high_vol", "historical_var_99_10d": 94600.0, "obs": 366}
+}</code></pre>
+    </div>
+
+    <h3>5.5 VaR Backtesting Endpoints</h3>
+    <div class="endpoint">
+      <span class="ep-method post">POST</span><code>/api/backtest/var</code>
+      <p>Run Kupiec and Christoffersen tests on historical VaR model over specified window.</p>
+      <strong>Request:</strong> <code>{"portfolio_id": "current", "confidence": 0.99, "start_date": "2021-01-01", "end_date": "2026-05-14"}</code><br>
+      <strong>Response:</strong>
+      <pre><code>{
+  "confidence": 0.99, "obs": 1258, "horizon_days": 1,
+  "violations": 18, "expected_violations": 12.58,
+  "violation_rate": 0.0143, "expected_rate": 0.01,
+  "kupiec": {
+    "lr_statistic": 2.84, "p_value": 0.092,
+    "critical_value_5pct": 3.841, "pass": true
+  },
+  "christoffersen": {
+    "lr_statistic": 4.12, "p_value": 0.041,
+    "critical_value_5pct": 3.841, "pass": false,
+    "finding": "Violations are clustered — model underestimates volatility persistence"
+  },
+  "verdict": "Unconditional coverage acceptable; conditional coverage fails — consider GARCH or regime-conditioned VaR"
+}</code></pre>
+    </div>
+    <div class="endpoint">
+      <span class="ep-method get">GET</span><code>/api/backtest/var/violations</code>
+      <p>Returns dates and magnitudes of all VaR violations for visualization.</p>
+      <strong>Response:</strong> <code>{"violations": [{"date": "2022-03-07", "actual_loss_pct": -0.0218, "var_threshold_pct": -0.0143}]}</code>
+    </div>
+
+    <h3>5.6 Factor Research Endpoints</h3>
+    <div class="endpoint">
+      <span class="ep-method get">GET</span><code>/api/factor/signal-ranking</code>
+      <p>Loads pre-computed signal ranking from BQuant artifact <code>factor_ic_results.json</code>.</p>
+      <strong>Response:</strong>
+      <pre><code>{
+  "source": "bquant_artifact", "computed_at": "2026-05-13",
+  "rankings": [
+    {"factor": "brent", "lag_days": 2, "ic_mean": 0.082, "icir": 1.24,
+     "t_stat": 3.18, "p_value": 0.0018, "pct_positive": 0.61,
+     "oos_sharpe": 0.74, "significant": true},
+    {"factor": "usdinr", "lag_days": 1, "ic_mean": -0.071, "icir": 1.08,
+     "t_stat": 2.74, "p_value": 0.0063, "pct_positive": 0.38,
+     "oos_sharpe": 0.61, "significant": true},
+    {"factor": "gold", "lag_days": 3, "ic_mean": 0.024, "icir": 0.31,
+     "t_stat": 0.79, "p_value": 0.43, "significant": false}
+  ]
+}</code></pre>
+    </div>
+    <div class="endpoint">
+      <span class="ep-method get">GET</span><code>/api/factor/granger</code>
+      <p>Loads Granger causality results from BQuant artifact. Returns commodity × sector × lag matrix.</p>
+      <strong>Response:</strong> <code>{"source": "bquant_artifact", "results": [{"commodity": "brent", "sector": "Oil & Gas", "lag": 2, "f_stat": 8.42, "p_value": 0.0038, "significant": true}]}</code>
+    </div>
+    <div class="endpoint">
+      <span class="ep-method get">GET</span><code>/api/factor/walk-forward</code>
+      <p>Loads walk-forward backtest results from BQuant artifact.</p>
+      <strong>Response:</strong> <code>{"factor": "brent", "lag": 2, "oos_sharpe": 0.74, "max_drawdown": -0.21, "win_rate": 0.58, "cumulative_return_series": [...]}</code>
+    </div>
+    <div class="endpoint">
+      <span class="ep-method post">POST</span><code>/api/factor/portfolio-exposure</code>
+      <p>Computes portfolio-specific commodity sensitivity using cached factor series and portfolio weights.</p>
+      <strong>Request:</strong> <code>{"portfolio_id": "current", "factors": ["brent", "gold", "usdinr"], "lags": [1, 2, 3, 5]}</code><br>
+      <strong>Response:</strong> Sensitivity scores per factor-lag pair for this specific portfolio.
+    </div>
+
+    <h3>5.7 ML / Regime Endpoints</h3>
+    <div class="endpoint">
+      <span class="ep-method get">GET</span><code>/api/ml/regime/current</code>
+      <p>Returns current regime from latest BQuant regime history artifact.</p>
+      <strong>Response:</strong> <code>{"date": "2026-05-14", "regime": 0, "label": "low_vol", "regime_prob": [0.91, 0.09], "consecutive_days_in_regime": 14, "source": "bquant_artifact"}</code>
+    </div>
+    <div class="endpoint">
+      <span class="ep-method get">GET</span><code>/api/ml/regime/history</code>
+      <p>Full regime label history for chart rendering.</p>
+      <strong>Response:</strong> <code>{"series": [{"date": "2021-01-04", "regime": 0, "regime_prob_1": 0.08}]}</code>
+    </div>
+    <div class="endpoint">
+      <span class="ep-method get">GET</span><code>/api/ml/models/status</code>
+      <strong>Response:</strong> <code>{"hmm": {"fitted": true, "n_states": 2, "fitted_at": "2026-05-13", "source": "bquant"}, "breach_classifier": {"fitted": false}}</code>
+    </div>
+
+    <h3>5.8 Commodity Spillover Endpoints</h3>
+    <div class="endpoint">
+      <span class="ep-method post">POST</span><code>/api/commodity/spillover</code>
+      <p>Runs portfolio-level commodity lag regression using local cached data.</p>
+      <strong>Request:</strong> <code>{"portfolio_id": "current", "factors": ["brent", "wti", "gold", "copper", "natgas"], "lags": [1,2,3,5,10]}</code><br>
+      <strong>Response:</strong> Sensitivity score, beta, R-squared, and significance per factor-lag combination.
+    </div>
+    <div class="endpoint">
+      <span class="ep-method get">GET</span><code>/api/commodity/factors/latest</code>
+      <strong>Response:</strong> Latest prices and 1-day/5-day/20-day returns for all 5 commodity factors.
+    </div>
+
+    <h3>5.9 News Endpoints</h3>
+    <div class="endpoint">
+      <span class="ep-method get">GET</span><code>/api/news/rss-risk?symbols=RELIANCE,ONGC&lookback_hours=48</code>
+      <strong>Response:</strong> <code>{"items": [{"headline": "...", "source": "SEBI_RSS", "published_at": "...", "matched_symbols": ["ONGC"], "matched_sectors": ["Oil & Gas"], "risk_flags": ["commodity", "regulatory"]}]}</code>
+    </div>
+
+    <h3>5.10 Copilot Endpoints</h3>
+    <div class="endpoint">
+      <span class="ep-method post">POST</span><code>/api/copilot/ask</code>
+      <strong>Request:</strong>
+      <pre><code>{
+  "question": "What is the biggest risk in this portfolio and is the VaR model reliable?",
   "portfolio_id": "current",
-  "allowed_context": ["risk_summary", "stress_tests", "commodity", "news"],
+  "allowed_context": ["risk_summary", "var_backtest", "factor_signals", "regime", "news"],
   "response_style": "class_presentation"
 }</code></pre>
-    </section>
+      <strong>Response:</strong> <code>{"answer": "...", "citations": [{"metric": "component_var", "value": "RELIANCE drives 28% of VaR"}, {"metric": "kupiec_test", "value": "Pass at 95% confidence"}], "advice_refused": false}</code>
+    </div>
+    <div class="endpoint">
+      <span class="ep-method post">POST</span><code>/api/copilot/memo</code>
+      <p>Generates a deterministic risk memo — no LLM required. Structures all risk and factor outputs into a presentation-ready document.</p>
+      <strong>Request:</strong> <code>{"portfolio_id": "current", "style": "academic", "include_factor_research": true}</code>
+    </div>
 
-    <section id="service-functions">
-      <h2>5. Important Service Functions</h2>
-      <div class="method">
-        <h3><code>import_zerodha_portfolio(access_token) -> PortfolioSnapshot</code></h3>
-        <p>Calls Zerodha holdings/positions APIs, validates response, maps external fields to internal holding schema, and labels unsupported instruments.</p>
-      </div>
-      <div class="method">
-        <h3><code>normalize_holdings(raw_holdings, instrument_master, sector_map) -> PortfolioSnapshot</code></h3>
-        <p>Standardizes symbol, exchange, instrument token, asset type, quantity, price, market value, sector, and modeled flag.</p>
-      </div>
-      <div class="method">
-        <h3><code>load_price_matrix(symbols, start_date, end_date, source_policy) -> PriceMatrix</code></h3>
-        <p>Loads aligned daily prices from cache/public source/Kite where available, then returns prices plus freshness and missing-data metadata.</p>
-      </div>
-      <div class="method">
-        <h3><code>calculate_returns(price_matrix, method="simple") -> ReturnMatrix</code></h3>
-        <p>Calculates daily returns, aligns dates, and records dropped observations.</p>
-      </div>
-      <div class="method">
-        <h3><code>calculate_historical_var(portfolio_returns, value, confidence, horizon_days) -> RiskMetric</code></h3>
-        <p>Finds empirical loss quantile, scales to selected horizon, and returns amount, percent, method, date range, and sample size.</p>
-      </div>
-      <div class="method">
-        <h3><code>calculate_expected_shortfall(portfolio_returns, value, confidence, horizon_days) -> RiskMetric</code></h3>
-        <p>Averages tail losses beyond the VaR threshold and returns tail observation count.</p>
-      </div>
-      <div class="method">
-        <h3><code>calculate_component_var(weights, covariance_matrix, portfolio_value, confidence) -> list[Contribution]</code></h3>
-        <p>Approximates marginal and component contribution to portfolio VaR for top risk driver explanations.</p>
-      </div>
-      <div class="method">
-        <h3><code>run_stress_scenario(portfolio, shock_vector, sector_map) -> StressResult</code></h3>
-        <p>Applies configured shocks to symbols/sectors/factors and returns scenario loss plus contribution table.</p>
-      </div>
-      <div class="method">
-        <h3><code>analyze_spillover(portfolio_returns, sector_returns, commodity_returns, lags) -> SpilloverReport</code></h3>
-        <p>Runs lagged correlation/regression scan, identifies strongest factor-lag pairs, and calculates commodity sensitivity score.</p>
-      </div>
-      <div class="method">
-        <h3><code>generate_copilot_context(portfolio_id, question) -> CopilotContext</code></h3>
-        <p>Selects only necessary structured metrics and sanitized holdings context for LLM/MCP use.</p>
-      </div>
-    </section>
+    <h3>5.11 Report Endpoints</h3>
+    <div class="endpoint">
+      <span class="ep-method get">GET</span><code>/api/report/risk-memo?format=html|pdf</code>
+      <p>Full risk report: portfolio summary, VaR (3 methods), ES, backtest result, regime status, stress scenarios, top contributors, commodity exposure, news flags.</p>
+    </div>
+    <div class="endpoint">
+      <span class="ep-method get">GET</span><code>/api/report/factor-research</code>
+      <p>Factor research report: signal ranking table, Granger results, walk-forward Sharpe chart, IC time series, methodology and caveats.</p>
+    </div>
+  </section>
 
-    <section id="risk-calculations">
-      <h2>6. Calculation Details</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Calculation</th>
-            <th>Input</th>
-            <th>Implementation detail</th>
-            <th>Caveat to display</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Portfolio returns</td>
-            <td>Return matrix and value weights</td>
-            <td><code>r_p,t = sum(w_i * r_i,t)</code></td>
-            <td>Assumes static current weights for historical simulation.</td>
-          </tr>
-          <tr>
-            <td>Historical VaR</td>
-            <td>Portfolio returns, confidence, value</td>
-            <td>Use empirical lower-tail percentile of returns, convert to positive loss amount.</td>
-            <td>Past returns may not capture future shocks.</td>
-          </tr>
-          <tr>
-            <td>10-day VaR</td>
-            <td>1-day VaR</td>
-            <td>Prototype may use square-root-time scaling.</td>
-            <td>Scaling assumes independent returns; stress tests complement this.</td>
-          </tr>
-          <tr>
-            <td>Expected Shortfall</td>
-            <td>Tail returns beyond VaR cutoff</td>
-            <td>Average realized losses worse than VaR threshold.</td>
-            <td>Can be unstable with small samples.</td>
-          </tr>
-          <tr>
-            <td>Commodity lag beta</td>
-            <td>Portfolio/sector returns and lagged factor returns</td>
-            <td>OLS regression or correlation scan across configured lags.</td>
-            <td>Association is not proof of causality.</td>
-          </tr>
-        </tbody>
-      </table>
-    </section>
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <section id="service-functions">
+    <h2>6. Key Service Function Contracts</h2>
 
-    <section id="mcp-tools">
-      <h2>7. Risk MCP Tools</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Tool</th>
-            <th>Input</th>
-            <th>Output</th>
-            <th>Use case</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><code>load_portfolio</code></td>
-            <td><code>{ "source": "current|sample|csv" }</code></td>
-            <td>Portfolio snapshot summary</td>
-            <td>Give copilot portfolio context.</td>
-          </tr>
-          <tr>
-            <td><code>calculate_portfolio_risk</code></td>
-            <td><code>{ "portfolio_id": "current" }</code></td>
-            <td>Risk summary payload</td>
-            <td>Answer broad risk questions.</td>
-          </tr>
-          <tr>
-            <td><code>calculate_var</code></td>
-            <td><code>{ "confidence": 0.99, "horizon_days": 10 }</code></td>
-            <td>VaR result</td>
-            <td>Answer VaR-specific questions.</td>
-          </tr>
-          <tr>
-            <td><code>calculate_expected_shortfall</code></td>
-            <td><code>{ "confidence": 0.99, "horizon_days": 10 }</code></td>
-            <td>Expected Shortfall result</td>
-            <td>Explain tail loss severity.</td>
-          </tr>
-          <tr>
-            <td><code>run_stress_test</code></td>
-            <td><code>{ "scenario_id": "crude_shock" }</code></td>
-            <td>Stress loss result</td>
-            <td>Answer scenario questions.</td>
-          </tr>
-          <tr>
-            <td><code>analyze_commodity_spillover</code></td>
-            <td><code>{ "factors": ["brent", "gold"], "lags": [1,2,3,5,10] }</code></td>
-            <td>Spillover report</td>
-            <td>Explain commodity-linked risk.</td>
-          </tr>
-          <tr>
-            <td><code>summarize_news_risk</code></td>
-            <td><code>{ "symbols": ["RELIANCE"], "lookback_hours": 48 }</code></td>
-            <td>Risk-tagged headlines</td>
-            <td>Add event/news context.</td>
-          </tr>
-          <tr>
-            <td><code>generate_risk_memo</code></td>
-            <td><code>{ "portfolio_id": "current", "style": "academic" }</code></td>
-            <td>Structured memo</td>
-            <td>Presentation-ready output.</td>
-          </tr>
-        </tbody>
-      </table>
-    </section>
+    <h3>6.1 Bloomberg Data Layer</h3>
+    <div class="method">
+      <h3><code>BloombergCache.get_prices(ticker, start, end) -> pd.DataFrame</code></h3>
+      <p>Cache-first. Returns Parquet-cached series if available and fresh; otherwise calls BLPAPI <code>bdh()</code>, writes to cache, and returns. Raises <code>DataUnavailableError</code> if neither cache nor BLPAPI succeeds.</p>
+    </div>
+    <div class="method">
+      <h3><code>TickerRegistry.resolve(zerodha_symbol) -> str</code></h3>
+      <p>Maps Zerodha trading symbol (e.g. <code>RELIANCE</code>) to Bloomberg ticker (e.g. <code>RELIANCE IN Equity</code>). Uses <code>bloomberg_tickers.json</code>; falls back to <code>{symbol} IN Equity</code> pattern with validation.</p>
+    </div>
+    <div class="method">
+      <h3><code>build_return_matrix(symbols, start, end, source="bloomberg") -> ReturnMatrix</code></h3>
+      <p>Loads adjusted close prices for all symbols from Bloomberg cache, aligns to common trading dates (Indian calendar), computes simple daily returns, reports dropped dates and missing symbols.</p>
+    </div>
+    <div class="method">
+      <h3><code>BQuantArtifactLoader.load(artifact_name) -> dict | pd.DataFrame</code></h3>
+      <p>Loads a named artifact from <code>data/cache/bquant_artifacts/</code>. Validates schema on load. Raises <code>ArtifactNotFoundError</code> with clear message if artifact hasn't been exported from BQuant yet.</p>
+    </div>
 
-    <section id="cache-storage">
-      <h2>8. Cache And Storage Design</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Object</th>
-            <th>Prototype storage</th>
-            <th>Refresh policy</th>
-            <th>Production change</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Sample portfolios</td>
-            <td><code>data/samples/*.json</code></td>
-            <td>Manual</td>
-            <td>Seed data in database or fixture service.</td>
-          </tr>
-          <tr>
-            <td>Instrument master</td>
-            <td>SQLite table or compressed CSV</td>
-            <td>Manual or startup refresh</td>
-            <td>Scheduled refresh with versioning.</td>
-          </tr>
-          <tr>
-            <td>Price history</td>
-            <td>SQLite table keyed by symbol/date/source</td>
-            <td>Use cache first, fetch missing ranges</td>
-            <td>Data warehouse/table partitions plus provider audit.</td>
-          </tr>
-          <tr>
-            <td>Commodity factors</td>
-            <td>CSV/SQLite series</td>
-            <td>Preload before demo</td>
-            <td>Background refresh and calendar normalization.</td>
-          </tr>
-          <tr>
-            <td>RSS headlines</td>
-            <td>SQLite table with headline metadata</td>
-            <td>Refresh on demand, TTL 6-24 hours</td>
-            <td>Worker queue, deduping, source health checks.</td>
-          </tr>
-          <tr>
-            <td>Access tokens</td>
-            <td>Memory/session only</td>
-            <td>Discard after demo session</td>
-            <td>Encrypted storage, expiry, revocation, audit logs.</td>
-          </tr>
-        </tbody>
-      </table>
-    </section>
+    <h3>6.2 Risk Engine</h3>
+    <div class="method">
+      <h3><code>calculate_historical_var(portfolio_returns, value, confidence, horizon_days) -> VaRResult</code></h3>
+      <p>Empirical lower-tail quantile of portfolio return distribution. Scales to horizon using square-root-of-time. Returns amount, percent, sample size, and date range.</p>
+    </div>
+    <div class="method">
+      <h3><code>calculate_parametric_var(weights, covariance_matrix, value, confidence, horizon_days) -> VaRResult</code></h3>
+      <p>Delta-normal VaR using current weights and Bloomberg-derived covariance matrix. Assumes multivariate normal returns — caveat reported in output.</p>
+    </div>
+    <div class="method">
+      <h3><code>calculate_monte_carlo_var(weights, covariance_matrix, value, confidence, horizon_days, n_sim=10000) -> VaRResult</code></h3>
+      <p>Cholesky decomposition of covariance matrix; simulate correlated returns; compute portfolio P&amp;L distribution empirical quantile.</p>
+    </div>
+    <div class="method">
+      <h3><code>calculate_expected_shortfall(portfolio_returns, value, confidence, horizon_days) -> ESResult</code></h3>
+      <p>Mean of returns worse than VaR threshold. Returns tail observation count. Flags instability if tail obs &lt; 30.</p>
+    </div>
+    <div class="method">
+      <h3><code>calculate_component_var(weights, covariance_matrix, portfolio_value, confidence) -> list[Contribution]</code></h3>
+      <p>Component VaR = weight × (covariance of holding with portfolio) / portfolio_vol × z-score × sqrt(horizon) × portfolio_value. Marginal VaR = component_var / weight.</p>
+    </div>
+    <div class="method">
+      <h3><code>run_stress_scenario(portfolio, shock_vector, sector_map) -> StressResult</code></h3>
+      <p>Applies shocks to holdings by symbol or sector. Built-in scenarios: <code>covid_march2020</code> (equity −35%), <code>rate_hike_100bps</code> (rate-sensitive −12%), <code>crude_shock_2022</code> (oil sector −18%, input-cost sectors −8%), <code>inr_depreciation_10pct</code> (IT +6%, import-heavy −9%), <code>election_2024_vol</code> (broad −5% with +30% vol).</p>
+    </div>
 
-    <section id="copilot-safety">
-      <h2>9. Copilot Prompt And Safety Contract</h2>
-      <pre><code>System policy for copilot:
-- You are a portfolio risk explainer, not an investment adviser.
-- Use only the structured risk context provided by tools.
-- Do not recommend buying, selling, holding, or rebalancing a security.
-- You may explain concentration, VaR, ES, stress loss, commodity sensitivity, and news risk.
-- When data is partial or stale, say so clearly.
-- If asked for trading advice, refuse briefly and provide risk diagnostics instead.</code></pre>
-      <div class="grid-2">
-        <div class="callout prototype">
-          <span class="label">Prototype LLM mode</span>
-          <ul>
-            <li>Provider is configurable.</li>
-            <li>Can be disabled in favor of deterministic memo.</li>
-            <li>Send summarized portfolio/risk context only.</li>
-          </ul>
-        </div>
-        <div class="callout production">
-          <span class="label">Production LLM mode</span>
-          <ul>
-            <li>Redact sensitive identifiers where possible.</li>
-            <li>Log tool calls and generated outputs for policy review.</li>
-            <li>Apply automated checks for recommendation language.</li>
-          </ul>
-        </div>
+    <h3>6.3 VaR Backtesting</h3>
+    <div class="method">
+      <h3><code>run_kupiec_test(violations, n_obs, confidence) -> KupiecResult</code></h3>
+      <p>Likelihood ratio test: <code>LR = -2 * ln[(1-p)^(n-v) * p^v] + 2 * ln[(1-v/n)^(n-v) * (v/n)^v]</code>. Chi-squared distributed with 1 df. p-value from chi2 CDF. Pass if p-value &gt; 0.05.</p>
+    </div>
+    <div class="method">
+      <h3><code>run_christoffersen_test(violation_series) -> ChristoffersenResult</code></h3>
+      <p>Independence test on violation sequence. Estimates transition probabilities between violation/no-violation states. Tests whether violations cluster (independence hypothesis). LR statistic, p-value, interpretation.</p>
+    </div>
+
+    <h3>6.4 Factor Research (Local Complement to BQuant)</h3>
+    <div class="method">
+      <h3><code>calculate_ic(factor_returns_lagged, forward_stock_returns) -> ICResult</code></h3>
+      <p>Rank correlation (Spearman) between lagged factor return and forward stock return cross-section. Returns IC, IC standard deviation, ICIR = IC_mean / IC_std, t-stat = ICIR * sqrt(n_periods), p-value.</p>
+    </div>
+    <div class="method">
+      <h3><code>run_granger_test(x_series, y_series, max_lag) -> GrangerResult</code></h3>
+      <p>Uses <code>statsmodels.tsa.stattools.grangercausalitytests</code>. Returns F-statistic and p-value per lag. Reports significant lags at 5% threshold.</p>
+    </div>
+    <div class="method">
+      <h3><code>calculate_portfolio_commodity_sensitivity(portfolio_returns, factor_returns_dict, lags) -> SpilloverReport</code></h3>
+      <p>OLS regression of portfolio returns on lagged commodity factor returns. Reports beta, t-stat, R-squared, and confidence indicator per factor-lag pair. Flags "not significant" explicitly.</p>
+    </div>
+
+    <h3>6.5 ML Layer (Loads BQuant Artifacts)</h3>
+    <div class="method">
+      <h3><code>RegimeDetector.current_regime(date) -> RegimeLabel</code></h3>
+      <p>Loads <code>regime_history.parquet</code> artifact. Returns regime label (0=low_vol, 1=high_vol), posterior probabilities, and consecutive days in current regime for the requested date.</p>
+    </div>
+    <div class="method">
+      <h3><code>RegimeConditionedVaR.compute(portfolio_returns, regime_history, value, confidence) -> RegimeVaRResult</code></h3>
+      <p>Splits return history by regime label. Computes historical VaR separately for each regime. Returns both VaR estimates plus sample sizes. Current regime VaR highlighted as the active risk estimate.</p>
+    </div>
+
+    <h3>6.6 Copilot Layer</h3>
+    <div class="method">
+      <h3><code>generate_copilot_context(portfolio_id, question, allowed_context) -> CopilotContext</code></h3>
+      <p>Selects minimal structured data needed to answer the question. Pulls from: risk summary, VaR backtest result, signal ranking, regime status, news tags. Redacts raw price data. Returns structured JSON passed to LLM/MCP.</p>
+    </div>
+    <div class="method">
+      <h3><code>generate_deterministic_memo(portfolio_id, style) -> str</code></h3>
+      <p>Builds a complete risk memo from structured outputs without calling an LLM. Sections: portfolio summary, VaR comparison (3 methods), backtest verdict, current regime, stress scenarios, top risk drivers, commodity exposure, news flags, methodology caveats. Safe to use when LLM is unavailable.</p>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <section id="api-contracts">
+    <h2>7. Full Risk Summary API Contract</h2>
+    <h3>Request</h3>
+    <pre><code>POST /api/risk/summary
+{
+  "portfolio_id": "current",
+  "confidence_levels": [0.95, 0.99],
+  "horizons": [1, 10],
+  "include": ["var_all_methods", "expected_shortfall", "stress",
+              "contribution", "drawdown", "volatility", "regime_conditioned_var"]
+}</code></pre>
+    <h3>Response</h3>
+    <pre><code>{
+  "portfolio_id": "demo-2026-05",
+  "as_of": "2026-05-14T10:30:00+05:30",
+  "data_source": "Bloomberg Terminal, FRTL, IIM Calcutta",
+  "data_quality": {
+    "status": "ok",
+    "priced_symbols": 12,
+    "missing_symbols": [],
+    "price_history_start": "2021-01-04",
+    "price_history_end": "2026-05-13",
+    "bquant_artifacts_loaded": ["regime_history", "factor_ic_results"]
+  },
+  "portfolio": {
+    "total_value": 845000.0,
+    "modeled_value": 845000.0,
+    "annualized_volatility": 0.218,
+    "beta_to_nifty": 1.12
+  },
+  "var": [
+    {
+      "confidence": 0.99, "horizon_days": 10,
+      "historical": {"amount": 64500.0, "percent": 0.0794},
+      "parametric": {"amount": 61200.0, "percent": 0.0754},
+      "montecarlo": {"amount": 67800.0, "percent": 0.0835}
+    }
+  ],
+  "expected_shortfall": [
+    {"confidence": 0.99, "horizon_days": 10, "amount": 91200.0, "percent": 0.1122, "tail_obs": 13}
+  ],
+  "var_backtest": {
+    "confidence": 0.99, "violations": 18, "expected": 12.58,
+    "kupiec_pass": true, "christoffersen_pass": false,
+    "verdict": "Coverage ok; violations cluster — regime-conditioned VaR recommended"
+  },
+  "regime": {
+    "current": 0, "label": "low_vol", "days_in_regime": 14,
+    "regime_conditioned_var": {
+      "low_vol": {"var_99_10d": 51200.0}, "high_vol": {"var_99_10d": 94600.0}
+    }
+  },
+  "max_drawdown": -0.284,
+  "top_contributors": [
+    {"symbol": "RELIANCE", "weight": 0.18, "component_var": 18200.0, "var_share": 0.282}
+  ],
+  "stress_tests": [
+    {"scenario": "crude_shock_2022", "loss": -123400.0, "loss_pct": -0.146}
+  ],
+  "commodity_exposure": {
+    "top_factor": "brent", "top_lag_days": 2,
+    "sensitivity_score": 0.72, "significant": true
+  },
+  "warnings": []
+}</code></pre>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <section id="schemas">
+    <h2>8. Core Data Schemas</h2>
+    <div class="grid-2">
+      <div>
+        <h3>Holding</h3>
+        <pre><code>{
+  "symbol": "RELIANCE",
+  "exchange": "NSE",
+  "bbg_ticker": "RELIANCE IN Equity",
+  "instrument_token": 738561,
+  "asset_type": "EQUITY",
+  "quantity": 12,
+  "average_price": 2430.50,
+  "last_price": 2510.20,
+  "market_value": 30122.40,
+  "weight": 0.0357,
+  "sector": "Oil, Gas & Consumable Fuels",
+  "gics_sector": "Energy",
+  "modeled": true,
+  "price_source": "bloomberg_cache"
+}</code></pre>
       </div>
-    </section>
+      <div>
+        <h3>ICResult</h3>
+        <pre><code>{
+  "factor": "brent",
+  "lag_days": 2,
+  "ic_mean": 0.082,
+  "ic_std": 0.066,
+  "icir": 1.242,
+  "t_stat": 3.18,
+  "p_value": 0.0018,
+  "pct_positive": 0.61,
+  "n_periods": 654,
+  "significant": true,
+  "oos_sharpe": 0.74,
+  "source": "bquant_artifact"
+}</code></pre>
+      </div>
+      <div>
+        <h3>RegimeLabel</h3>
+        <pre><code>{
+  "date": "2026-05-14",
+  "regime": 0,
+  "label": "low_vol",
+  "posterior_prob": [0.91, 0.09],
+  "regime_0_mean_vol": 0.142,
+  "regime_1_mean_vol": 0.318,
+  "consecutive_days": 14,
+  "source": "bquant_hmm_artifact"
+}</code></pre>
+      </div>
+      <div>
+        <h3>BacktestResult</h3>
+        <pre><code>{
+  "confidence": 0.99,
+  "obs": 1258,
+  "violations": 18,
+  "expected_violations": 12.58,
+  "violation_rate": 0.0143,
+  "kupiec": {
+    "lr_stat": 2.84, "p_value": 0.092, "pass": true
+  },
+  "christoffersen": {
+    "lr_stat": 4.12, "p_value": 0.041, "pass": false
+  },
+  "verdict": "string"
+}</code></pre>
+      </div>
+    </div>
+  </section>
 
-    <section id="errors">
-      <h2>10. Error Codes And Handling</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Code</th>
-            <th>Meaning</th>
-            <th>User message</th>
-            <th>Developer action</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><code>AUTH_ZERODHA_FAILED</code></td>
-            <td>Login/callback/session failed.</td>
-            <td>Zerodha connection failed. Try again or load sample portfolio.</td>
-            <td>Check callback URL, request token, state, and API credentials.</td>
-          </tr>
-          <tr>
-            <td><code>PORTFOLIO_EMPTY</code></td>
-            <td>No holdings available.</td>
-            <td>No supported holdings were found for risk analysis.</td>
-            <td>Validate import parser and account contents.</td>
-          </tr>
-          <tr>
-            <td><code>PRICE_DATA_MISSING</code></td>
-            <td>One or more symbols lack price history.</td>
-            <td>Some holdings were excluded because price history was unavailable.</td>
-            <td>Refresh cache or map symbols/instrument tokens.</td>
-          </tr>
-          <tr>
-            <td><code>RISK_SAMPLE_TOO_SMALL</code></td>
-            <td>Not enough return observations.</td>
-            <td>Risk estimates need more historical data to be reliable.</td>
-            <td>Extend date range or fetch additional history.</td>
-          </tr>
-          <tr>
-            <td><code>NEWS_FEED_UNAVAILABLE</code></td>
-            <td>RSS source failed.</td>
-            <td>News context is currently unavailable; risk calculations are unaffected.</td>
-            <td>Check feed URL, timeout, and parser.</td>
-          </tr>
-          <tr>
-            <td><code>LLM_UNAVAILABLE</code></td>
-            <td>LLM provider failed or no key configured.</td>
-            <td>AI explanation is unavailable; showing deterministic risk memo.</td>
-            <td>Check provider key, quota, and request payload.</td>
-          </tr>
-        </tbody>
-      </table>
-    </section>
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <section id="mcp-tools">
+    <h2>9. Risk MCP Tool Definitions</h2>
+    <table>
+      <thead><tr><th>Tool name</th><th>Input schema</th><th>Output</th><th>Copilot use case</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code>load_portfolio</code></td>
+          <td><code>{"source": "current|sample|csv"}</code></td>
+          <td>PortfolioSnapshot summary (no raw prices)</td>
+          <td>Give copilot portfolio context</td>
+        </tr>
+        <tr>
+          <td><code>calculate_portfolio_risk</code></td>
+          <td><code>{"portfolio_id": "current", "methods": ["all"]}</code></td>
+          <td>Full risk summary payload</td>
+          <td>Answer broad risk questions</td>
+        </tr>
+        <tr>
+          <td><code>calculate_var</code></td>
+          <td><code>{"confidence": 0.99, "horizon_days": 10, "method": "all"}</code></td>
+          <td>VaR result with all 3 methods</td>
+          <td>VaR-specific questions, method comparison</td>
+        </tr>
+        <tr>
+          <td><code>get_var_backtest</code></td>
+          <td><code>{"confidence": 0.99}</code></td>
+          <td>BacktestResult with Kupiec and Christoffersen</td>
+          <td>"Is my VaR model reliable?"</td>
+        </tr>
+        <tr>
+          <td><code>get_current_regime</code></td>
+          <td><code>{}</code></td>
+          <td>RegimeLabel with regime-conditioned VaR</td>
+          <td>Explain current market regime and its risk implication</td>
+        </tr>
+        <tr>
+          <td><code>get_factor_signals</code></td>
+          <td><code>{"top_n": 5}</code></td>
+          <td>Top-ranked factor signals with IC, t-stat, OOS Sharpe</td>
+          <td>Explain which commodity factors matter most</td>
+        </tr>
+        <tr>
+          <td><code>run_stress_test</code></td>
+          <td><code>{"scenario_id": "crude_shock_2022"}</code></td>
+          <td>StressResult with loss and contributors</td>
+          <td>Scenario-specific questions</td>
+        </tr>
+        <tr>
+          <td><code>get_top_risk_contributors</code></td>
+          <td><code>{"confidence": 0.99, "top_n": 5}</code></td>
+          <td>Component VaR table</td>
+          <td>"Which stock drives my risk?"</td>
+        </tr>
+        <tr>
+          <td><code>summarize_news_risk</code></td>
+          <td><code>{"lookback_hours": 48}</code></td>
+          <td>Risk-tagged headlines for portfolio symbols</td>
+          <td>Add event context to risk answer</td>
+        </tr>
+        <tr>
+          <td><code>generate_risk_memo</code></td>
+          <td><code>{"style": "academic", "include_factor_research": true}</code></td>
+          <td>Full deterministic risk memo text</td>
+          <td>Presentation-ready summary generation</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
 
-    <section id="security">
-      <h2>11. Security Implementation Notes</h2>
-      <ul>
-        <li>Never print access tokens, API secrets, request tokens, or LLM keys in logs.</li>
-        <li>Keep prototype credentials in local <code>.env</code> only.</li>
-        <li>Validate CSV file type, row count, numeric fields, and symbols before processing.</li>
-        <li>Use session-scoped portfolio ids; avoid exposing raw local file paths in API responses.</li>
-        <li>For production, use HTTPS, secure cookies, CSRF protection, encrypted token storage, and deletion workflow.</li>
-        <li>Add a visible disclaimer: "For educational risk analytics only. Not investment advice."</li>
-      </ul>
-    </section>
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <section id="copilot-safety">
+    <h2>10. Copilot System Policy</h2>
+    <pre><code>System policy:
+- You are Drishti's portfolio risk explainer, not an investment adviser.
+- Use ONLY structured outputs from Risk MCP tools. Never invent numbers.
+- Do not recommend buying, selling, holding, or rebalancing any security.
+- You may explain: VaR (and compare methods), ES, backtest results, regime
+  implications, component contributions, stress losses, IC/t-stat signal
+  quality, Granger causality findings, and news risk flags.
+- When the backtest fails (Christoffersen), explain what clustering of
+  violations means — do not say the portfolio is safe or unsafe.
+- When data is partial, stale, or an artifact is missing, say so explicitly.
+- If asked for trade advice, refuse with one sentence and redirect to the
+  relevant risk diagnostic instead.</code></pre>
+  </section>
 
-    <section id="test-plan">
-      <h2>12. Low-Level Test Plan</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Test</th>
-            <th>Setup</th>
-            <th>Expected result</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>CSV import success</td>
-            <td>Valid CSV with 5 equity holdings</td>
-            <td>Normalized portfolio with modeled value and sectors.</td>
-          </tr>
-          <tr>
-            <td>Unsupported asset detection</td>
-            <td>CSV includes F&amp;O or mutual fund row</td>
-            <td>Row appears in unsupported summary, not deep risk model.</td>
-          </tr>
-          <tr>
-            <td>VaR synthetic validation</td>
-            <td>Known return vector with known quantile</td>
-            <td>VaR matches expected quantile within tolerance.</td>
-          </tr>
-          <tr>
-            <td>ES synthetic validation</td>
-            <td>Known tail loss observations</td>
-            <td>ES equals average tail loss within tolerance.</td>
-          </tr>
-          <tr>
-            <td>Stress scenario sign check</td>
-            <td>Negative equity shock scenario</td>
-            <td>Loss is positive amount and affected holdings are ranked.</td>
-          </tr>
-          <tr>
-            <td>Commodity weak signal</td>
-            <td>Random uncorrelated factor series</td>
-            <td>Spillover report says weak/not significant.</td>
-          </tr>
-          <tr>
-            <td>RSS failure</td>
-            <td>Invalid feed URL</td>
-            <td>News unavailable warning; risk dashboard still loads.</td>
-          </tr>
-          <tr>
-            <td>Copilot refusal</td>
-            <td>User asks "Should I buy stock X?"</td>
-            <td>Copilot refuses advice and explains current risk exposure instead.</td>
-          </tr>
-        </tbody>
-      </table>
-    </section>
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <section id="error-codes">
+    <h2>11. Error Codes</h2>
+    <table>
+      <thead><tr><th>Code</th><th>Meaning</th><th>User message</th></tr></thead>
+      <tbody>
+        <tr><td><code>BLOOMBERG_SESSION_FAILED</code></td><td>BLPAPI connection refused</td><td>Bloomberg data unavailable. Using local cache if available.</td></tr>
+        <tr><td><code>BLOOMBERG_TICKER_NOT_FOUND</code></td><td>Symbol not in ticker registry</td><td>Symbol {X} could not be mapped to Bloomberg. Manual ticker entry required.</td></tr>
+        <tr><td><code>CACHE_STALE</code></td><td>Parquet file older than threshold</td><td>Price data for {X} is {N} days old. Showing stale data with warning.</td></tr>
+        <tr><td><code>BQUANT_ARTIFACT_MISSING</code></td><td>Required artifact not exported from BQuant</td><td>BQuant artifact "{name}" not found. Run BQuant notebook and export before using this feature.</td></tr>
+        <tr><td><code>AUTH_ZERODHA_FAILED</code></td><td>OAuth or callback failed</td><td>Zerodha connection failed. Use sample or CSV portfolio.</td></tr>
+        <tr><td><code>PORTFOLIO_EMPTY</code></td><td>No modeled holdings</td><td>No supported holdings found for risk analysis.</td></tr>
+        <tr><td><code>PRICE_DATA_MISSING</code></td><td>Symbol lacks cached price history</td><td>Some holdings excluded — run data pull for {symbols}.</td></tr>
+        <tr><td><code>RISK_SAMPLE_TOO_SMALL</code></td><td>Fewer than 60 return observations</td><td>Insufficient history for reliable risk estimates.</td></tr>
+        <tr><td><code>BACKTEST_INSUFFICIENT_DATA</code></td><td>Window too short for meaningful test</td><td>Need at least 252 observations for backtesting. Extend date range.</td></tr>
+        <tr><td><code>LLM_UNAVAILABLE</code></td><td>LLM provider error or no key</td><td>AI explanation unavailable. Showing deterministic risk memo.</td></tr>
+        <tr><td><code>NEWS_FEED_UNAVAILABLE</code></td><td>RSS fetch failed</td><td>News context unavailable. Risk calculations are unaffected.</td></tr>
+      </tbody>
+    </table>
+  </section>
 
-    <section id="hosting-delta">
-      <h2>13. What Changes When Hosted As A Product</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Area</th>
-            <th>Local prototype</th>
-            <th>Hosted product</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Identity</td>
-            <td>Single local user/session.</td>
-            <td>User accounts, sessions, consent records, logout/delete account.</td>
-          </tr>
-          <tr>
-            <td>Secrets</td>
-            <td>Manual <code>.env</code>.</td>
-            <td>Cloud secret manager and key rotation.</td>
-          </tr>
-          <tr>
-            <td>Broker tokens</td>
-            <td>Memory only.</td>
-            <td>Encrypted database storage, expiry, revocation, audit.</td>
-          </tr>
-          <tr>
-            <td>Market data</td>
-            <td>Cached/public/optional live.</td>
-            <td>Licensed/paid data path and no unauthorized redistribution.</td>
-          </tr>
-          <tr>
-            <td>Compute</td>
-            <td>Synchronous local calls.</td>
-            <td>Async jobs, queues, worker processes, retry policy.</td>
-          </tr>
-          <tr>
-            <td>Database</td>
-            <td>SQLite/local files.</td>
-            <td>Postgres/Supabase with tenant-aware schema and backups.</td>
-          </tr>
-          <tr>
-            <td>Observability</td>
-            <td>Console logs.</td>
-            <td>Metrics, traces, error alerts, API usage dashboards.</td>
-          </tr>
-          <tr>
-            <td>Compliance</td>
-            <td>Educational disclaimer.</td>
-            <td>Legal review, privacy policy, data retention, SEBI/advice boundary review.</td>
-          </tr>
-        </tbody>
-      </table>
-    </section>
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <section id="test-plan">
+    <h2>12. Test Plan</h2>
+    <table>
+      <thead><tr><th>Test</th><th>Setup</th><th>Expected result</th></tr></thead>
+      <tbody>
+        <tr><td>Bloomberg cache load</td><td>Pre-populated Parquet for RELIANCE, TCS, CO1</td><td>Return matrix aligned to Indian trading calendar with no NaN gaps.</td></tr>
+        <tr><td>Ticker registry resolution</td><td>Zerodha symbol "RELIANCE" → BBG ticker</td><td>Returns "RELIANCE IN Equity".</td></tr>
+        <tr><td>BQuant artifact load</td><td><code>factor_ic_results.json</code> in artifacts folder</td><td>Signal ranking returns sorted table with IC, t-stat, p-value fields.</td></tr>
+        <tr><td>BQuant artifact missing</td><td>Remove <code>regime_history.parquet</code></td><td>Returns <code>BQUANT_ARTIFACT_MISSING</code> error with clear notebook instruction.</td></tr>
+        <tr><td>Historical VaR synthetic</td><td>Known return vector, known 99th-percentile loss</td><td>VaR matches expected value within 0.1%.</td></tr>
+        <tr><td>Parametric vs historical divergence</td><td>Return series with fat tails</td><td>Parametric VaR lower than historical — method difference surfaced in output.</td></tr>
+        <tr><td>Kupiec test — good model</td><td>Inject exactly 1% violation rate</td><td>LR stat below critical value; pass = true.</td></tr>
+        <tr><td>Kupiec test — bad model</td><td>Inject 3% violation rate into 99% VaR</td><td>LR stat above critical value; pass = false; verdict text explains.</td></tr>
+        <tr><td>Christoffersen — clustered violations</td><td>Inject violations in consecutive blocks</td><td>Independence test fails; finding says "violations cluster".</td></tr>
+        <tr><td>IC calculation synthetic</td><td>Perfect rank-correlation input (IC = 1.0)</td><td>IC = 1.0, t-stat very large, p-value ≈ 0.</td></tr>
+        <tr><td>IC not significant</td><td>Random uncorrelated factor and return series</td><td>IC ≈ 0, t-stat &lt; 2, significant = false.</td></tr>
+        <tr><td>Regime detection loads</td><td>Valid <code>regime_history.parquet</code></td><td>Current regime returned with posterior probabilities summing to 1.</td></tr>
+        <tr><td>Regime-conditioned VaR split</td><td>50% high-vol, 50% low-vol in history</td><td>High-vol VaR significantly exceeds low-vol VaR.</td></tr>
+        <tr><td>Stress scenario sign check</td><td>Crude shock applied to portfolio with Oil &amp; Gas exposure</td><td>Loss is positive amount; Oil &amp; Gas holdings ranked top contributors.</td></tr>
+        <tr><td>Copilot refusal</td><td>Ask "Should I sell RELIANCE?"</td><td>Copilot refuses and redirects to component VaR for RELIANCE instead.</td></tr>
+        <tr><td>Copilot cites backtest</td><td>Ask "Is my VaR model reliable?"</td><td>Copilot cites Kupiec pass/fail, violation rate, and Christoffersen result.</td></tr>
+        <tr><td>RSS failure isolation</td><td>Corrupt feed URL</td><td><code>NEWS_FEED_UNAVAILABLE</code> returned; risk dashboard still loads fully.</td></tr>
+        <tr><td>CSV import</td><td>Valid CSV with 8 NSE equity rows</td><td>Normalized portfolio with Bloomberg ticker mapping, sectors, modeled flag.</td></tr>
+        <tr><td>Unsupported asset</td><td>CSV includes F&amp;O or MF row</td><td>Row appears in unsupported_summary; excluded from risk model.</td></tr>
+      </tbody>
+    </table>
+  </section>
 
-    <section id="references">
-      <h2>14. Reference Links</h2>
-      <ul>
-        <li><a href="https://kite.trade/docs/connect/v3/portfolio/">Kite Connect Portfolio API</a></li>
-        <li><a href="https://kite.trade/docs/connect/v3/market-quotes/">Kite Connect Market Quotes API</a></li>
-        <li><a href="https://kite.trade/docs/connect/v3/historical/">Kite Connect Historical Data API</a></li>
-        <li><a href="https://kite.trade/docs/connect/v3/websocket/">Kite Connect WebSocket API</a></li>
-        <li><a href="https://github.com/zerodha/kite-mcp-server">Zerodha Kite MCP Server</a></li>
-        <li><a href="https://www.sebi.gov.in/rss.html">SEBI RSS</a></li>
-        <li><a href="https://www.nseindia.com/rss-feed">NSE RSS</a></li>
-      </ul>
-    </section>
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <section id="security">
+    <h2>13. Security Implementation Notes</h2>
+    <ul>
+      <li>Never log Bloomberg access tokens, Zerodha access tokens, LLM API keys, or raw price data to console or files.</li>
+      <li>All secrets in local <code>.env</code> — never committed to version control.</li>
+      <li>Bloomberg raw price files gitignored — cite data source in code comments and reports only.</li>
+      <li>Validate CSV file type, row count, numeric fields, and symbol format before processing.</li>
+      <li>Session-scoped portfolio IDs — never expose local file paths in API responses.</li>
+      <li>BQuant notebooks should not contain hardcoded credentials — use Bloomberg session authentication natively.</li>
+      <li>Add visible disclaimer in UI and all reports: "For educational risk analytics only. Not investment advice."</li>
+    </ul>
+  </section>
 
-    <p class="footer">Portfolio Risk Copilot LLD - ready for implementation as a local-first risk analytics prototype.</p>
-  </main>
+  <p class="footer">Drishti LLD — Bloomberg BLPAPI + BQuant research layer + full endpoint registry. Data: Bloomberg Terminal, FRTL, IIM Calcutta.</p>
+</main>
 </body>
 </html>

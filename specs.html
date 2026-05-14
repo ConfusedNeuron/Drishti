@@ -3,357 +3,202 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Portfolio Risk Copilot - Functional And Technical Specifications</title>
+  <title>Drishti - Functional And Technical Specifications</title>
   <style>
     :root {
-      --bg: #f5f7fa;
-      --paper: #ffffff;
-      --ink: #17202a;
-      --muted: #5d6d7e;
-      --line: #d7dee8;
-      --primary: #145c72;
-      --primary-2: #1f7a8c;
-      --accent: #b85c38;
-      --ok: #1d7a46;
-      --warn: #a76500;
-      --danger: #a33b3b;
-      --soft-blue: #e7f2f6;
-      --soft-green: #e8f5ee;
-      --soft-amber: #fff2dc;
-      --soft-red: #fae9e8;
-      --shadow: 0 18px 42px rgba(23, 32, 42, 0.10);
+      --bg: #f5f7fa; --paper: #ffffff; --ink: #17202a; --muted: #5d6d7e;
+      --line: #d7dee8; --primary: #145c72; --primary-2: #1f7a8c;
+      --accent: #b85c38; --ok: #1d7a46; --warn: #a76500; --danger: #a33b3b;
+      --soft-blue: #e7f2f6; --soft-green: #e8f5ee; --soft-amber: #fff2dc;
+      --soft-red: #fae9e8; --shadow: 0 18px 42px rgba(23,32,42,.10);
     }
-
     * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      background: var(--bg);
-      color: var(--ink);
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      line-height: 1.58;
-    }
-
+    body { margin: 0; background: var(--bg); color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, sans-serif; line-height: 1.58; }
     a { color: var(--primary); text-decoration: none; }
     a:hover { text-decoration: underline; }
-
-    .page {
-      max-width: 1180px;
-      margin: 0 auto;
-      padding: 32px 20px 64px;
-    }
-
-    .hero {
-      background: linear-gradient(135deg, #0d3f4d 0%, #145c72 54%, #2f5f63 100%);
-      color: #fff;
-      border-radius: 8px;
-      padding: 44px;
-      box-shadow: var(--shadow);
-    }
-
-    .eyebrow {
-      margin: 0 0 10px;
-      font-size: 13px;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: #cce8ef;
-      font-weight: 700;
-    }
-
-    h1, h2, h3 { line-height: 1.18; margin: 0; }
+    .page { max-width: 1180px; margin: 0 auto; padding: 32px 20px 64px; }
+    .hero { background: linear-gradient(135deg,#0d3f4d 0%,#145c72 54%,#2f5f63 100%);
+      color: #fff; border-radius: 8px; padding: 44px; box-shadow: var(--shadow); }
+    .eyebrow { margin: 0 0 10px; font-size: 13px; text-transform: uppercase;
+      letter-spacing: .08em; color: #cce8ef; font-weight: 700; }
+    h1,h2,h3 { line-height: 1.18; margin: 0; }
     h1 { font-size: 42px; max-width: 950px; }
     h2 { font-size: 26px; margin-bottom: 16px; color: #123845; }
     h3 { font-size: 18px; margin-bottom: 8px; color: #173b46; }
-
-    .subtitle {
-      margin: 18px 0 0;
-      max-width: 900px;
-      font-size: 18px;
-      color: #eef8fb;
-    }
-
-    .meta {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
-      margin-top: 28px;
-    }
-
-    .meta div {
-      border: 1px solid rgba(255, 255, 255, 0.24);
-      background: rgba(255, 255, 255, 0.10);
-      border-radius: 8px;
-      padding: 12px;
-    }
-
-    .meta strong {
-      display: block;
-      font-size: 12px;
-      color: #cce8ef;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      margin-bottom: 4px;
-    }
-
-    .nav {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin: 22px 0;
-      padding: 12px;
-      border: 1px solid var(--line);
-      background: var(--paper);
-      border-radius: 8px;
-      position: sticky;
-      top: 0;
-      z-index: 5;
-    }
-
-    .nav a {
-      padding: 8px 12px;
-      border-radius: 6px;
-      color: #173b46;
-      background: #eef4f7;
-      font-weight: 650;
-      font-size: 14px;
-    }
-
-    .nav a.active {
-      background: var(--primary);
-      color: #fff;
-    }
-
-    section {
-      background: var(--paper);
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 28px;
-      margin-top: 18px;
-      box-shadow: 0 8px 22px rgba(23, 32, 42, 0.05);
-    }
-
-    .grid-2, .grid-3, .grid-4 {
-      display: grid;
-      gap: 16px;
-    }
-    .grid-2 { grid-template-columns: repeat(2, 1fr); }
-    .grid-3 { grid-template-columns: repeat(3, 1fr); }
-    .grid-4 { grid-template-columns: repeat(4, 1fr); }
-
-    .card {
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 18px;
-      background: #fbfcfe;
-    }
-
-    .callout {
-      border-radius: 8px;
-      border: 1px solid var(--line);
-      padding: 16px 18px;
-      margin: 16px 0;
-    }
-
+    .subtitle { margin: 18px 0 0; max-width: 900px; font-size: 18px; color: #eef8fb; }
+    .meta { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-top: 28px; }
+    .meta div { border: 1px solid rgba(255,255,255,.24); background: rgba(255,255,255,.10);
+      border-radius: 8px; padding: 12px; }
+    .meta strong { display: block; font-size: 12px; color: #cce8ef; text-transform: uppercase;
+      letter-spacing: .06em; margin-bottom: 4px; }
+    .nav { display: flex; gap: 10px; flex-wrap: wrap; margin: 22px 0; padding: 12px;
+      border: 1px solid var(--line); background: var(--paper); border-radius: 8px;
+      position: sticky; top: 0; z-index: 5; }
+    .nav a { padding: 8px 12px; border-radius: 6px; color: #173b46;
+      background: #eef4f7; font-weight: 650; font-size: 14px; }
+    .nav a.active { background: var(--primary); color: #fff; }
+    section { background: var(--paper); border: 1px solid var(--line); border-radius: 8px;
+      padding: 28px; margin-top: 18px; box-shadow: 0 8px 22px rgba(23,32,42,.05); }
+    .grid-2,.grid-3,.grid-4 { display: grid; gap: 16px; }
+    .grid-2 { grid-template-columns: repeat(2,1fr); }
+    .grid-3 { grid-template-columns: repeat(3,1fr); }
+    .grid-4 { grid-template-columns: repeat(4,1fr); }
+    .card { border: 1px solid var(--line); border-radius: 8px; padding: 18px; background: #fbfcfe; }
+    .card strong { display: block; color: #122f38; margin-bottom: 5px; }
+    .callout { border-radius: 8px; border: 1px solid var(--line); padding: 16px 18px; margin: 16px 0; }
     .prototype { background: var(--soft-blue); border-color: #b8d8e4; }
     .production { background: var(--soft-green); border-color: #bddfc9; }
     .warning { background: var(--soft-amber); border-color: #efd096; }
     .danger { background: var(--soft-red); border-color: #e8b6b2; }
-
-    .label {
-      display: inline-flex;
-      align-items: center;
-      padding: 3px 8px;
-      border-radius: 999px;
-      background: #eaf0f3;
-      color: #24434c;
-      font-size: 12px;
-      font-weight: 750;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-bottom: 8px;
-    }
-
-    ul, ol { padding-left: 22px; margin: 10px 0 0; }
+    .label { display: inline-flex; align-items: center; padding: 3px 8px; border-radius: 999px;
+      background: #eaf0f3; color: #24434c; font-size: 12px; font-weight: 750;
+      text-transform: uppercase; letter-spacing: .05em; margin-bottom: 8px; }
+    ul,ol { padding-left: 22px; margin: 10px 0 0; }
     li { margin: 6px 0; }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 14px;
-      overflow: hidden;
-      border-radius: 8px;
-      font-size: 14px;
+    table { width: 100%; border-collapse: collapse; margin-top: 14px;
+      overflow: hidden; border-radius: 8px; font-size: 14px; }
+    th,td { border: 1px solid var(--line); padding: 11px 12px; text-align: left; vertical-align: top; }
+    th { background: #eaf0f3; color: #173b46; }
+    code,pre { background: #eef3f6; color: #173b46; border: 1px solid #dbe5ea;
+      border-radius: 5px; font-family: ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; }
+    code { padding: 1px 5px; font-size: .92em; }
+    pre { padding: 16px; overflow: auto; font-size: 13px; line-height: 1.45; }
+    .pipeline { display: grid; grid-template-columns: repeat(6,1fr); gap: 10px; margin-top: 16px; }
+    .pipeline div { min-height: 96px; border: 1px solid #c8d7de; background: #f7fbfc;
+      border-radius: 8px; padding: 12px; position: relative; }
+    .pipeline div:not(:last-child)::after { content: ">"; position: absolute; right: -9px;
+      top: 38px; color: var(--primary); font-weight: 800; }
+    .footer { margin-top: 24px; color: var(--muted); font-size: 13px; text-align: center; }
+    @media (max-width:1000px) {
+      .hero { padding: 28px; } h1 { font-size: 32px; }
+      .meta,.grid-2,.grid-3,.grid-4,.pipeline { grid-template-columns: 1fr; }
+      .pipeline div:not(:last-child)::after { display: none; } .nav { position: static; }
     }
-
-    th, td {
-      border: 1px solid var(--line);
-      padding: 11px 12px;
-      text-align: left;
-      vertical-align: top;
-    }
-
-    th {
-      background: #eaf0f3;
-      color: #173b46;
-    }
-
-    code, pre {
-      background: #eef3f6;
-      color: #173b46;
-      border: 1px solid #dbe5ea;
-      border-radius: 5px;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    }
-
-    code {
-      padding: 1px 5px;
-      font-size: 0.92em;
-    }
-
-    pre {
-      padding: 16px;
-      overflow: auto;
-      font-size: 13px;
-      line-height: 1.45;
-    }
-
-    .pipeline {
-      display: grid;
-      grid-template-columns: repeat(6, 1fr);
-      gap: 10px;
-      margin-top: 16px;
-    }
-
-    .pipeline div {
-      min-height: 96px;
-      border: 1px solid #c8d7de;
-      background: #f7fbfc;
-      border-radius: 8px;
-      padding: 12px;
-      position: relative;
-    }
-
-    .pipeline div:not(:last-child)::after {
-      content: ">";
-      position: absolute;
-      right: -9px;
-      top: 38px;
-      color: var(--primary);
-      font-weight: 800;
-    }
-
-    .footer {
-      margin-top: 24px;
-      color: var(--muted);
-      font-size: 13px;
-      text-align: center;
-    }
-
-    @media (max-width: 1000px) {
-      .hero { padding: 28px; }
-      h1 { font-size: 32px; }
-      .meta, .grid-2, .grid-3, .grid-4, .pipeline { grid-template-columns: 1fr; }
-      .pipeline div:not(:last-child)::after { display: none; }
-      .nav { position: static; }
-    }
-
     @media print {
-      body { background: #fff; color: #000; }
-      .page { max-width: none; padding: 0; }
-      .hero, section, .nav { box-shadow: none; }
-      .nav { position: static; }
-      a { color: #000; text-decoration: underline; }
-      section { break-inside: avoid; }
+      body { background: #fff; color: #000; } .page { max-width: none; padding: 0; }
+      .hero,section,.nav { box-shadow: none; } .nav { position: static; }
+      a { color: #000; text-decoration: underline; } section { break-inside: avoid; }
     }
   </style>
 </head>
 <body>
-  <main class="page">
-    <header class="hero">
-      <p class="eyebrow">Functional And Technical Specifications</p>
-      <h1>Portfolio Risk Copilot - Specs</h1>
-      <p class="subtitle">Detailed feature, data, analytics, UI, and acceptance specifications for the local-first Zerodha portfolio risk prototype.</p>
-      <div class="meta">
-        <div><strong>Version</strong>V1 Specs</div>
-        <div><strong>Primary stack</strong>Python backend + web dashboard</div>
-        <div><strong>Asset scope</strong>Equity and ETF deep modeling</div>
-        <div><strong>Data strategy</strong>Live import + public/cache fallback</div>
-      </div>
-    </header>
+<main class="page">
+  <header class="hero">
+    <p class="eyebrow">Functional And Technical Specifications</p>
+    <h1>Drishti — Specs</h1>
+    <p class="subtitle">Detailed feature, data, analytics, factor research, ML, backtesting, UI, and acceptance specifications for the Bloomberg-powered local-first portfolio risk research prototype.</p>
+    <div class="meta">
+      <div><strong>Version</strong>V2 Specs</div>
+      <div><strong>Primary stack</strong>Python backend + web dashboard</div>
+      <div><strong>Data source</strong>Bloomberg BLPAPI (FRTL) + CSV fallback</div>
+      <div><strong>Research depth</strong>Factor IC, Granger, HMM regime, VaR backtest</div>
+    </div>
+  </header>
 
-    <nav class="nav" aria-label="Document navigation">
-      <a href="prd.html">PRD</a>
-      <a class="active" href="specs.html">Specs</a>
-      <a href="highleveldesign.html">High-Level Design</a>
-      <a href="lowleveldesign.html">Low-Level Design</a>
-    </nav>
+  <nav class="nav" aria-label="Document navigation">
+    <a href="prd.html">PRD</a>
+    <a class="active" href="specs.html">Specs</a>
+    <a href="highleveldesign.html">High-Level Design</a>
+    <a href="lowleveldesign.html">Low-Level Design</a>
+  </nav>
 
-    <section id="overview">
-      <h2>1. Specification Overview</h2>
-      <p>The system imports or simulates a Zerodha portfolio, normalizes holdings, fetches or loads historical market data, calculates market risk, augments the result with commodity spillover and news context, then presents results through a dashboard and AI copilot.</p>
-      <div class="pipeline" aria-label="Data pipeline">
-        <div><strong>Import</strong><br>Zerodha, CSV, or sample holdings.</div>
-        <div><strong>Normalize</strong><br>Symbols, quantities, prices, sectors, asset classes.</div>
-        <div><strong>Enrich</strong><br>Historical prices, factor series, RSS headlines.</div>
-        <div><strong>Compute</strong><br>VaR, ES, stress, contribution, spillover.</div>
-        <div><strong>Explain</strong><br>Risk narratives and MCP tool outputs.</div>
-        <div><strong>Present</strong><br>Dashboard, memo, and copilot answers.</div>
-      </div>
-    </section>
+  <section id="overview">
+    <h2>1. Specification Overview</h2>
+    <p>The system imports a Zerodha portfolio, pulls Bloomberg data via BLPAPI (or loads from pre-exported CSV cache), computes multi-method market risk, backtests the VaR model, researches commodity factor signals across the NIFTY universe, detects volatility regimes via ML, then presents findings through a dashboard and MCP-grounded AI copilot.</p>
+    <div class="pipeline" aria-label="Data pipeline">
+      <div><strong>Import</strong><br>Zerodha, CSV, or sample holdings.</div>
+      <div><strong>Data Pull</strong><br>Bloomberg BLPAPI: prices, factors, macro, indices.</div>
+      <div><strong>Compute Risk</strong><br>VaR (3 methods), ES, stress, contribution, backtest.</div>
+      <div><strong>Research</strong><br>Factor IC, Granger, walk-forward, HMM regimes.</div>
+      <div><strong>Explain</strong><br>Risk narratives and MCP tool outputs.</div>
+      <div><strong>Present</strong><br>Dashboard, research report, copilot answers.</div>
+    </div>
+  </section>
 
-    <section id="data-sources">
-      <h2>2. Data Sources</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Data type</th>
-            <th>Prototype source</th>
-            <th>Production source</th>
-            <th>Notes</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Holdings and positions</td>
-            <td>Zerodha login, Kite MCP, CSV, or sample file</td>
-            <td>Kite Connect OAuth/session flow</td>
-            <td>Only equity/ETF modeled deeply in V1.</td>
-          </tr>
-          <tr>
-            <td>Historical equity prices</td>
-            <td>Public/cached data, local fixture, optional paid Kite data</td>
-            <td>Licensed market data or paid Kite Connect plan where allowed</td>
-            <td>Must track data freshness and source.</td>
-          </tr>
-          <tr>
-            <td>Live/latest prices</td>
-            <td>Portfolio import price, cached quote, or delayed quote</td>
-            <td>Kite quote endpoints or WebSocket if paid plan is used</td>
-            <td>Do not publicly redistribute exchange data.</td>
-          </tr>
-          <tr>
-            <td>Commodity factors</td>
-            <td>Public/cached crude, Brent, gold, copper, natural gas series</td>
-            <td>Licensed feed or approved public APIs with caching</td>
-            <td>Use returns and volatility shocks, not raw price comparisons.</td>
-          </tr>
-          <tr>
-            <td>News</td>
-            <td>Free RSS feeds such as SEBI/NSE and market news RSS where allowed</td>
-            <td>RSS plus licensed news provider if commercialized</td>
-            <td>MVP stores headline, source, timestamp, link, and tags only.</td>
-          </tr>
-        </tbody>
-      </table>
-    </section>
+  <section id="data-sources">
+    <h2>2. Data Sources</h2>
+    <table>
+      <thead>
+        <tr><th>Data type</th><th>Prototype source</th><th>Bloomberg ticker examples</th><th>Notes</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Holdings and positions</td>
+          <td>Zerodha login / Kite MCP / CSV / sample</td>
+          <td>—</td>
+          <td>Only equity and ETF modeled deeply in V1.</td>
+        </tr>
+        <tr>
+          <td>Indian equity prices (adjusted)</td>
+          <td>Bloomberg BLPAPI — <code>BDH()</code> with <code>PX_ADJ_CLOSE</code></td>
+          <td><code>RELIANCE IN Equity</code>, <code>TCS IN Equity</code>, <code>HDFCBANK IN Equity</code></td>
+          <td>Adjusted for splits and dividends. Do not redistribute raw data.</td>
+        </tr>
+        <tr>
+          <td>Indian sector indices</td>
+          <td>Bloomberg BLPAPI — sector index series</td>
+          <td><code>NSEOILGS Index</code>, <code>NSEIT Index</code>, <code>NSEMETAL Index</code>, <code>NSEBANK Index</code>, <code>NSEFMCG Index</code>, <code>NSEAUTO Index</code>, <code>NSEPHRM Index</code></td>
+          <td>Used for cross-sectional factor research and component VaR by sector.</td>
+        </tr>
+        <tr>
+          <td>Broad market index</td>
+          <td>Bloomberg BLPAPI</td>
+          <td><code>NIFTY Index</code>, <code>SENSEX Index</code></td>
+          <td>Benchmark for Sharpe and drawdown comparison.</td>
+        </tr>
+        <tr>
+          <td>Commodity futures (front-month continuous)</td>
+          <td>Bloomberg BLPAPI — <code>BDH()</code></td>
+          <td><code>CO1 Comdty</code> (Brent), <code>CL1 Comdty</code> (WTI), <code>GC1 Comdty</code> (Gold), <code>HG1 Comdty</code> (Copper), <code>NG1 Comdty</code> (NatGas)</td>
+          <td>Front-month continuous. Use daily returns for factor construction.</td>
+        </tr>
+        <tr>
+          <td>FX — USD/INR</td>
+          <td>Bloomberg BLPAPI</td>
+          <td><code>USDINR Curncy</code></td>
+          <td>Key macro factor for Indian equity risk; included in factor model.</td>
+        </tr>
+        <tr>
+          <td>India 10Y G-Sec yield</td>
+          <td>Bloomberg BLPAPI</td>
+          <td><code>GIND10YR Index</code></td>
+          <td>Interest rate factor; relevant for rate-sensitive sectors (Financials, Realty).</td>
+        </tr>
+        <tr>
+          <td>India VIX</td>
+          <td>Bloomberg BLPAPI</td>
+          <td><code>INVIXN Index</code></td>
+          <td>Input feature for HMM regime detection.</td>
+        </tr>
+        <tr>
+          <td>Equity reference data (sector, market cap)</td>
+          <td>Bloomberg BLPAPI — <code>BDP()</code></td>
+          <td>Field: <code>GICS_SECTOR_NAME</code>, <code>CUR_MKT_CAP</code></td>
+          <td>Used for sector mapping and universe construction.</td>
+        </tr>
+        <tr>
+          <td>News / event risk</td>
+          <td>Free RSS: SEBI, NSE, ET Markets</td>
+          <td>—</td>
+          <td>Headline metadata only: text, source, timestamp, link.</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="callout warning">
+      <span class="label">Bloomberg data policy</span>
+      All Bloomberg data is cached locally under <code>data/cache/bloomberg/</code>. Raw files are gitignored and never committed to any public repository. Cite "Bloomberg Terminal, FRTL, IIM Calcutta" in research outputs.
+    </div>
+  </section>
 
-    <section id="data-models">
-      <h2>3. Core Data Models</h2>
-      <div class="grid-2">
-        <div>
-          <h3>Holding</h3>
-          <pre><code>{
+  <section id="data-models">
+    <h2>3. Core Data Models</h2>
+    <div class="grid-2">
+      <div>
+        <h3>Holding</h3>
+        <pre><code>{
   "symbol": "RELIANCE",
+  "bloomberg_ticker": "RELIANCE IN Equity",
   "exchange": "NSE",
   "instrument_token": 738561,
   "asset_type": "EQUITY",
@@ -361,407 +206,392 @@
   "average_price": 2430.50,
   "last_price": 2510.20,
   "market_value": 30122.40,
-  "sector": "Oil, Gas & Consumable Fuels",
+  "sector": "Oil, Gas &amp; Consumable Fuels",
+  "gics_sector": "Energy",
   "modeled": true
 }</code></pre>
-        </div>
-        <div>
-          <h3>Portfolio Snapshot</h3>
-          <pre><code>{
-  "portfolio_id": "demo-2026-05",
-  "as_of": "2026-05-14T10:30:00+05:30",
-  "source": "zerodha|csv|sample",
-  "total_value": 845000.00,
-  "modeled_value": 812500.00,
-  "holdings": [],
-  "unsupported_summary": []
-}</code></pre>
-        </div>
       </div>
-      <div class="grid-2">
-        <div>
-          <h3>Risk Summary</h3>
-          <pre><code>{
+      <div>
+        <h3>Factor Series</h3>
+        <pre><code>{
+  "factor_id": "brent_crude",
+  "bloomberg_ticker": "CO1 Comdty",
+  "series_type": "daily_return",
+  "source": "bloomberg",
+  "data_start": "2018-01-01",
+  "data_end": "2026-05-13",
+  "observations": 2088,
+  "cache_path": "data/cache/bloomberg/CO1.parquet"
+}</code></pre>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div>
+        <h3>Risk Summary</h3>
+        <pre><code>{
   "confidence": 0.99,
   "horizon_days": 10,
-  "var_amount": 64500.00,
+  "var_historical": 64500.00,
+  "var_parametric": 61200.00,
+  "var_montecarlo": 66800.00,
   "expected_shortfall": 91200.00,
   "annualized_volatility": 0.218,
   "max_drawdown": -0.284,
+  "current_regime": "high_vol",
+  "regime_conditioned_var": 78400.00,
+  "backtest_kupiec_pvalue": 0.32,
+  "backtest_pass": true,
   "top_contributors": [],
-  "data_quality": "ok|stale|partial"
+  "data_quality": "bloomberg_full",
+  "data_source": "Bloomberg Terminal, FRTL, IIM Calcutta"
 }</code></pre>
-        </div>
-        <div>
-          <h3>News Risk Item</h3>
-          <pre><code>{
-  "headline": "Oil prices rise after supply concern",
-  "source": "RSS_FEED_NAME",
-  "published_at": "2026-05-14T09:00:00+05:30",
-  "link": "https://example.com/news",
-  "matched_symbols": ["ONGC", "BPCL"],
-  "matched_sectors": ["Oil & Gas"],
-  "risk_flags": ["commodity", "margin_pressure"]
+      </div>
+      <div>
+        <h3>Factor Signal Result</h3>
+        <pre><code>{
+  "factor": "brent_crude",
+  "target": "NSEOILGS Index",
+  "best_lag_days": 2,
+  "ic": 0.082,
+  "ic_ir": 1.34,
+  "ic_tstat": 2.31,
+  "granger_pvalue": 0.038,
+  "walkforward_sharpe": 0.61,
+  "is_oos": true,
+  "oos_start": "2024-01-01",
+  "signal_direction": "positive",
+  "significant": true,
+  "note": "Granger causality significant at 5%; IC degrades in rate-hike regime."
 }</code></pre>
-        </div>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <section id="functional">
-      <h2>4. Functional Requirements</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Requirement</th>
-            <th>Acceptance criteria</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>FR-01</td>
-            <td>Import portfolio from Zerodha, CSV, or sample fixture.</td>
-            <td>At least one path works without external network during demo.</td>
-          </tr>
-          <tr>
-            <td>FR-02</td>
-            <td>Normalize securities into modeled equity/ETF and unsupported buckets.</td>
-            <td>Unsupported instruments are visible and excluded from deep metrics.</td>
-          </tr>
-          <tr>
-            <td>FR-03</td>
-            <td>Fetch or load historical daily prices for modeled holdings.</td>
-            <td>Risk engine receives aligned return matrix with missing data report.</td>
-          </tr>
-          <tr>
-            <td>FR-04</td>
-            <td>Calculate portfolio risk metrics.</td>
-            <td>Dashboard shows VaR, ES, volatility, drawdown, concentration, and contribution.</td>
-          </tr>
-          <tr>
-            <td>FR-05</td>
-            <td>Run stress scenarios.</td>
-            <td>Each scenario outputs estimated loss, affected sectors, and largest contributors.</td>
-          </tr>
-          <tr>
-            <td>FR-06</td>
-            <td>Analyze commodity spillover.</td>
-            <td>System reports strongest factor, lag, direction, and confidence/significance indicator.</td>
-          </tr>
-          <tr>
-            <td>FR-07</td>
-            <td>Summarize RSS headline risk.</td>
-            <td>System shows source, link, sector/ticker tags, and risk category.</td>
-          </tr>
-          <tr>
-            <td>FR-08</td>
-            <td>Answer copilot questions using structured risk context.</td>
-            <td>Copilot cites calculated metrics and avoids advice wording.</td>
-          </tr>
-          <tr>
-            <td>FR-09</td>
-            <td>Generate a presentation-ready risk memo.</td>
-            <td>Memo includes total risk, drivers, stress losses, commodity exposure, news flags, and caveats.</td>
-          </tr>
-        </tbody>
-      </table>
-    </section>
+  <section id="functional">
+    <h2>4. Functional Requirements</h2>
+    <table>
+      <thead><tr><th>ID</th><th>Requirement</th><th>Acceptance criteria</th></tr></thead>
+      <tbody>
+        <tr><td>FR-01</td><td>Import portfolio from Zerodha, CSV, or sample fixture.</td><td>At least one path works without external network during demo.</td></tr>
+        <tr><td>FR-02</td><td>Pull adjusted daily prices and factor series from Bloomberg BLPAPI with local cache. Fall back to pre-exported CSV.</td><td>All calculations cite Bloomberg as data source. Fallback loads silently from cache.</td></tr>
+        <tr><td>FR-03</td><td>Normalize securities into modeled equity/ETF and unsupported buckets.</td><td>Unsupported instruments are visible and excluded from deep metrics.</td></tr>
+        <tr><td>FR-04</td><td>Compute VaR using three methods: historical simulation, parametric (variance-covariance), and Monte Carlo.</td><td>All three VaR estimates shown with method labels and assumptions noted.</td></tr>
+        <tr><td>FR-05</td><td>Backtest historical VaR using Kupiec unconditional coverage and Christoffersen independence tests.</td><td>Dashboard shows violation rate, expected rate, test statistics, p-values, and pass/fail verdict.</td></tr>
+        <tr><td>FR-06</td><td>Detect 2-state volatility regimes using HMM on rolling return and VIX features.</td><td>Current regime is displayed. Regime-conditioned VaR estimates are shown alongside unconditional VaR.</td></tr>
+        <tr><td>FR-07</td><td>Research commodity factor signals against Indian sector indices and portfolio returns. Report IC, ICIR, t-stat, Granger p-value, walk-forward Sharpe.</td><td>Research report ranks factor-lag pairs by t-stat. Non-significant results reported honestly.</td></tr>
+        <tr><td>FR-08</td><td>Run cross-sectional factor analysis across NIFTY 50 universe.</td><td>IC computed cross-sectionally with t-stat above 1.96 flagged as statistically significant.</td></tr>
+        <tr><td>FR-09</td><td>Run stress scenarios (COVID, rate shock, crude spike, INR depreciation, election).</td><td>Each scenario outputs estimated loss, affected sectors, and largest contributors.</td></tr>
+        <tr><td>FR-10</td><td>Summarize RSS headline risk for portfolio holdings and sectors.</td><td>System shows source, link, sector/ticker tags, and risk category.</td></tr>
+        <tr><td>FR-11</td><td>Answer copilot questions using structured MCP tool outputs only.</td><td>Copilot cites calculated metrics and avoids advice wording.</td></tr>
+        <tr><td>FR-12</td><td>Generate a presentation-ready risk and research memo.</td><td>Memo includes risk metrics, backtest result, regime, top factor signals, news flags, and data caveats.</td></tr>
+      </tbody>
+    </table>
+  </section>
 
-    <section id="risk-engine">
-      <h2>5. Risk Engine Specification</h2>
-      <div class="grid-2">
-        <div class="card">
-          <h3>Return calculation</h3>
-          <ul>
-            <li>Use adjusted close where available; otherwise document close-price limitation.</li>
-            <li>Compute simple returns for interpretability and optionally log returns for robustness checks.</li>
-            <li>Align all return series by trading date and report dropped/missing observations.</li>
-          </ul>
-        </div>
-        <div class="card">
-          <h3>Portfolio aggregation</h3>
-          <ul>
-            <li>Weight each holding by current market value divided by modeled portfolio value.</li>
-            <li>Daily portfolio return equals weighted sum of holding returns.</li>
-            <li>Unsupported assets are excluded from modeled risk and shown separately.</li>
-          </ul>
-        </div>
+  <section id="risk-engine">
+    <h2>5. Risk Engine Specification</h2>
+    <table>
+      <thead><tr><th>Metric</th><th>Method</th><th>Output</th><th>Caveat to display</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Historical VaR</td>
+          <td>Empirical lower-tail percentile of portfolio return distribution at 95% and 99% confidence.</td>
+          <td>1-day and 10-day (square-root-time scaled) VaR amount and percentage.</td>
+          <td>Past returns may not capture future regime shifts.</td>
+        </tr>
+        <tr>
+          <td>Parametric VaR</td>
+          <td>Assumes normally distributed returns. <code>VaR = μ - z * σ</code> where z is the confidence quantile.</td>
+          <td>1-day and 10-day VaR. Compare to historical to assess normality assumption impact.</td>
+          <td>Underestimates fat-tail losses; compare to historical and Monte Carlo.</td>
+        </tr>
+        <tr>
+          <td>Monte Carlo VaR</td>
+          <td>Simulate 10,000 portfolio return paths using estimated covariance matrix. Take empirical quantile.</td>
+          <td>1-day and 10-day VaR with simulation confidence band.</td>
+          <td>Depends on covariance estimate stability; run with multiple seeds for robustness.</td>
+        </tr>
+        <tr>
+          <td>Expected Shortfall</td>
+          <td>Average of realized losses worse than VaR threshold.</td>
+          <td>Tail loss amount, percentage, and observation count.</td>
+          <td>Unstable with small samples (&lt;250 observations).</td>
+        </tr>
+        <tr>
+          <td>VaR Backtest — Kupiec</td>
+          <td>Likelihood ratio test: observed violations vs. expected at stated confidence. H₀: violation rate = 1 - confidence.</td>
+          <td>Observed violation rate, expected rate, LR statistic, p-value, pass/fail.</td>
+          <td>Low power with short windows (&lt;250 observations).</td>
+        </tr>
+        <tr>
+          <td>VaR Backtest — Christoffersen</td>
+          <td>Test independence of violations — violations should not cluster. Extends Kupiec with conditional coverage.</td>
+          <td>Independence test statistic, p-value, combined test result.</td>
+          <td>Failing independence test suggests volatility clustering not captured by model.</td>
+        </tr>
+        <tr>
+          <td>Regime-conditioned VaR</td>
+          <td>Estimate VaR separately for high-vol and low-vol regimes identified by HMM. Report current regime VaR.</td>
+          <td>VaR by regime, current regime label, regime probability.</td>
+          <td>Regime labels are probabilistic; history is rewritten each time HMM is refitted.</td>
+        </tr>
+        <tr>
+          <td>Component VaR</td>
+          <td>Marginal contribution to portfolio VaR using covariance and weights.</td>
+          <td>Top risk contributors by amount and percentage share.</td>
+          <td>Assumes static current weights for historical simulation.</td>
+        </tr>
+        <tr>
+          <td>Stress testing</td>
+          <td>Apply scenario shock vector to holdings/sectors/factors.</td>
+          <td>Scenario loss, affected sectors, top loss contributors.</td>
+          <td>Shocks are deterministic; does not account for second-order contagion effects.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="factor-research">
+    <h2>6. Factor Signal Research Specification</h2>
+    <p>The factor research module is the primary differentiator of Drishti for quant research audiences. It researches whether commodity and macro factors have statistically significant predictive power over Indian equity sector returns.</p>
+    <div class="callout warning">
+      <span class="label">Research vs risk</span>
+      Factor signal research is not portfolio construction. It measures signal quality and reports statistics. It does not produce buy/sell recommendations or optimal allocations.
+    </div>
+    <table>
+      <thead><tr><th>Metric</th><th>Definition</th><th>Threshold for significance</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Information Coefficient (IC)</td>
+          <td>Rank correlation (Spearman) between the factor signal at time t and forward returns at time t+lag. Computed cross-sectionally across NIFTY sectors or holdings.</td>
+          <td>IC &gt; 0.05 considered economically meaningful; IC &gt; 0.10 strong.</td>
+        </tr>
+        <tr>
+          <td>IC Information Ratio (ICIR)</td>
+          <td>Mean IC divided by standard deviation of IC over rolling windows. Measures IC stability.</td>
+          <td>ICIR &gt; 0.5 considered consistent; &gt; 1.0 strong.</td>
+        </tr>
+        <tr>
+          <td>IC t-statistic</td>
+          <td><code>t = IC_mean / (IC_std / sqrt(n_periods))</code>. Tests whether mean IC is significantly different from zero.</td>
+          <td>|t| &gt; 1.96 significant at 5%; |t| &gt; 2.58 significant at 1%.</td>
+        </tr>
+        <tr>
+          <td>Granger causality p-value</td>
+          <td>VAR-based Granger causality test: does lagged commodity factor improve prediction of sector returns beyond the sector's own lags?</td>
+          <td>p &lt; 0.05 reject null of no Granger causality. Report all p-values including non-significant.</td>
+        </tr>
+        <tr>
+          <td>Walk-forward Sharpe</td>
+          <td>Expand-window training with out-of-sample signal application. Go long when signal is positive, flat/short otherwise. Compute annualized Sharpe on OOS returns.</td>
+          <td>Sharpe &gt; 0.5 OOS considered promising for prototype. Primary evidence: OOS, not IS.</td>
+        </tr>
+      </tbody>
+    </table>
+    <h3 style="margin-top:18px">Factors To Research</h3>
+    <table>
+      <thead><tr><th>Factor</th><th>Bloomberg ticker</th><th>Rationale</th><th>Primary target sectors</th></tr></thead>
+      <tbody>
+        <tr><td>Brent crude return</td><td><code>CO1 Comdty</code></td><td>Largest commodity driver of Indian input costs and trade deficit.</td><td>Oil &amp; Gas, Chemicals, Paint, Aviation</td></tr>
+        <tr><td>WTI crude return</td><td><code>CL1 Comdty</code></td><td>Global crude benchmark; test Brent vs WTI explanatory difference.</td><td>Oil &amp; Gas, Chemicals</td></tr>
+        <tr><td>Gold return</td><td><code>GC1 Comdty</code></td><td>Safe-haven factor; flows affect Indian equity-gold rotation.</td><td>Jewellery, broad market</td></tr>
+        <tr><td>Copper return</td><td><code>HG1 Comdty</code></td><td>Global growth proxy; leads industrial and infrastructure sectors.</td><td>Metals, Capital Goods, Construction</td></tr>
+        <tr><td>Natural gas return</td><td><code>NG1 Comdty</code></td><td>Input cost for fertiliser, power, and city gas distribution.</td><td>Fertilisers, Power, Gas Utilities</td></tr>
+        <tr><td>USD/INR return</td><td><code>USDINR Curncy</code></td><td>Currency factor: exporters benefit, importers hurt from INR depreciation.</td><td>IT (positive), Oil &amp; Gas (negative), Pharma</td></tr>
+        <tr><td>India 10Y yield change</td><td><code>GIND10YR Index</code></td><td>Rate factor: rising yields compress financials, NBFC, real estate valuations.</td><td>Banks, NBFC, Realty, Capital Goods</td></tr>
+        <tr><td>India VIX change</td><td><code>INVIXN Index</code></td><td>Volatility risk factor; sharp VIX spikes often precede market-wide drawdowns.</td><td>Broad market, high-beta sectors</td></tr>
+      </tbody>
+    </table>
+    <h3 style="margin-top:18px">Lags To Test</h3>
+    <p>Test lags: 1, 2, 3, 5, 10 trading days. Report best lag (highest |IC| t-stat), runner-up, and full lag profile chart. Explain economically why the best lag makes sense (e.g., 2-day lag for crude-to-refinery margin transmission).</p>
+  </section>
+
+  <section id="ml-spec">
+    <h2>7. ML Model Specification</h2>
+    <div class="grid-2">
+      <div class="card">
+        <h3>Model 1 — HMM Volatility Regime Detection</h3>
+        <ul>
+          <li><strong>Type:</strong> Gaussian Hidden Markov Model, 2 hidden states (low-vol, high-vol).</li>
+          <li><strong>Features:</strong> Rolling 20-day portfolio return std, rolling 20-day absolute return mean, India VIX level, VIX change.</li>
+          <li><strong>Library:</strong> <code>hmmlearn.GaussianHMM</code></li>
+          <li><strong>Validation:</strong> Walk-forward refitting; compare regime-conditioned VaR violation rate to unconditional in OOS window.</li>
+          <li><strong>Output:</strong> Current state probability, historical regime sequence, regime-conditioned VaR.</li>
+        </ul>
       </div>
-      <table>
-        <thead>
-          <tr>
-            <th>Metric</th>
-            <th>Method</th>
-            <th>Output</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Historical VaR</td>
-            <td>Empirical quantile of portfolio return distribution at 95% and 99% confidence.</td>
-            <td>1-day and square-root-time 10-day VaR amount and percentage.</td>
-          </tr>
-          <tr>
-            <td>Expected Shortfall</td>
-            <td>Average of returns worse than VaR threshold.</td>
-            <td>Tail loss amount and percentage.</td>
-          </tr>
-          <tr>
-            <td>Rolling volatility</td>
-            <td>Rolling standard deviation annualized with trading-day factor.</td>
-            <td>Trend chart and latest volatility value.</td>
-          </tr>
-          <tr>
-            <td>Drawdown</td>
-            <td>Cumulative portfolio value path versus running peak.</td>
-            <td>Maximum drawdown and current drawdown.</td>
-          </tr>
-          <tr>
-            <td>Component VaR</td>
-            <td>Approximate contribution from each holding using covariance and portfolio weights.</td>
-            <td>Top risk contributors by amount and percentage contribution.</td>
-          </tr>
-          <tr>
-            <td>Stress testing</td>
-            <td>Apply scenario shock vector to holdings/sectors/factors.</td>
-            <td>Scenario loss, affected sectors, top loss contributors.</td>
-          </tr>
-        </tbody>
-      </table>
-    </section>
+      <div class="card">
+        <h3>Model 2 — VaR Breach Classifier (Optional)</h3>
+        <ul>
+          <li><strong>Type:</strong> Gradient Boosted Tree (XGBoost) binary classifier.</li>
+          <li><strong>Target:</strong> Will tomorrow's portfolio return exceed the 99% historical VaR threshold? (breach = 1).</li>
+          <li><strong>Features:</strong> Rolling volatility, VIX level, Brent 5-day return, USD/INR 5-day change, 10Y yield change, sector momentum z-scores.</li>
+          <li><strong>Validation:</strong> Time-series split, no lookahead. Report AUC, precision at high-confidence threshold, and calibration.</li>
+          <li><strong>Caveat:</strong> Class imbalance at 1% tail — use SMOTE or adjusted threshold carefully.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="callout warning">
+      <span class="label">ML hygiene rules</span>
+      <ul>
+        <li>All feature construction uses only information available at time t (no future data leaks).</li>
+        <li>Train/test split is always time-ordered — never random shuffle on time series data.</li>
+        <li>Report out-of-sample performance separately from in-sample. If OOS degrades significantly, say so.</li>
+        <li>Regime labels from HMM are refit on expanding window — do not use full-sample labels for any in-sample training.</li>
+      </ul>
+    </div>
+  </section>
 
-    <section id="commodity">
-      <h2>6. Commodity Spillover Specification</h2>
-      <p>The commodity module is a risk-driver layer, not a replacement for total portfolio risk. It answers whether commodity shocks are historically associated with portfolio or sector movements after short lags.</p>
-      <table>
-        <thead>
-          <tr>
-            <th>Step</th>
-            <th>Prototype method</th>
-            <th>Production extension</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Factor construction</td>
-            <td>Daily returns and volatility z-scores for crude, Brent, gold, copper, natural gas.</td>
-            <td>Licensed/validated commodity feed, currency adjustment, Indian market calendar alignment.</td>
-          </tr>
-          <tr>
-            <td>Lag scan</td>
-            <td>Test lags 1, 2, 3, 5, and 10 trading days against sector/portfolio returns.</td>
-            <td>Rolling window lag stability, regime detection, confidence bands.</td>
-          </tr>
-          <tr>
-            <td>Regression</td>
-            <td>Portfolio/sector return as function of lagged commodity returns and volatility shocks.</td>
-            <td>Regularized multi-factor model and residual diagnostics.</td>
-          </tr>
-          <tr>
-            <td>Risk score</td>
-            <td>Combine absolute beta, significance, sector exposure, and recent shock magnitude.</td>
-            <td>Backtested early-warning score with alert thresholds.</td>
-          </tr>
-        </tbody>
-      </table>
-      <pre><code>commodity_sensitivity_score =
+  <section id="backtest-spec">
+    <h2>8. Backtest Framework Specification</h2>
+    <div class="grid-2">
+      <div class="callout prototype">
+        <span class="label">VaR model backtest</span>
+        <ol>
+          <li>Compute historical VaR at 99% confidence on a 252-day rolling window.</li>
+          <li>For each day in the backtest window, record whether actual portfolio return exceeded the VaR estimate (violation = 1).</li>
+          <li>Run Kupiec LR test: <code>LR = -2 * log((p^x * (1-p)^(T-x)) / (x/T)^x * (1-x/T)^(T-x))</code> where p = 0.01, x = violations, T = days.</li>
+          <li>Run Christoffersen test: independence of violations using first-order Markov transitions.</li>
+          <li>Report: observed violation rate, expected 1%, p-values for both tests, pass/fail.</li>
+        </ol>
+      </div>
+      <div class="callout prototype">
+        <span class="label">Factor signal walk-forward backtest</span>
+        <ol>
+          <li>Training window: minimum 252 days expanding from start date.</li>
+          <li>At each refit date (monthly), compute IC on training window, identify best factor-lag pair.</li>
+          <li>Apply signal to next OOS month: go long sector if signal is positive.</li>
+          <li>Accumulate OOS returns across all refit periods.</li>
+          <li>Report: OOS Sharpe, OOS IC, IC stability (ICIR), turnover, regime breakdown of returns.</li>
+        </ol>
+      </div>
+    </div>
+    <div class="callout danger">
+      <span class="label">Lookahead bias checklist</span>
+      <ul>
+        <li>Prices at time t are only used to compute returns known at end of day t.</li>
+        <li>VaR estimate at time t uses only data through t-1.</li>
+        <li>Signal at time t uses factor data through t-1, not t.</li>
+        <li>HMM regime at time t is determined using data through t-1 in walk-forward mode.</li>
+        <li>Instrument master and sector map are treated as static to avoid survivorship bias for prototype scope.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="commodity">
+    <h2>9. Commodity Spillover Specification</h2>
+    <p>The commodity module is both a risk-driver layer (portfolio sensitivity) and a research layer (signal quality validation). It answers two distinct questions: "How sensitive is my portfolio to commodity shocks today?" and "Do commodity factor returns have predictive power over sector returns?"</p>
+    <pre><code>commodity_sensitivity_score =
   sector_weight
   * normalized_abs_lag_beta
   * recent_factor_shock_zscore
-  * confidence_multiplier</code></pre>
-    </section>
+  * confidence_multiplier  # = 1 if Granger p &lt; 0.05 else 0.5</code></pre>
+  </section>
 
-    <section id="news">
-      <h2>7. News Risk Specification</h2>
-      <div class="callout warning">
-        <span class="label">MVP rule</span>
-        Store and display headline metadata only: headline, link, source, timestamp, matched sector/ticker, and risk tags. Do not scrape full article bodies in V1.
+  <section id="news">
+    <h2>10. News Risk Specification</h2>
+    <div class="callout warning">
+      <span class="label">MVP rule</span>
+      Store headline metadata only: headline text, link, source, timestamp, matched sector/ticker, and risk tag. No full article scraping.
+    </div>
+    <table>
+      <thead><tr><th>Risk tag</th><th>Keyword examples</th><th>Portfolio implication</th></tr></thead>
+      <tbody>
+        <tr><td>Commodity</td><td>crude, Brent, oil, gold, copper, gas, supply</td><td>Input cost change, margin pressure, sector volatility.</td></tr>
+        <tr><td>Regulatory</td><td>SEBI, RBI, circular, penalty, disclosure, compliance</td><td>Event risk for financials, brokers, and listed companies.</td></tr>
+        <tr><td>Macro</td><td>inflation, repo, rupee, rates, GDP, fiscal, Fed</td><td>Broad market and interest-sensitive sector risk.</td></tr>
+        <tr><td>Earnings</td><td>results, profit, margin, revenue, guidance, miss</td><td>Single-stock volatility and gap risk.</td></tr>
+        <tr><td>Geopolitical</td><td>war, sanctions, OPEC, tariff, trade</td><td>Commodity and INR volatility.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="ui">
+    <h2>11. Dashboard Specification</h2>
+    <div class="grid-3">
+      <div class="card">
+        <h3>Risk Overview</h3>
+        <ul>
+          <li>Portfolio value and modeled percentage.</li>
+          <li>VaR (all 3 methods) at 95% and 99%.</li>
+          <li>ES, max drawdown, annualized volatility.</li>
+          <li>Current regime badge (High Vol / Low Vol).</li>
+          <li>Regime-conditioned VaR.</li>
+          <li>VaR backtest pass/fail indicator.</li>
+          <li>Data source and freshness.</li>
+        </ul>
       </div>
-      <table>
-        <thead>
-          <tr>
-            <th>Risk tag</th>
-            <th>Keyword examples</th>
-            <th>Possible portfolio implication</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Commodity</td>
-            <td>crude, Brent, oil, gold, copper, gas, supply</td>
-            <td>Margin pressure, input cost change, sector volatility.</td>
-          </tr>
-          <tr>
-            <td>Regulatory</td>
-            <td>SEBI, RBI, circular, penalty, disclosure, compliance</td>
-            <td>Event risk for financials, brokers, listed companies.</td>
-          </tr>
-          <tr>
-            <td>Macro</td>
-            <td>inflation, repo, rupee, rates, GDP, fiscal</td>
-            <td>Broad market and interest-sensitive sector risk.</td>
-          </tr>
-          <tr>
-            <td>Earnings</td>
-            <td>results, profit, margin, revenue, guidance</td>
-            <td>Single-stock volatility and gap risk.</td>
-          </tr>
-        </tbody>
-      </table>
-    </section>
-
-    <section id="ui">
-      <h2>8. Dashboard Specification</h2>
-      <div class="grid-3">
-        <div class="card">
-          <h3>Overview</h3>
-          <ul>
-            <li>Total portfolio value.</li>
-            <li>Modeled value percentage.</li>
-            <li>99% 10-day VaR and ES.</li>
-            <li>Data freshness indicator.</li>
-          </ul>
-        </div>
-        <div class="card">
-          <h3>Risk drivers</h3>
-          <ul>
-            <li>Top component VaR holdings.</li>
-            <li>Sector concentration.</li>
-            <li>Correlation heatmap.</li>
-            <li>Largest drawdown periods.</li>
-          </ul>
-        </div>
-        <div class="card">
-          <h3>Context</h3>
-          <ul>
-            <li>Commodity sensitivity cards.</li>
-            <li>Stress scenario comparison.</li>
-            <li>RSS risk flags.</li>
-            <li>Copilot Q&amp;A panel.</li>
-          </ul>
-        </div>
+      <div class="card">
+        <h3>Risk Drivers</h3>
+        <ul>
+          <li>Top component VaR holdings.</li>
+          <li>Sector concentration chart.</li>
+          <li>Correlation heatmap.</li>
+          <li>Stress scenario comparison table.</li>
+          <li>Rolling volatility trend chart.</li>
+        </ul>
       </div>
-      <table>
-        <thead>
-          <tr>
-            <th>State</th>
-            <th>UI behavior</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>No portfolio loaded</td>
-            <td>Show three clear actions: connect Zerodha, upload CSV, load sample portfolio.</td>
-          </tr>
-          <tr>
-            <td>Partial data</td>
-            <td>Show risk metrics for modeled holdings and a warning for excluded instruments.</td>
-          </tr>
-          <tr>
-            <td>Stale market data</td>
-            <td>Display last-updated timestamp and continue using cached data with warning.</td>
-          </tr>
-          <tr>
-            <td>Failed auth/API</td>
-            <td>Show human-readable error and fallback actions without exposing secrets.</td>
-          </tr>
-        </tbody>
-      </table>
-    </section>
+      <div class="card">
+        <h3>Factor Research</h3>
+        <ul>
+          <li>Factor signal ranking table (IC, t-stat, Granger p).</li>
+          <li>Walk-forward Sharpe chart.</li>
+          <li>Regime-conditioned IC breakdown.</li>
+          <li>Commodity sensitivity heatmap by sector.</li>
+          <li>RSS risk flags panel.</li>
+          <li>Copilot Q&amp;A.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
 
-    <section id="non-functional">
-      <h2>9. Non-Functional Requirements</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Category</th>
-            <th>Requirement</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Performance</td>
-            <td>Sample portfolio dashboard should render in under 60 seconds on a normal laptop.</td>
-          </tr>
-          <tr>
-            <td>Reliability</td>
-            <td>Demo must work with no live Zerodha account and no external network after sample data is prepared.</td>
-          </tr>
-          <tr>
-            <td>Privacy</td>
-            <td>Prototype should not persist access tokens or upload raw holdings to a hosted service by default.</td>
-          </tr>
-          <tr>
-            <td>Auditability</td>
-            <td>Every risk output should include calculation method, input date range, and data quality status.</td>
-          </tr>
-          <tr>
-            <td>Safety</td>
-            <td>Copilot must refuse buy/sell/hold recommendations and redirect to risk explanation.</td>
-          </tr>
-        </tbody>
-      </table>
-    </section>
+  <section id="non-functional">
+    <h2>12. Non-Functional Requirements</h2>
+    <table>
+      <thead><tr><th>Category</th><th>Requirement</th></tr></thead>
+      <tbody>
+        <tr><td>Performance</td><td>Sample portfolio full risk + factor research pipeline completes in under 90 seconds on a standard laptop with cached Bloomberg data.</td></tr>
+        <tr><td>Reliability</td><td>Demo must work with no live Zerodha account and no external network after Bloomberg cache is pre-populated.</td></tr>
+        <tr><td>Data integrity</td><td>Bloomberg data is cached with source tag, pull timestamp, and ticker. Every risk output cites its data source and date range.</td></tr>
+        <tr><td>Privacy</td><td>Prototype does not persist access tokens or upload raw holdings or Bloomberg data to any hosted service.</td></tr>
+        <tr><td>ML reproducibility</td><td>All ML models are seeded. Training data windows, feature definitions, and model hyperparameters are logged with each run.</td></tr>
+        <tr><td>Safety</td><td>Copilot refuses buy/sell/hold recommendations and redirects to risk and factor diagnostics.</td></tr>
+      </tbody>
+    </table>
+  </section>
 
-    <section id="roadmap">
-      <h2>10. Phase-Wise Roadmap</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Phase</th>
-            <th>Deliverable</th>
-            <th>Exit criteria</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Phase 0</td>
-            <td>Documentation, sample portfolio, data dictionary, source strategy.</td>
-            <td>PRD, specs, HLD, and LLD are approved.</td>
-          </tr>
-          <tr>
-            <td>Phase 1</td>
-            <td>Portfolio import, normalization, cached prices, basic dashboard.</td>
-            <td>Sample portfolio shows value, weights, sector exposure.</td>
-          </tr>
-          <tr>
-            <td>Phase 2</td>
-            <td>VaR, ES, stress tests, contribution, drawdown, volatility.</td>
-            <td>Risk outputs validated against synthetic test portfolios.</td>
-          </tr>
-          <tr>
-            <td>Phase 3</td>
-            <td>Commodity spillover and RSS news risk context.</td>
-            <td>Risk dashboard explains at least one factor/sector driver.</td>
-          </tr>
-          <tr>
-            <td>Phase 4</td>
-            <td>Dual MCP and AI copilot demo.</td>
-            <td>Copilot answers using tool outputs and avoids advice language.</td>
-          </tr>
-          <tr>
-            <td>Phase 5</td>
-            <td>Production-readiness plan.</td>
-            <td>Hosting, security, token storage, compliance, and cost changes documented.</td>
-          </tr>
-        </tbody>
-      </table>
-    </section>
+  <section id="roadmap">
+    <h2>13. Phase-Wise Roadmap</h2>
+    <table>
+      <thead><tr><th>Phase</th><th>Deliverable</th><th>Exit criteria</th></tr></thead>
+      <tbody>
+        <tr><td>Phase 0</td><td>PRD, Specs, HLD, LLD, sample portfolio data dictionary.</td><td>All 4 documents finalized.</td></tr>
+        <tr><td>Phase 1</td><td>Bloomberg BLPAPI data pipeline with local cache. CSV export fallback.</td><td>Price history and factor series for all target tickers cached locally and queryable.</td></tr>
+        <tr><td>Phase 2</td><td>Portfolio import (Zerodha/CSV/sample), normalization, basic risk dashboard (VaR historical, ES, drawdown, concentration).</td><td>Sample portfolio shows value, weights, sector exposure, and historical VaR.</td></tr>
+        <tr><td>Phase 3</td><td>VaR methods 2 and 3 (parametric, Monte Carlo), stress tests, component contribution, VaR backtest (Kupiec + Christoffersen).</td><td>All 3 VaR methods shown. Backtest reports violation rate and test p-values.</td></tr>
+        <tr><td>Phase 4</td><td>HMM regime detection, regime-conditioned VaR, India VIX integration.</td><td>Current regime displayed. Regime-conditioned VaR validated OOS.</td></tr>
+        <tr><td>Phase 5</td><td>Commodity factor signal research: IC, ICIR, t-stat, Granger causality, walk-forward Sharpe. Cross-sectional analysis on NIFTY 50.</td><td>Research report shows top factor-lag pair with OOS Sharpe and t-stat.</td></tr>
+        <tr><td>Phase 6</td><td>Dual MCP, AI copilot, RSS news risk, presentation-ready memo.</td><td>Copilot answers using MCP tools and avoids advice language.</td></tr>
+        <tr><td>Phase 7</td><td>Production-readiness documentation.</td><td>Hosting, security, data licensing, and compliance changes documented.</td></tr>
+      </tbody>
+    </table>
+  </section>
 
-    <section id="acceptance">
-      <h2>11. Acceptance Test Scenarios</h2>
-      <ul>
-        <li>CSV import loads a portfolio and produces a modeled/unsupported split.</li>
-        <li>Sample portfolio produces 95% and 99% VaR plus ES without internet access.</li>
-        <li>Missing price data produces a warning, not a crash.</li>
-        <li>Commodity module reports "not significant" when lag relationships are weak.</li>
-        <li>RSS failure displays stale/unavailable news state without affecting core risk calculations.</li>
-        <li>Copilot answers "What is my biggest risk?" using top component VaR and concentration outputs.</li>
-        <li>Copilot refuses "Should I buy more of stock X?" and offers risk context instead.</li>
-      </ul>
-    </section>
+  <section id="acceptance">
+    <h2>14. Acceptance Test Scenarios</h2>
+    <ul>
+      <li>Bloomberg cache loads prices for NIFTY 50 stocks, 8 commodity/macro series, and 7 sector indices without external network.</li>
+      <li>Historical, parametric, and Monte Carlo VaR differ by less than 20% on a diversified portfolio — large divergence triggers a model comparison note.</li>
+      <li>Kupiec test p-value &gt; 0.05 on historical VaR at 99% for a sample portfolio with 3 years of data.</li>
+      <li>HMM identifies high-vol regime during COVID (Feb–Apr 2020) and rate-hike cycle (2022).</li>
+      <li>Brent crude factor shows IC t-stat &gt; 1.96 against NSEOILGS Index at 1–3 day lag.</li>
+      <li>Walk-forward factor backtest reports OOS Sharpe separately from in-sample.</li>
+      <li>Copilot answers "What is my biggest risk?" citing top component VaR and current regime.</li>
+      <li>Copilot refuses "Should I buy more RELIANCE?" and redirects to risk diagnostics.</li>
+      <li>RSS failure shows stale/unavailable state without affecting core risk calculations.</li>
+    </ul>
+  </section>
 
-    <p class="footer">Portfolio Risk Copilot Specs - deterministic calculations first, AI explanation second.</p>
-  </main>
+  <p class="footer">Drishti Specs v2 — Bloomberg data, backtest-validated VaR, IC-graded factor signals, HMM regimes, MCP copilot.</p>
+</main>
 </body>
 </html>

@@ -3,647 +3,492 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Portfolio Risk Copilot - High-Level Design</title>
+  <title>Drishti - High-Level Design</title>
   <style>
     :root {
-      --bg: #f5f7fa;
-      --paper: #ffffff;
-      --ink: #17202a;
-      --muted: #5d6d7e;
-      --line: #d7dee8;
-      --primary: #145c72;
-      --primary-2: #1f7a8c;
-      --accent: #b85c38;
-      --ok: #1d7a46;
-      --warn: #a76500;
-      --danger: #a33b3b;
-      --soft-blue: #e7f2f6;
-      --soft-green: #e8f5ee;
-      --soft-amber: #fff2dc;
-      --soft-red: #fae9e8;
-      --shadow: 0 18px 42px rgba(23, 32, 42, 0.10);
+      --bg: #f5f7fa; --paper: #ffffff; --ink: #17202a; --muted: #5d6d7e;
+      --line: #d7dee8; --primary: #145c72; --primary-2: #1f7a8c;
+      --accent: #b85c38; --ok: #1d7a46; --warn: #a76500; --danger: #a33b3b;
+      --soft-blue: #e7f2f6; --soft-green: #e8f5ee; --soft-amber: #fff2dc;
+      --soft-red: #fae9e8; --shadow: 0 18px 42px rgba(23,32,42,.10);
     }
-
     * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      background: var(--bg);
-      color: var(--ink);
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      line-height: 1.58;
-    }
-
+    body { margin: 0; background: var(--bg); color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, sans-serif; line-height: 1.58; }
     a { color: var(--primary); text-decoration: none; }
     a:hover { text-decoration: underline; }
-
-    .page {
-      max-width: 1180px;
-      margin: 0 auto;
-      padding: 32px 20px 64px;
-    }
-
-    .hero {
-      background: linear-gradient(135deg, #0d3f4d 0%, #145c72 54%, #2f5f63 100%);
-      color: #fff;
-      border-radius: 8px;
-      padding: 44px;
-      box-shadow: var(--shadow);
-    }
-
-    .eyebrow {
-      margin: 0 0 10px;
-      font-size: 13px;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: #cce8ef;
-      font-weight: 700;
-    }
-
-    h1, h2, h3 { line-height: 1.18; margin: 0; }
+    .page { max-width: 1180px; margin: 0 auto; padding: 32px 20px 64px; }
+    .hero { background: linear-gradient(135deg,#0d3f4d 0%,#145c72 54%,#2f5f63 100%);
+      color: #fff; border-radius: 8px; padding: 44px; box-shadow: var(--shadow); }
+    .eyebrow { margin: 0 0 10px; font-size: 13px; text-transform: uppercase;
+      letter-spacing: .08em; color: #cce8ef; font-weight: 700; }
+    h1,h2,h3 { line-height: 1.18; margin: 0; }
     h1 { font-size: 42px; max-width: 950px; }
     h2 { font-size: 26px; margin-bottom: 16px; color: #123845; }
     h3 { font-size: 18px; margin-bottom: 8px; color: #173b46; }
-
-    .subtitle {
-      margin: 18px 0 0;
-      max-width: 900px;
-      font-size: 18px;
-      color: #eef8fb;
-    }
-
-    .meta {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
-      margin-top: 28px;
-    }
-
-    .meta div {
-      border: 1px solid rgba(255, 255, 255, 0.24);
-      background: rgba(255, 255, 255, 0.10);
-      border-radius: 8px;
-      padding: 12px;
-    }
-
-    .meta strong {
-      display: block;
-      font-size: 12px;
-      color: #cce8ef;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      margin-bottom: 4px;
-    }
-
-    .nav {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin: 22px 0;
-      padding: 12px;
-      border: 1px solid var(--line);
-      background: var(--paper);
-      border-radius: 8px;
-      position: sticky;
-      top: 0;
-      z-index: 5;
-    }
-
-    .nav a {
-      padding: 8px 12px;
-      border-radius: 6px;
-      color: #173b46;
-      background: #eef4f7;
-      font-weight: 650;
-      font-size: 14px;
-    }
-
-    .nav a.active {
-      background: var(--primary);
-      color: #fff;
-    }
-
-    section {
-      background: var(--paper);
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 28px;
-      margin-top: 18px;
-      box-shadow: 0 8px 22px rgba(23, 32, 42, 0.05);
-    }
-
-    .grid-2, .grid-3, .grid-4 {
-      display: grid;
-      gap: 16px;
-    }
-    .grid-2 { grid-template-columns: repeat(2, 1fr); }
-    .grid-3 { grid-template-columns: repeat(3, 1fr); }
-    .grid-4 { grid-template-columns: repeat(4, 1fr); }
-
-    .card {
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 18px;
-      background: #fbfcfe;
-    }
-
-    .callout {
-      border-radius: 8px;
-      border: 1px solid var(--line);
-      padding: 16px 18px;
-      margin: 16px 0;
-    }
-
+    .subtitle { margin: 18px 0 0; max-width: 900px; font-size: 18px; color: #eef8fb; }
+    .meta { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-top: 28px; }
+    .meta div { border: 1px solid rgba(255,255,255,.24); background: rgba(255,255,255,.10);
+      border-radius: 8px; padding: 12px; }
+    .meta strong { display: block; font-size: 12px; color: #cce8ef; text-transform: uppercase;
+      letter-spacing: .06em; margin-bottom: 4px; }
+    .nav { display: flex; gap: 10px; flex-wrap: wrap; margin: 22px 0; padding: 12px;
+      border: 1px solid var(--line); background: var(--paper); border-radius: 8px;
+      position: sticky; top: 0; z-index: 5; }
+    .nav a { padding: 8px 12px; border-radius: 6px; color: #173b46;
+      background: #eef4f7; font-weight: 650; font-size: 14px; }
+    .nav a.active { background: var(--primary); color: #fff; }
+    section { background: var(--paper); border: 1px solid var(--line); border-radius: 8px;
+      padding: 28px; margin-top: 18px; box-shadow: 0 8px 22px rgba(23,32,42,.05); }
+    .grid-2,.grid-3,.grid-4 { display: grid; gap: 16px; }
+    .grid-2 { grid-template-columns: repeat(2,1fr); }
+    .grid-3 { grid-template-columns: repeat(3,1fr); }
+    .grid-4 { grid-template-columns: repeat(4,1fr); }
+    .card { border: 1px solid var(--line); border-radius: 8px; padding: 18px; background: #fbfcfe; }
+    .card strong { display: block; color: #122f38; margin-bottom: 5px; }
+    .callout { border-radius: 8px; border: 1px solid var(--line); padding: 16px 18px; margin: 16px 0; }
     .prototype { background: var(--soft-blue); border-color: #b8d8e4; }
     .production { background: var(--soft-green); border-color: #bddfc9; }
     .warning { background: var(--soft-amber); border-color: #efd096; }
     .danger { background: var(--soft-red); border-color: #e8b6b2; }
-
-    .label {
-      display: inline-flex;
-      align-items: center;
-      padding: 3px 8px;
-      border-radius: 999px;
-      background: #eaf0f3;
-      color: #24434c;
-      font-size: 12px;
-      font-weight: 750;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-bottom: 8px;
-    }
-
-    ul, ol { padding-left: 22px; margin: 10px 0 0; }
+    .label { display: inline-flex; align-items: center; padding: 3px 8px; border-radius: 999px;
+      background: #eaf0f3; color: #24434c; font-size: 12px; font-weight: 750;
+      text-transform: uppercase; letter-spacing: .05em; margin-bottom: 8px; }
+    ul,ol { padding-left: 22px; margin: 10px 0 0; }
     li { margin: 6px 0; }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 14px;
-      overflow: hidden;
-      border-radius: 8px;
-      font-size: 14px;
-    }
-
-    th, td {
-      border: 1px solid var(--line);
-      padding: 11px 12px;
-      text-align: left;
-      vertical-align: top;
-    }
-
-    th {
-      background: #eaf0f3;
-      color: #173b46;
-    }
-
-    code, pre {
-      background: #eef3f6;
-      color: #173b46;
-      border: 1px solid #dbe5ea;
-      border-radius: 5px;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    }
-
-    code {
-      padding: 1px 5px;
-      font-size: 0.92em;
-    }
-
-    pre {
-      padding: 16px;
-      overflow: auto;
-      font-size: 13px;
-      line-height: 1.45;
-    }
-
-    .diagram {
-      display: grid;
-      gap: 14px;
-      margin-top: 16px;
-    }
-
-    .layer {
-      border: 1px solid #c8d7de;
-      background: #f7fbfc;
-      border-radius: 8px;
-      padding: 16px;
-    }
-
-    .layer-title {
-      font-weight: 800;
-      color: #123845;
-      margin-bottom: 10px;
-    }
-
-    .nodes {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 10px;
-    }
-
-    .node {
-      border: 1px solid #d2dce2;
-      background: #ffffff;
-      border-radius: 7px;
-      padding: 12px;
-      min-height: 72px;
-    }
-
-    .footer {
-      margin-top: 24px;
-      color: var(--muted);
-      font-size: 13px;
-      text-align: center;
-    }
-
-    @media (max-width: 1000px) {
-      .hero { padding: 28px; }
-      h1 { font-size: 32px; }
-      .meta, .grid-2, .grid-3, .grid-4, .nodes { grid-template-columns: 1fr; }
+    table { width: 100%; border-collapse: collapse; margin-top: 14px;
+      overflow: hidden; border-radius: 8px; font-size: 14px; }
+    th,td { border: 1px solid var(--line); padding: 11px 12px; text-align: left; vertical-align: top; }
+    th { background: #eaf0f3; color: #173b46; }
+    code,pre { background: #eef3f6; color: #173b46; border: 1px solid #dbe5ea;
+      border-radius: 5px; font-family: ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; }
+    code { padding: 1px 5px; font-size: .92em; }
+    pre { padding: 16px; overflow: auto; font-size: 13px; line-height: 1.45; }
+    .diagram { display: grid; gap: 14px; margin-top: 16px; }
+    .layer { border: 1px solid #c8d7de; background: #f7fbfc; border-radius: 8px; padding: 16px; }
+    .layer-title { font-weight: 800; color: #123845; margin-bottom: 10px; font-size: 15px; }
+    .layer-bloomberg { border-color: #fbbf24; background: #fffbeb; }
+    .layer-quant { border-color: #a78bfa; background: #f5f3ff; }
+    .nodes { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; }
+    .nodes-5 { display: grid; grid-template-columns: repeat(5,1fr); gap: 10px; }
+    .node { border: 1px solid #d2dce2; background: #ffffff; border-radius: 7px; padding: 12px; min-height: 72px; }
+    .node-bloomberg { border-color: #fde68a; background: #fffef0; }
+    .node-quant { border-color: #c4b5fd; background: #faf5ff; }
+    .flow-arrow { text-align: center; color: var(--primary); font-weight: 800; font-size: 20px; margin: 4px 0; }
+    .footer { margin-top: 24px; color: var(--muted); font-size: 13px; text-align: center; }
+    @media (max-width:1000px) {
+      .hero { padding: 28px; } h1 { font-size: 32px; }
+      .meta,.grid-2,.grid-3,.grid-4,.nodes,.nodes-5 { grid-template-columns: 1fr; }
       .nav { position: static; }
     }
-
     @media print {
-      body { background: #fff; color: #000; }
-      .page { max-width: none; padding: 0; }
-      .hero, section, .nav { box-shadow: none; }
-      .nav { position: static; }
-      a { color: #000; text-decoration: underline; }
-      section { break-inside: avoid; }
+      body { background: #fff; color: #000; } .page { max-width: none; padding: 0; }
+      .hero,section,.nav { box-shadow: none; } .nav { position: static; }
+      a { color: #000; text-decoration: underline; } section { break-inside: avoid; }
     }
   </style>
 </head>
 <body>
-  <main class="page">
-    <header class="hero">
-      <p class="eyebrow">High-Level Design</p>
-      <h1>Portfolio Risk Copilot - System Architecture</h1>
-      <p class="subtitle">Architecture, component boundaries, external integrations, MCP role, data flow, and the path from a local course prototype to a hosted product.</p>
-      <div class="meta">
-        <div><strong>Architecture</strong>Local-first modular app</div>
-        <div><strong>AI pattern</strong>Tool-grounded copilot</div>
-        <div><strong>Data flow</strong>Import -> enrich -> compute -> explain</div>
-        <div><strong>Hosting</strong>Local demo now, cloud later</div>
-      </div>
-    </header>
+<main class="page">
+  <header class="hero">
+    <p class="eyebrow">High-Level Design</p>
+    <h1>Drishti — System Architecture</h1>
+    <p class="subtitle">Six-layer architecture covering Bloomberg data ingestion, portfolio import, risk computation, quant factor research, ML regime detection, and MCP-grounded AI copilot — with clear component boundaries and local-to-hosted evolution path.</p>
+    <div class="meta">
+      <div><strong>Architecture</strong>6-layer local-first modular app</div>
+      <div><strong>Data source</strong>Bloomberg BLPAPI + Zerodha Kite</div>
+      <div><strong>Quant layer</strong>Factor IC, Granger, HMM, VaR backtest</div>
+      <div><strong>AI pattern</strong>MCP-grounded tool copilot</div>
+    </div>
+  </header>
 
-    <nav class="nav" aria-label="Document navigation">
-      <a href="prd.html">PRD</a>
-      <a href="specs.html">Specs</a>
-      <a class="active" href="highleveldesign.html">High-Level Design</a>
-      <a href="lowleveldesign.html">Low-Level Design</a>
-    </nav>
+  <nav class="nav" aria-label="Document navigation">
+    <a href="prd.html">PRD</a>
+    <a href="specs.html">Specs</a>
+    <a class="active" href="highleveldesign.html">High-Level Design</a>
+    <a href="lowleveldesign.html">Low-Level Design</a>
+  </nav>
 
-    <section id="architecture">
-      <h2>1. Architecture Overview</h2>
-      <p>The system is split into four major layers: user interface, application API, analytics services, and external integrations. The key design rule is that the risk engine owns numerical truth; the AI copilot only explains structured results.</p>
-      <div class="diagram" aria-label="Architecture layers">
-        <div class="layer">
-          <div class="layer-title">Presentation Layer</div>
-          <div class="nodes">
-            <div class="node"><strong>Web Dashboard</strong><br>Portfolio, risk, stress, news, commodity panels.</div>
-            <div class="node"><strong>Copilot UI</strong><br>Natural-language questions and risk memo generation.</div>
-            <div class="node"><strong>CSV/Sample Loader</strong><br>Reliable fallback for demo.</div>
-            <div class="node"><strong>Report View</strong><br>Presentation-ready risk summary.</div>
-          </div>
-        </div>
-        <div class="layer">
-          <div class="layer-title">Application API Layer</div>
-          <div class="nodes">
-            <div class="node"><strong>Auth Controller</strong><br>Zerodha redirect and session handling.</div>
-            <div class="node"><strong>Portfolio Controller</strong><br>Import, normalize, store current snapshot.</div>
-            <div class="node"><strong>Risk Controller</strong><br>Run risk calculations and return structured outputs.</div>
-            <div class="node"><strong>Copilot Controller</strong><br>Prepare context and call LLM/MCP tools.</div>
-          </div>
-        </div>
-        <div class="layer">
-          <div class="layer-title">Analytics And Data Layer</div>
-          <div class="nodes">
-            <div class="node"><strong>Risk Engine</strong><br>VaR, ES, stress, contribution, drawdown.</div>
-            <div class="node"><strong>Spillover Engine</strong><br>Commodity lag scan and sensitivity scoring.</div>
-            <div class="node"><strong>News Engine</strong><br>RSS ingestion, tagging, risk flags.</div>
-            <div class="node"><strong>Local Cache</strong><br>SQLite/files for prices, factors, news, fixtures.</div>
-          </div>
-        </div>
-        <div class="layer">
-          <div class="layer-title">External Integration Layer</div>
-          <div class="nodes">
-            <div class="node"><strong>Zerodha/Kite</strong><br>Holdings, positions, instruments, quotes.</div>
-            <div class="node"><strong>Kite MCP</strong><br>AI-client-accessible Zerodha tools.</div>
-            <div class="node"><strong>Risk MCP</strong><br>Custom tool server for portfolio risk analytics.</div>
-            <div class="node"><strong>LLM Provider</strong><br>NVIDIA/OpenAI-compatible or local option.</div>
-          </div>
+  <section id="architecture">
+    <h2>1. Architecture Overview</h2>
+    <p>The system is organized into six layers. <strong>Bloomberg and Zerodha are the only external data sources.</strong> The risk engine and quant research engine own all numerical truth. The AI copilot is strictly downstream from both and only explains structured results — it never computes independently.</p>
+    <div class="diagram" aria-label="Architecture layers">
+
+      <div class="layer layer-bloomberg">
+        <div class="layer-title">Layer 1 — External Data Sources</div>
+        <div class="nodes-5">
+          <div class="node node-bloomberg"><strong>Bloomberg BLPAPI</strong><br>Equity prices, sector indices, commodity futures, FX, rates, VIX, reference data.</div>
+          <div class="node node-bloomberg"><strong>Bloomberg CSV Export</strong><br>Fallback: pre-exported parquet/CSV files loaded from local cache when BLPAPI is unavailable.</div>
+          <div class="node"><strong>Zerodha Kite API</strong><br>Holdings, positions, instruments, latest quotes. OAuth flow.</div>
+          <div class="node"><strong>Kite MCP Server</strong><br>Zerodha account and market data exposed as AI tools.</div>
+          <div class="node"><strong>RSS Feeds</strong><br>SEBI, NSE, ET Markets — headline metadata only.</div>
         </div>
       </div>
-    </section>
 
-    <section id="component-responsibilities">
-      <h2>2. Component Responsibilities</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Component</th>
-            <th>Responsibilities</th>
-            <th>Does not do</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Dashboard frontend</td>
-            <td>Render import choices, risk cards, charts, tables, copilot panel, fallback states.</td>
-            <td>Calculate authoritative risk metrics.</td>
-          </tr>
-          <tr>
-            <td>Backend API</td>
-            <td>Coordinate import, validation, cache lookup, calculation requests, and response formatting.</td>
-            <td>Store secrets in source code or expose raw access tokens.</td>
-          </tr>
-          <tr>
-            <td>Risk engine</td>
-            <td>Compute deterministic financial risk metrics from normalized inputs.</td>
-            <td>Generate trade recommendations.</td>
-          </tr>
-          <tr>
-            <td>Commodity engine</td>
-            <td>Estimate commodity factor sensitivity and lagged spillover signals.</td>
-            <td>Claim causality when only correlation/regression is measured.</td>
-          </tr>
-          <tr>
-            <td>News engine</td>
-            <td>Fetch RSS metadata, tag risk categories, link headlines to sectors/holdings.</td>
-            <td>Scrape full articles or act as the primary risk model.</td>
-          </tr>
-          <tr>
-            <td>Copilot</td>
-            <td>Explain risk outputs, answer questions, generate a memo from structured context.</td>
-            <td>Invent calculations or issue buy/sell instructions.</td>
-          </tr>
-        </tbody>
-      </table>
-    </section>
+      <div class="flow-arrow">↓</div>
 
-    <section id="data-flow">
-      <h2>3. Primary Data Flow</h2>
-      <pre><code>User
-  -> Dashboard import action
-  -> Backend portfolio controller
-  -> Zerodha / CSV / Sample loader
-  -> Holding normalizer and sector mapper
-  -> Price/factor/news cache lookup
-  -> Risk engine + commodity engine + news engine
-  -> Structured risk response
-  -> Dashboard cards/charts
-  -> Optional copilot question
-  -> Risk MCP tools / LLM explanation
-  -> Safe risk answer</code></pre>
+      <div class="layer">
+        <div class="layer-title">Layer 2 — Data Ingestion and Cache</div>
+        <div class="nodes">
+          <div class="node"><strong>BLPAPI Client</strong><br>Session management, BDH/BDP/BDS requests, error handling, rate control.</div>
+          <div class="node"><strong>Bloomberg Cache Manager</strong><br>Parquet/SQLite store keyed by ticker+date+field. Cache-first reads, incremental pulls.</div>
+          <div class="node"><strong>Zerodha Client</strong><br>OAuth callback, holdings/positions fetch, instrument master download.</div>
+          <div class="node"><strong>RSS Ingester</strong><br>Feed polling, headline dedup, TTL-based cache, sector/ticker tagging.</div>
+        </div>
+      </div>
+
+      <div class="flow-arrow">↓</div>
+
+      <div class="layer">
+        <div class="layer-title">Layer 3 — Portfolio and Market Data Services</div>
+        <div class="nodes">
+          <div class="node"><strong>Portfolio Importer</strong><br>Zerodha / CSV / sample loader. Normalizes to internal holding schema.</div>
+          <div class="node"><strong>Portfolio Normalizer</strong><br>Symbol validation, Bloomberg ticker mapping, sector mapping, asset type classification, modeled/unsupported split.</div>
+          <div class="node"><strong>Price Matrix Builder</strong><br>Loads aligned daily return matrix for all modeled holdings. Reports missing symbols.</div>
+          <div class="node"><strong>Factor Series Builder</strong><br>Loads commodity, FX, rate, VIX series from Bloomberg cache. Aligns to Indian trading calendar.</div>
+        </div>
+      </div>
+
+      <div class="flow-arrow">↓</div>
+
+      <div class="layer layer-quant">
+        <div class="layer-title">Layer 4 — Analytics Engines (Risk + Quant Research + ML)</div>
+        <div class="nodes">
+          <div class="node node-quant"><strong>Risk Engine</strong><br>VaR (historical, parametric, MC), ES, drawdown, rolling volatility, component VaR, stress testing.</div>
+          <div class="node node-quant"><strong>VaR Backtest Engine</strong><br>Kupiec LR test, Christoffersen independence test. Violation rate, p-values, pass/fail.</div>
+          <div class="node node-quant"><strong>Factor Research Engine</strong><br>IC/ICIR/t-stat calculator, Granger causality tester, walk-forward backtester, cross-sectional signal research.</div>
+          <div class="node node-quant"><strong>ML Engine</strong><br>HMM regime detector (hmmlearn), VaR breach classifier (XGBoost), walk-forward fitting, OOS evaluation.</div>
+        </div>
+      </div>
+
+      <div class="flow-arrow">↓</div>
+
+      <div class="layer">
+        <div class="layer-title">Layer 5 — Application API</div>
+        <div class="nodes">
+          <div class="node"><strong>Auth Controller</strong><br>Zerodha OAuth redirect and session. State validation, no persistent token storage in prototype.</div>
+          <div class="node"><strong>Portfolio Controller</strong><br>Import dispatch, normalization trigger, snapshot storage, universe builder.</div>
+          <div class="node"><strong>Risk and Research Controller</strong><br>Orchestrates risk, backtest, factor, ML, commodity, news requests. Returns structured JSON.</div>
+          <div class="node"><strong>Copilot Controller</strong><br>Builds structured context from analytics results. Calls LLM via Risk MCP tools. Enforces advice policy.</div>
+        </div>
+      </div>
+
+      <div class="flow-arrow">↓</div>
+
+      <div class="layer">
+        <div class="layer-title">Layer 6 — Presentation</div>
+        <div class="nodes">
+          <div class="node"><strong>Risk Dashboard</strong><br>VaR (3 methods), ES, backtest result, regime badge, stress scenarios, contributors.</div>
+          <div class="node"><strong>Factor Research Panel</strong><br>Signal ranking table, walk-forward chart, IC/t-stat visualization, commodity heatmap.</div>
+          <div class="node"><strong>Copilot Panel</strong><br>Natural-language Q&amp;A, risk memo generator, MCP tool call trace.</div>
+          <div class="node"><strong>Import and Fallback UI</strong><br>Zerodha connect, CSV upload, sample portfolio picker. Clear error states.</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <section id="component-responsibilities">
+    <h2>2. Component Responsibilities</h2>
+    <table>
+      <thead><tr><th>Component</th><th>Owns</th><th>Does not do</th></tr></thead>
+      <tbody>
+        <tr><td>BLPAPI Client</td><td>Bloomberg session, BDH/BDP requests, error recovery, incremental data pull.</td><td>Any calculation or transformation. Raw data only.</td></tr>
+        <tr><td>Bloomberg Cache Manager</td><td>Local parquet/SQLite storage, cache-first logic, freshness metadata, ticker registry.</td><td>Bloomberg API calls (delegated to BLPAPI Client).</td></tr>
+        <tr><td>Portfolio Normalizer</td><td>Map Zerodha/CSV fields to internal schema, Bloomberg ticker lookup, GICS sector assignment.</td><td>Risk calculations or data fetching.</td></tr>
+        <tr><td>Risk Engine</td><td>All deterministic financial risk metrics: VaR (3 methods), ES, drawdown, volatility, stress, component contribution.</td><td>Generate trade recommendations. Call external APIs.</td></tr>
+        <tr><td>VaR Backtest Engine</td><td>Kupiec test, Christoffersen test, violation sequence, p-value and pass/fail output.</td><td>Recommend model changes (reports only).</td></tr>
+        <tr><td>Factor Research Engine</td><td>IC computation, ICIR, t-stat, Granger causality tests, walk-forward signal backtesting, cross-sectional analysis.</td><td>Claim causality from correlation alone. Produce trading signals as recommendations.</td></tr>
+        <tr><td>ML Engine</td><td>HMM regime fitting and prediction, VaR breach classifier training and OOS evaluation, feature engineering from Bloomberg data.</td><td>Use future data in training. Claim regime labels as ground truth.</td></tr>
+        <tr><td>Commodity Engine</td><td>Sensitivity score computation, lag scan against portfolio and sector returns, risk-weighted exposure summary.</td><td>Claim causality when only correlation/regression measured.</td></tr>
+        <tr><td>Copilot</td><td>Explain risk and factor outputs in natural language using only structured MCP tool results.</td><td>Invent calculations, issue trade instructions, or access raw portfolio data directly.</td></tr>
+        <tr><td>Dashboard Frontend</td><td>Render all panels, manage import states, display warnings, format charts and tables.</td><td>Compute authoritative risk or research metrics.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="data-flow">
+    <h2>3. Primary Data Flow</h2>
+    <pre><code>BLOOMBERG BLPAPI / CSV Export
+  -> bloomberg_cache (parquet/SQLite, keyed by ticker+date)
+  -> price_matrix_builder (aligned daily returns for all symbols)
+  -> factor_series_builder (commodity, FX, rate, VIX series)
+
+ZERODHA / CSV / SAMPLE
+  -> portfolio_importer
+  -> portfolio_normalizer (bloomberg_ticker mapping, sector, asset_type)
+  -> portfolio_snapshot (stored in local session cache)
+
+RISK PATH:
+  portfolio_snapshot + price_matrix
+  -> risk_engine (VaR x3, ES, drawdown, volatility, contribution)
+  -> backtest_engine (Kupiec, Christoffersen on historical VaR)
+  -> stress_engine (scenario shock application)
+  -> structured_risk_response
+
+QUANT RESEARCH PATH:
+  factor_series + sector_index_returns + portfolio_returns
+  -> factor_research_engine (IC, ICIR, t-stat, Granger)
+  -> walk_forward_backtester (OOS Sharpe, IC stability)
+  -> ml_engine (HMM regime detection, regime-conditioned VaR)
+  -> structured_research_response
+
+COPILOT PATH (optional, downstream from both):
+  structured_risk_response + structured_research_response
+  -> copilot_context_builder (select relevant metrics, sanitize)
+  -> Risk MCP tools (calculate_portfolio_risk, run_factor_research, ...)
+  -> LLM (explain structured context, no independent calculation)
+  -> safe_risk_answer
+
+PRESENTATION:
+  structured_risk_response + structured_research_response
+  -> dashboard panels (risk overview, drivers, factor research, copilot)
+  -> downloadable memo (PDF/HTML risk and research summary)</code></pre>
+    <div class="callout warning">
+      <span class="label">Design principle</span>
+      The quant research path is independent from the risk path. Both are independent from the AI path. If the LLM provider or MCP server is unavailable, the risk dashboard and research report must still work fully.
+    </div>
+  </section>
+
+  <section id="bloomberg-integration">
+    <h2>4. Bloomberg BLPAPI Integration Architecture</h2>
+    <p>Bloomberg Terminal access is provided through FRTL, IIM Calcutta. The BLPAPI Python library connects to a locally running Bloomberg terminal session. The system is designed with a two-path architecture to handle network/access variability.</p>
+    <div class="grid-2">
+      <div class="callout prototype">
+        <span class="label">Path A — BLPAPI (programmatic)</span>
+        <ol>
+          <li>Bloomberg Terminal is running on the FRTL machine or accessible on the lab network.</li>
+          <li>BLPAPI Python client connects to <code>localhost:8194</code> (default Bloomberg server port).</li>
+          <li>Service <code>//blp/refdata</code> handles historical and reference data requests.</li>
+          <li>Cache Manager stores all pulled data as parquet files under <code>data/cache/bloomberg/</code>.</li>
+          <li>Subsequent requests check cache first; only missing date ranges trigger new API calls.</li>
+        </ol>
+      </div>
       <div class="callout warning">
-        <span class="label">Design principle</span>
-        The AI path is downstream from the analytics path. If the LLM provider is unavailable, the dashboard and deterministic risk memo should still work.
+        <span class="label">Path B — CSV export fallback</span>
+        <ol>
+          <li>Export data from Bloomberg terminal manually using <code>BDH()</code> Excel formula or Bloomberg export tool.</li>
+          <li>Save as CSV files following naming convention: <code>{TICKER}_{FIELD}_{START}_{END}.csv</code>.</li>
+          <li>Place in <code>data/cache/bloomberg/exports/</code>.</li>
+          <li>Cache Manager detects and ingests CSV files on startup, converting to parquet.</li>
+          <li>System operates fully offline from this point — identical to BLPAPI path.</li>
+        </ol>
       </div>
-    </section>
+    </div>
+    <h3 style="margin-top:16px">Bloomberg Services Used</h3>
+    <table>
+      <thead><tr><th>Service</th><th>Request type</th><th>Use in Drishti</th></tr></thead>
+      <tbody>
+        <tr><td><code>//blp/refdata</code></td><td><code>HistoricalDataRequest</code></td><td>Pull daily price history: <code>PX_ADJ_CLOSE</code>, <code>PX_LAST</code>, <code>PX_VOLUME</code> for equities and indices; <code>PX_LAST</code> for commodity futures and macro series.</td></tr>
+        <tr><td><code>//blp/refdata</code></td><td><code>ReferenceDataRequest</code></td><td>Pull reference fields: <code>GICS_SECTOR_NAME</code>, <code>CUR_MKT_CAP</code>, <code>SECURITY_NAME</code> for universe construction and sector mapping.</td></tr>
+        <tr><td><code>//blp/refdata</code></td><td><code>FieldInfoRequest</code></td><td>Validate field names and check data availability before batch pulls.</td></tr>
+      </tbody>
+    </table>
+    <h3 style="margin-top:16px">Key Bloomberg Tickers</h3>
+    <table>
+      <thead><tr><th>Category</th><th>Ticker</th><th>Field</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td>Indian equity (example)</td><td><code>RELIANCE IN Equity</code></td><td><code>PX_ADJ_CLOSE</code></td><td>Adjusted daily close for VaR and factor analysis.</td></tr>
+        <tr><td>Broad market</td><td><code>NIFTY Index</code>, <code>SENSEX Index</code></td><td><code>PX_LAST</code></td><td>Benchmark returns and correlation.</td></tr>
+        <tr><td>Sector — Oil &amp; Gas</td><td><code>NSEOILGS Index</code></td><td><code>PX_LAST</code></td><td>Primary target for Brent/WTI spillover research.</td></tr>
+        <tr><td>Sector — IT</td><td><code>NSEIT Index</code></td><td><code>PX_LAST</code></td><td>USD/INR factor target (IT exports benefit from weak INR).</td></tr>
+        <tr><td>Sector — Metals</td><td><code>NSEMETAL Index</code></td><td><code>PX_LAST</code></td><td>Copper and global growth factor target.</td></tr>
+        <tr><td>Sector — Financials</td><td><code>NSEBANK Index</code>, <code>NSEFIN Index</code></td><td><code>PX_LAST</code></td><td>Rate (10Y yield) factor target.</td></tr>
+        <tr><td>Sector — FMCG, Auto, Pharma</td><td><code>NSEFMCG Index</code>, <code>NSEAUTO Index</code>, <code>NSEPHRM Index</code></td><td><code>PX_LAST</code></td><td>Defensive sector and commodity input cost research.</td></tr>
+        <tr><td>Brent crude</td><td><code>CO1 Comdty</code></td><td><code>PX_LAST</code></td><td>Primary commodity factor in spillover model.</td></tr>
+        <tr><td>WTI crude</td><td><code>CL1 Comdty</code></td><td><code>PX_LAST</code></td><td>Cross-check Brent; test explanatory difference.</td></tr>
+        <tr><td>Gold</td><td><code>GC1 Comdty</code></td><td><code>PX_LAST</code></td><td>Safe-haven factor; Indian gold demand linkage.</td></tr>
+        <tr><td>Copper</td><td><code>HG1 Comdty</code></td><td><code>PX_LAST</code></td><td>Global growth proxy; metals sector signal.</td></tr>
+        <tr><td>Natural gas</td><td><code>NG1 Comdty</code></td><td><code>PX_LAST</code></td><td>Input cost for fertiliser and power sectors.</td></tr>
+        <tr><td>USD/INR</td><td><code>USDINR Curncy</code></td><td><code>PX_LAST</code></td><td>Currency macro factor; exporters vs. importers.</td></tr>
+        <tr><td>India 10Y G-Sec yield</td><td><code>GIND10YR Index</code></td><td><code>PX_LAST</code></td><td>Rate factor for financials and rate-sensitive sectors.</td></tr>
+        <tr><td>India VIX</td><td><code>INVIXN Index</code></td><td><code>PX_LAST</code></td><td>Volatility feature for HMM regime detection.</td></tr>
+      </tbody>
+    </table>
+  </section>
 
-    <section id="zerodha-flow">
-      <h2>4. Zerodha Integration Flow</h2>
-      <div class="grid-2">
-        <div class="callout prototype">
-          <span class="label">Prototype flow</span>
-          <ol>
-            <li>User clicks "Connect Zerodha" or chooses sample/CSV.</li>
-            <li>Backend redirects to Zerodha login if live import is used.</li>
-            <li>Callback receives request token and creates short-lived access session.</li>
-            <li>Backend fetches holdings/positions and immediately normalizes them.</li>
-            <li>Token is kept only for the active local session, then discarded.</li>
-          </ol>
-        </div>
-        <div class="callout production">
-          <span class="label">Production flow</span>
-          <ol>
-            <li>User sees consent screen explaining exact data access.</li>
-            <li>OAuth/session state is protected against CSRF and replay.</li>
-            <li>Access tokens are encrypted and retained only as long as needed.</li>
-            <li>Refresh/background jobs respect API rate limits and market data terms.</li>
-            <li>Every account-link and data-access event is auditable.</li>
-          </ol>
-        </div>
+  <section id="zerodha-flow">
+    <h2>5. Zerodha Integration Flow</h2>
+    <div class="grid-2">
+      <div class="callout prototype">
+        <span class="label">Prototype flow</span>
+        <ol>
+          <li>User clicks "Connect Zerodha" or chooses sample/CSV.</li>
+          <li>Backend redirects to Zerodha login page with API key and state token.</li>
+          <li>Callback receives <code>request_token</code>. Backend exchanges for access token using API secret.</li>
+          <li>Fetch <code>/portfolio/holdings</code> and <code>/portfolio/positions</code>.</li>
+          <li>Map each holding to Bloomberg ticker using instrument master + symbol lookup table.</li>
+          <li>Token kept only in memory for active session. Discarded after use.</li>
+        </ol>
       </div>
-      <table>
-        <thead>
-          <tr>
-            <th>External API</th>
-            <th>Use in design</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><code>GET /portfolio/holdings</code></td>
-            <td>Primary source for current equity/ETF holdings.</td>
-          </tr>
-          <tr>
-            <td><code>GET /portfolio/positions</code></td>
-            <td>Detect intraday or overnight positions; deep modeling deferred in V1 if non-equity/F&amp;O.</td>
-          </tr>
-          <tr>
-            <td><code>GET /instruments</code></td>
-            <td>Map trading symbols to instrument tokens and metadata.</td>
-          </tr>
-          <tr>
-            <td><code>GET /quote</code>, <code>/quote/ohlc</code>, <code>/quote/ltp</code></td>
-            <td>Latest prices where available and permitted.</td>
-          </tr>
-          <tr>
-            <td><code>GET /instruments/historical/:instrument_token/:interval</code></td>
-            <td>Historical candles if paid/allowed path is available.</td>
-          </tr>
-          <tr>
-            <td><code>wss://ws.kite.trade</code></td>
-            <td>Production/paid enhancement for live market updates.</td>
-          </tr>
-        </tbody>
-      </table>
-    </section>
-
-    <section id="mcp">
-      <h2>5. MCP Architecture</h2>
-      <p>The demo uses two MCP stories: Zerodha's Kite MCP for account/market connectivity in an AI environment, and a custom Risk MCP server for project-specific analytics.</p>
-      <div class="grid-2">
-        <div class="card">
-          <h3>Kite MCP</h3>
-          <ul>
-            <li>Demonstrates that broker data can be exposed to AI tools with controlled permissions.</li>
-            <li>Useful for live portfolio or market questions in an MCP-capable client.</li>
-            <li>Kept separate from the dashboard's reliability path.</li>
-          </ul>
-        </div>
-        <div class="card">
-          <h3>Risk MCP</h3>
-          <ul>
-            <li>Exposes this project's risk functions as tools.</li>
-            <li>Calls deterministic analytics modules.</li>
-            <li>Returns structured JSON for LLM explanation and memo generation.</li>
-          </ul>
-        </div>
+      <div class="callout production">
+        <span class="label">Production flow</span>
+        <ol>
+          <li>Consent screen with explicit data access scopes.</li>
+          <li>CSRF and state token protection on OAuth callback.</li>
+          <li>Encrypted token storage with short retention and revocation.</li>
+          <li>Background refresh respects Kite Connect rate limits.</li>
+          <li>Every data access event logged with timestamp and scope.</li>
+        </ol>
       </div>
-      <pre><code>AI Client / Copilot
-  -> Kite MCP: read Zerodha portfolio/market context
-  -> Risk MCP: calculate VaR, ES, stress, spillover, news risk
-  -> LLM: convert structured outputs into safe explanation</code></pre>
-    </section>
+    </div>
+  </section>
 
-    <section id="deployment">
-      <h2>6. Deployment View</h2>
-      <div class="grid-2">
-        <div class="callout prototype">
-          <span class="label">Local course demo</span>
-          <ul>
-            <li>Frontend and backend run on localhost.</li>
-            <li>SQLite/files store cached prices, factors, news, and sample portfolios.</li>
-            <li>Secrets live in local <code>.env</code>.</li>
-            <li>Only presenter machine sees raw portfolio data.</li>
-            <li>Risk MCP runs as a local process.</li>
-            <li>LLM use can be disabled, local, or configured through a temporary API key.</li>
-          </ul>
-        </div>
-        <div class="callout production">
-          <span class="label">Hosted product</span>
-          <ul>
-            <li>Frontend hosted separately from backend API.</li>
-            <li>Backend deployed as a persistent service with background workers.</li>
-            <li>Postgres/Supabase or equivalent database with tenant separation.</li>
-            <li>Secrets managed through cloud secret manager.</li>
-            <li>Encrypted tokens, consent logs, audit trails, and deletion workflow.</li>
-            <li>Risk MCP secured behind authenticated tool access.</li>
-          </ul>
-        </div>
+  <section id="mcp">
+    <h2>6. MCP Architecture</h2>
+    <p>Two MCP servers are used: Zerodha's Kite MCP for broker connectivity in an AI client, and the custom Drishti Risk MCP for project analytics. The copilot uses both to answer questions about portfolio risk, factor signals, and market context.</p>
+    <div class="grid-2">
+      <div class="card">
+        <h3>Kite MCP (Zerodha)</h3>
+        <ul>
+          <li>Official Zerodha MCP server — exposes broker account and market tools.</li>
+          <li>Used in demo to show live portfolio or market query via AI client.</li>
+          <li>Runs as a separate local process; kept isolated from reliability path.</li>
+          <li>Not required for risk calculations — dashboard works without it.</li>
+        </ul>
       </div>
-    </section>
-
-    <section id="security">
-      <h2>7. Security And Compliance View</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Concern</th>
-            <th>Prototype handling</th>
-            <th>Production handling</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>User consent</td>
-            <td>Presenter verbally explains what will be accessed.</td>
-            <td>Consent screen with explicit data scopes and retention policy.</td>
-          </tr>
-          <tr>
-            <td>Token storage</td>
-            <td>No persistent token storage; local active session only.</td>
-            <td>Encrypted token storage, expiry, revocation, and short retention.</td>
-          </tr>
-          <tr>
-            <td>Market data terms</td>
-            <td>Use local/cached/public data; avoid public redistribution.</td>
-            <td>Licensed data strategy and exchange/broker term review.</td>
-          </tr>
-          <tr>
-            <td>Investment advice</td>
-            <td>Disclaimers and copilot policy to avoid recommendations.</td>
-            <td>Legal/SEBI review before monetized personalized usage.</td>
-          </tr>
-          <tr>
-            <td>LLM data exposure</td>
-            <td>Send summarized risk context only, preferably with user-controlled key.</td>
-            <td>Data minimization, provider contracts, redaction, audit logs.</td>
-          </tr>
-        </tbody>
-      </table>
-    </section>
-
-    <section id="scalability">
-      <h2>8. Scalability And Cost View</h2>
-      <div class="grid-3">
-        <div class="card">
-          <h3>Zero-cost prototype</h3>
-          <ul>
-            <li>Local machine only.</li>
-            <li>Sample/cached prices.</li>
-            <li>RSS headline metadata.</li>
-            <li>Optional free-tier LLM key.</li>
-          </ul>
-        </div>
-        <div class="card">
-          <h3>Low-cost beta</h3>
-          <ul>
-            <li>Static frontend hosting.</li>
-            <li>Small backend server.</li>
-            <li>Postgres free/low tier.</li>
-            <li>Manual rate-limit controls.</li>
-          </ul>
-        </div>
-        <div class="card">
-          <h3>Real product</h3>
-          <ul>
-            <li>Paid market data plan where needed.</li>
-            <li>Queue workers for refreshes.</li>
-            <li>Encrypted secret management.</li>
-            <li>Monitoring and compliance review.</li>
-          </ul>
-        </div>
+      <div class="card">
+        <h3>Drishti Risk MCP (Custom)</h3>
+        <ul>
+          <li>Exposes all Drishti analytics as structured MCP tools.</li>
+          <li>Calls deterministic risk, backtest, factor, and ML modules.</li>
+          <li>Returns structured JSON — LLM explains, never computes.</li>
+          <li>Runs as a local Python process alongside the backend.</li>
+          <li>Tools: portfolio risk, VaR, ES, stress, backtest, factor IC, regime, news, memo.</li>
+        </ul>
       </div>
-    </section>
+    </div>
+    <pre><code>AI Client / Claude with MCP
+  -> Kite MCP:      get_holdings, get_positions, get_market_quote
+  -> Risk MCP:      calculate_portfolio_risk     -> VaR x3, ES, drawdown, contribution
+                    run_var_backtest             -> Kupiec/Christoffersen test results
+                    run_factor_research          -> IC, t-stat, Granger, walk-forward Sharpe
+                    detect_volatility_regime     -> current regime + regime-conditioned VaR
+                    run_stress_test              -> scenario loss + contributors
+                    analyze_commodity_spillover  -> sensitivity score + lag findings
+                    summarize_news_risk          -> risk-tagged headlines
+                    generate_risk_memo           -> structured memo
+  -> LLM:           convert structured outputs into safe, cited risk explanation</code></pre>
+  </section>
 
-    <section id="failure">
-      <h2>9. Failure Handling Strategy</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Failure</th>
-            <th>User-facing behavior</th>
-            <th>System behavior</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Zerodha auth fails</td>
-            <td>Show reconnect, CSV upload, and sample portfolio options.</td>
-            <td>Do not retry indefinitely; log sanitized error.</td>
-          </tr>
-          <tr>
-            <td>Price data missing</td>
-            <td>Show partial modeling warning and excluded symbols.</td>
-            <td>Compute on available modeled holdings only.</td>
-          </tr>
-          <tr>
-            <td>RSS feed unavailable</td>
-            <td>Show "news context unavailable" state.</td>
-            <td>Do not block risk calculations.</td>
-          </tr>
-          <tr>
-            <td>LLM unavailable</td>
-            <td>Show deterministic risk memo instead of chat answer.</td>
-            <td>Skip provider call and keep dashboard functional.</td>
-          </tr>
-          <tr>
-            <td>MCP server unavailable</td>
-            <td>Show copilot tool error and keep dashboard active.</td>
-            <td>Restart local MCP process or disable AI tool path.</td>
-          </tr>
-        </tbody>
-      </table>
-    </section>
+  <section id="factor-research-pipeline">
+    <h2>7. Factor Research Pipeline Architecture</h2>
+    <p>The factor research pipeline is designed as an independent module that can run against any set of signals and target return series. It is parameterized, not hard-coded to specific factors.</p>
+    <pre><code>FactorResearchPipeline(
+  factors       = [brent_return, wti_return, gold_return, copper_return,
+                   ng_return, usdinr_return, gind10y_change, vix_change],
+  targets       = [NSEOILGS_return, NSEIT_return, NSEMETAL_return,
+                   NSEBANK_return, portfolio_return, ...NIFTY50_stocks],
+  lags          = [1, 2, 3, 5, 10],
+  ic_type       = "spearman",
+  granger_maxlag = 10,
+  walkforward   = { min_train_days: 252, refit_freq: "monthly" }
+)
 
-    <section id="references">
-      <h2>10. External References</h2>
-      <ul>
-        <li><a href="https://kite.trade/docs/connect/v3/portfolio/">Kite Connect Portfolio API</a></li>
-        <li><a href="https://kite.trade/docs/connect/v3/market-quotes/">Kite Connect Market Quotes API</a></li>
-        <li><a href="https://kite.trade/docs/connect/v3/historical/">Kite Connect Historical Data API</a></li>
-        <li><a href="https://kite.trade/docs/connect/v3/websocket/">Kite Connect WebSocket API</a></li>
-        <li><a href="https://github.com/zerodha/kite-mcp-server">Zerodha Kite MCP Server</a></li>
-        <li><a href="https://support.zerodha.com/category/trading-and-markets/kite-web-and-mobile/kite-api/articles/what-are-the-charges-for-kite-apis">Zerodha Kite API Charges</a></li>
-      </ul>
-    </section>
+Pipeline steps:
+  1. Construct lagged factor matrix (shift factor returns by lag days)
+  2. Align factor matrix with target return matrix on common trading dates
+  3. Compute IC per factor-lag-target triple: spearman_corr(signal_t, return_t+lag)
+  4. Compute ICIR = mean(IC) / std(IC) over rolling 63-day window
+  5. Compute IC t-stat = mean(IC) / (std(IC) / sqrt(n_months))
+  6. Run Granger causality VAR test for each factor-target pair at all lags
+  7. Walk-forward backtest: expanding window, monthly refit, accumulate OOS returns
+  8. Report: ranked signal table, top factor-lag pair, OOS Sharpe, regime breakdown</code></pre>
+  </section>
 
-    <p class="footer">Portfolio Risk Copilot HLD - clean boundaries between broker access, analytics, AI tools, and hosted-product concerns.</p>
-  </main>
+  <section id="ml-pipeline">
+    <h2>8. ML and Regime Detection Architecture</h2>
+    <pre><code>HMM Regime Detection Pipeline:
+  features = [
+    rolling_20d_portfolio_vol,        # from risk engine
+    rolling_20d_abs_return_mean,      # from risk engine
+    invixn_level,                     # from Bloomberg cache
+    invixn_5d_change,                 # derived
+    brent_5d_return_zscore,           # from Bloomberg cache
+    usdinr_5d_change                  # from Bloomberg cache
+  ]
+
+  walk_forward_hmm:
+    for each month in backtest window:
+      -> fit GaussianHMM(n_components=2) on expanding training window
+      -> predict regime for next month (OOS)
+      -> label states: high_vol = state with higher emission variance
+      -> compute regime-conditioned VaR: VaR_cond = historical_var(
+           returns[regime_labels == current_state], confidence=0.99)
+      -> accumulate: VaR_breach_rate by regime
+
+  Output:
+    -> regime_sequence (T labels: 0=low, 1=high)
+    -> current_regime (latest label + probability)
+    -> regime_conditioned_var (by state)
+    -> oos_breach_rate_by_regime (validation evidence)</code></pre>
+    <div class="callout warning">
+      <span class="label">ML architecture rule</span>
+      HMM is refit at each time step using only past data. Regime labels used for VaR conditioning are always the OOS predictions, never in-sample. This prevents the "regime rewriting" problem common in naive HMM applications.
+    </div>
+  </section>
+
+  <section id="deployment">
+    <h2>9. Deployment View</h2>
+    <div class="grid-2">
+      <div class="callout prototype">
+        <span class="label">Local course demo</span>
+        <ul>
+          <li>Frontend and backend on localhost.</li>
+          <li>Bloomberg data pre-cached via BLPAPI or CSV export before demo day.</li>
+          <li>SQLite/parquet files under <code>data/cache/</code>.</li>
+          <li>Secrets in local <code>.env</code> only.</li>
+          <li>Risk MCP and Kite MCP as local Python processes.</li>
+          <li>LLM use optional — dashboard works without it.</li>
+          <li>Bloomberg data files gitignored — never committed publicly.</li>
+        </ul>
+      </div>
+      <div class="callout production">
+        <span class="label">Hosted product</span>
+        <ul>
+          <li>Frontend and backend deployed separately.</li>
+          <li>Licensed market data subscription (not Bloomberg terminal).</li>
+          <li>Postgres/Supabase with tenant-aware schema.</li>
+          <li>Cloud secret manager.</li>
+          <li>Background workers for data refresh and model refitting.</li>
+          <li>Risk MCP secured behind authenticated tool access.</li>
+          <li>Audit logs and policy checks for all AI outputs.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="security">
+    <h2>10. Security And Compliance</h2>
+    <table>
+      <thead><tr><th>Concern</th><th>Prototype handling</th><th>Production handling</th></tr></thead>
+      <tbody>
+        <tr><td>Bloomberg data policy</td><td>Local cache only. Never committed to public repo. Academic use citation.</td><td>Licensed data subscription. No redistribution of exchange data.</td></tr>
+        <tr><td>Zerodha token storage</td><td>Memory-only active session. No persistence.</td><td>Encrypted database, expiry, revocation, audit log.</td></tr>
+        <tr><td>User consent</td><td>Presenter verbally explains data scope.</td><td>Explicit consent screen with data scopes and retention policy.</td></tr>
+        <tr><td>LLM data exposure</td><td>Summarized structured context only. User-controlled API key.</td><td>Data minimization, provider contracts, redaction, audit.</td></tr>
+        <tr><td>Investment advice boundary</td><td>System policy in copilot prompt. Disclaimers on all outputs.</td><td>Legal and SEBI review before monetized personalized usage.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="failure">
+    <h2>11. Failure Handling</h2>
+    <table>
+      <thead><tr><th>Failure</th><th>User-facing behavior</th><th>System behavior</th></tr></thead>
+      <tbody>
+        <tr><td>BLPAPI connection refused</td><td>Show "Bloomberg unavailable — using cached data" banner.</td><td>Cache Manager switches to CSV/parquet file mode. All calculations proceed normally.</td></tr>
+        <tr><td>Bloomberg data stale or incomplete</td><td>Show data freshness date and list of excluded symbols.</td><td>Compute on available modeled holdings with partial data warning in output.</td></tr>
+        <tr><td>Zerodha auth fails</td><td>Show reconnect, CSV, and sample portfolio options.</td><td>Do not retry indefinitely; log sanitized error.</td></tr>
+        <tr><td>HMM regime detection fails</td><td>Show unconditional VaR only; hide regime badge.</td><td>Fall back to unconditional VaR. Log HMM error for diagnostics.</td></tr>
+        <tr><td>Factor research signals not significant</td><td>Show IC/t-stat table with "not significant" labels. Do not hide weak results.</td><td>Report full result including p-values. Non-significant result is a valid research finding.</td></tr>
+        <tr><td>LLM unavailable</td><td>Show deterministic risk and research memo instead of chat answer.</td><td>Skip LLM call; keep full dashboard functional.</td></tr>
+        <tr><td>RSS feed unavailable</td><td>Show "news context unavailable" state.</td><td>Do not block risk or factor calculations.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <p class="footer">Drishti HLD v2 — Bloomberg data, quant research layer, ML regimes, MCP copilot, clean component boundaries throughout.</p>
+</main>
 </body>
 </html>
