@@ -121,7 +121,7 @@
           <div class="node node-bloomberg"><strong>Bloomberg CSV Export</strong><br>Fallback: pre-exported parquet/CSV files loaded from local cache when BLPAPI is unavailable.</div>
           <div class="node"><strong>Zerodha Kite API</strong><br>Holdings, positions, instruments, latest quotes. OAuth flow.</div>
           <div class="node"><strong>Kite MCP Server</strong><br>Zerodha account and market data exposed as AI tools.</div>
-          <div class="node"><strong>RSS Feeds</strong><br>SEBI, NSE, ET Markets — headline metadata only.</div>
+          <div class="node"><strong>NSE-Cogencis + RSS</strong><br>Cogencis India news wire + SEBI/NSE/ET headlines → FinBERT sentiment (NLP layer).</div>
         </div>
       </div>
 
@@ -156,7 +156,7 @@
         <div class="nodes">
           <div class="node node-quant"><strong>Risk Engine</strong><br>VaR (historical, parametric, MC), ES, drawdown, rolling volatility, component VaR, stress testing.</div>
           <div class="node node-quant"><strong>VaR Backtest Engine</strong><br>Kupiec LR test, Christoffersen independence test. Violation rate, p-values, pass/fail.</div>
-          <div class="node node-quant"><strong>Factor Research Engine</strong><br>IC/ICIR/t-stat calculator, Granger causality tester, walk-forward backtester, cross-sectional signal research.</div>
+          <div class="node node-quant"><strong>Spillover &amp; Factor Engine</strong><br>DCC-GARCH dynamic correlations, Diebold–Yilmaz connectedness, IC/Granger lead-lag, walk-forward backtester, cross-sectional research.</div>
           <div class="node node-quant"><strong>ML Engine</strong><br>HMM regime detector (hmmlearn), VaR breach classifier (XGBoost), walk-forward fitting, OOS evaluation.</div>
         </div>
       </div>

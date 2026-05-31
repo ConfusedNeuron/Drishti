@@ -139,7 +139,7 @@
           <td>Indian sector indices</td>
           <td>Bloomberg BLPAPI — sector index series</td>
           <td><code>NSEOILGS Index</code>, <code>NSEIT Index</code>, <code>NSEMETAL Index</code>, <code>NSEBANK Index</code>, <code>NSEFMCG Index</code>, <code>NSEAUTO Index</code>, <code>NSEPHRM Index</code></td>
-          <td>Used for cross-sectional factor research and component VaR by sector.</td>
+          <td>Study targets: Energy (NSEOILGS), Metals (NSEMETAL), FMCG (NSEFMCG), IT (NSEIT). Banks excluded as a commodity target — the commodity→CPI→RBI-repo→banks channel is captured via the 10Y G-Sec yield mediator.</td>
         </tr>
         <tr>
           <td>Broad market index</td>
@@ -353,7 +353,7 @@
 
   <section id="factor-research">
     <h2>6. Factor Signal Research Specification</h2>
-    <p>The factor research module is the primary differentiator of Drishti for quant research audiences. It researches whether commodity and macro factors have statistically significant predictive power over Indian equity sector returns.</p>
+    <p>The spillover research module is Drishti's primary differentiator. It measures how commodity and macro shocks <strong>transmit risk</strong> into Indian equity sectors — primarily via <strong>DCC-GARCH</strong> dynamic conditional correlations and <strong>Diebold–Yilmaz</strong> connectedness (volatility spillover), with IC / Granger lead-lag as secondary descriptives. This aligns the project with the VAR-MGARCH / DCC volatility-spillover methodology standard in the Indian equity–commodity literature.</p>
     <div class="callout warning">
       <span class="label">Research vs risk</span>
       Factor signal research is not portfolio construction. It measures signal quality and reports statistics. It does not produce buy/sell recommendations or optimal allocations.
@@ -386,6 +386,14 @@
           <td>Expand-window training with out-of-sample signal application. Go long when signal is positive, flat/short otherwise. Compute annualized Sharpe on OOS returns.</td>
           <td>Sharpe &gt; 0.5 OOS considered promising for prototype. Primary evidence: OOS, not IS.</td>
         </tr>
+      </tbody>
+    </table>
+    <h3 style="margin-top:18px">Spillover Methods (primary)</h3>
+    <table>
+      <thead><tr><th>Method</th><th>What it measures</th><th>Output</th></tr></thead>
+      <tbody>
+        <tr><td>DCC-GARCH</td><td>Dynamic conditional correlation between each sector index and commodity/macro factors; how correlation rises in crises.</td><td>Time-varying ρ(sector, crude/gold); crisis spikes (COVID-2020, 2022).</td></tr>
+        <tr><td>Diebold–Yilmaz connectedness</td><td>Directional volatility-spillover network across sectors + commodities + macro (VAR + generalized FEVD).</td><td>Total / net / pairwise spillover; who transmits, who receives.</td></tr>
       </tbody>
     </table>
     <h3 style="margin-top:18px">Factors To Research</h3>
@@ -491,7 +499,7 @@
     <h2>10. News Risk Specification</h2>
     <div class="callout warning">
       <span class="label">MVP rule</span>
-      Store headline metadata only: headline text, link, source, timestamp, matched sector/ticker, and risk tag. No full article scraping.
+      Store headline metadata only: headline text, link, source, timestamp, matched sector/ticker, and risk tag. No full article scraping. Sentiment is scored with <strong>FinBERT</strong> (VADER fallback) on NSE-Cogencis / RSS headlines and aggregated to a per-sector / per-holding news-risk score — used as an overlay and an optional regime/breach feature, never as a direct input to the VaR number.
     </div>
     <table>
       <thead><tr><th>Risk tag</th><th>Keyword examples</th><th>Portfolio implication</th></tr></thead>

@@ -97,10 +97,10 @@
   <header class="hero">
     <p class="eyebrow">Low-Level Design — Drishti</p>
     <h1>APIs, Functions, Contracts, and Data Specifications</h1>
-    <p class="subtitle">Complete endpoint registry, Bloomberg BLPAPI and BQuant integration, service function contracts, factor research calculations, ML model specifications, backtesting framework, cache design, and test plan.</p>
+    <p class="subtitle">Complete endpoint registry, Bloomberg BLPAPI integration, service function contracts, factor research calculations, ML model specifications, backtesting framework, cache design, and test plan.</p>
     <div class="meta">
-      <div><strong>Data tier 1</strong>BQuant + BQL — research notebooks</div>
-      <div><strong>Data tier 2</strong>BLPAPI — local app data pipeline</div>
+      <div><strong>Data tier 1</strong>BQuant (Python bql) — research</div>
+      <div><strong>Data tier 2</strong>BLPAPI app pipeline + Cogencis news</div>
       <div><strong>Backend</strong>Python / FastAPI, SQLite cache</div>
       <div><strong>LLM role</strong>Explainer only, not calculator</div>
     </div>
@@ -115,21 +115,20 @@
 
   <!-- ═══════════════════════════════════════════════════════════ -->
   <section id="two-tier">
-    <h2>1. Two-Tier Data Architecture</h2>
+    <h2>1. Two-Tier Data Architecture (BQuant + BLPAPI)</h2>
     <div class="callout warning">
       <span class="label">Key design principle</span>
-      <strong>BQuant is the research environment. BLPAPI is the app data pipeline.</strong>
-      They are complementary, not alternatives. Research artifacts produced in BQuant (fitted HMM parameters, signal rankings, regime history) are exported as JSON/Parquet and consumed by the local app.
+      <strong>BQuant (Python bql API) is the research environment; BLPAPI is the app data pipeline.</strong>
+      They are complementary. Heavy cross-sectional research (Nifty 200 IC / Granger / DCC-GARCH / Diebold–Yilmaz / HMM / walk-forward) runs in BQuant and exports artifacts (JSON/Parquet) that the local BLPAPI-fed app consumes. Access note: BQuant <em>API</em> only — BQL is written in Python inside BQuant, not via the in-terminal/Excel query screen. NSE-Cogencis supplies Indian data + the news wire for the NLP layer.
     </div>
     <div class="grid-2">
       <div class="card">
         <strong>Tier 1 — BQuant <span class="tier-badge tier-bquant">BQuant</span></strong>
         <ul>
-          <li>Bloomberg-hosted Jupyter environment with BQL access.</li>
-          <li>Runs cross-sectional IC research over NIFTY universe.</li>
-          <li>Fits HMM regime model, walk-forward signal backtests, Granger causality.</li>
-          <li>Exports: <code>regime_history.parquet</code>, <code>hmm_params.json</code>, <code>signal_ranking.json</code>, <code>factor_ic_results.json</code>.</li>
-          <li>BQL syntax — cleaner for research-style queries over large universes.</li>
+          <li>Bloomberg-hosted Python (<code>bql</code>) environment — programmatic BQL, no terminal/Excel query screen needed.</li>
+          <li>Pulls the NIFTY 200 cross-section in a single query.</li>
+          <li>Fits DCC-GARCH / Diebold–Yilmaz spillover, HMM regimes, IC/Granger, walk-forward backtests.</li>
+          <li>Exports artifacts (regime history, signal rankings, spillover tables) for the local app.</li>
         </ul>
       </div>
       <div class="card">
@@ -173,10 +172,10 @@
         reference_loader.py     # BDP: sector, market cap, name, currency
         ticker_registry.py      # Zerodha symbol → Bloomberg ticker mapping
 
-      bquant/
-        artifact_loader.py      # Load exported BQuant artifacts (JSON/Parquet)
+      bquant/                   # BQuant artifact load/export (Python bql exports)
+        artifact_loader.py      # Load/export research artifacts (JSON/Parquet)
         regime_loader.py        # Load hmm_params.json, regime_history.parquet
-        signal_loader.py        # Load signal_ranking.json, factor_ic_results.json
+        signal_loader.py        # Load signal_ranking.json, spillover tables
 
       zerodha/
         kite_client.py          # Kite Connect session wrapper
@@ -215,12 +214,15 @@
         regime_conditioned_var.py # VaR split by regime label
 
       commodity/
-        spillover_engine.py       # Lagged regression, sensitivity score
+        dcc_garch.py              # DCC-GARCH dynamic conditional correlations
+        diebold_yilmaz.py         # Connectedness / volatility-spillover network (VAR + FEVD)
+        spillover_engine.py       # Lagged regression, sensitivity score (secondary)
         lag_scanner.py            # Test lags 1,2,3,5,10 for each commodity-sector pair
 
       news/
-        rss_ingester.py           # Fetch RSS feeds, parse metadata
-        news_tagger.py            # Keyword matching → risk tags, sector/ticker links
+        cogencis_ingester.py      # NSE-Cogencis news wire + RSS (SEBI/NSE/ET) metadata
+        news_tagger.py            # Zero-shot / keyword → risk tags, sector/ticker links
+        sentiment_scorer.py       # FinBERT sentiment (VADER fallback) -> news-risk score
 
       copilot/
         copilot_service.py        # Orchestrate MCP tool calls and LLM response
@@ -257,14 +259,14 @@
         macro/                    # USDINR_Curncy.parquet, GIND10YR_Index.parquet
         indices/                  # NIFTY_Index.parquet, sector indices
         reference/                # BDP metadata (sector, mktcap) as JSON
-      bquant_artifacts/           # Exported from BQuant: hmm_params.json, etc.
+      research_artifacts/           # Exported from research: hmm_params.json, etc.
       computed/                   # Cached risk results, factor IC tables
     mappings/
       bloomberg_tickers.json      # Zerodha symbol → Bloomberg ticker
       sector_map.json             # Symbol → GICS sector (manual fallback)
       nifty50_universe.json       # NIFTY 50 member list with Bloomberg tickers
 
-  notebooks/                      # BQuant notebooks (checked in without output)
+  notebooks/                      # research notebooks (checked in without output)
     01_data_pull.ipynb
     02_factor_ic_research.ipynb
     03_granger_causality.ipynb
@@ -371,7 +373,7 @@ def create_bloomberg_session(host="localhost", port=8194) -> blpapi.Session:
         <tr><td>Macro series</td><td>Parquet per ticker</td><td><code>bloomberg/macro/{ticker}.parquet</code></td><td>Weekly refresh or on demand</td></tr>
         <tr><td>Sector indices</td><td>Parquet per index</td><td><code>bloomberg/indices/{ticker}.parquet</code></td><td>Incremental daily</td></tr>
         <tr><td>Reference data (BDP)</td><td>JSON</td><td><code>bloomberg/reference/{symbol}.json</code></td><td>Monthly or on symbol add</td></tr>
-        <tr><td>BQuant artifacts</td><td>JSON / Parquet</td><td><code>bquant_artifacts/{artifact}.json</code></td><td>Manual export after each research run</td></tr>
+        <tr><td>research artifacts</td><td>JSON / Parquet</td><td><code>research_artifacts/{artifact}.json</code></td><td>Manual export after each research run</td></tr>
       </tbody>
     </table>
   </section>
@@ -379,10 +381,10 @@ def create_bloomberg_session(host="localhost", port=8194) -> blpapi.Session:
   <!-- ═══════════════════════════════════════════════════════════ -->
   <section id="bquant">
     <h2>4. BQuant Research Notebooks</h2>
-    <p>BQuant notebooks run on Bloomberg infrastructure with direct BQL access. They are the authoritative source for all factor research outputs. Results are exported as files and loaded by the local app.</p>
+    <p>BQuant notebooks run in Bloomberg's hosted Python (<code>bql</code>) environment. They are the authoritative source for all spillover / factor outputs, exported as JSON/Parquet for the local BLPAPI-fed app.</p>
 
     <h3>4.1 BQL Query Patterns</h3>
-    <pre class="bql"><code><span class="cm"># BQuant Notebook — Factor IC Research</span>
+    <pre class="bql"><code><span class="cm"># research Notebook — Factor IC Research</span>
 <span class="kw">import</span> bql
 bq = bql.Service()
 
@@ -523,7 +525,7 @@ macro = bq.execute(bql.Request(
     </div>
     <div class="endpoint">
       <span class="ep-method get">GET</span><code>/api/data/cache/status</code>
-      <strong>Response:</strong> <code>{"equities": {"count": 12, "oldest": "2021-01-04", "newest": "2026-05-14"}, "commodities": {"count": 5, "stale": false}, "macro": {"count": 3}, "bquant_artifacts": {"available": ["factor_ic_results.json", "regime_history.parquet", "walk_forward_results.json"]}}</code>
+      <strong>Response:</strong> <code>{"equities": {"count": 12, "oldest": "2021-01-04", "newest": "2026-05-14"}, "commodities": {"count": 5, "stale": false}, "macro": {"count": 3}, "research_artifacts": {"available": ["factor_ic_results.json", "regime_history.parquet", "walk_forward_results.json"]}}</code>
     </div>
     <div class="endpoint">
       <span class="ep-method post">POST</span><code>/api/data/cache/refresh</code>
@@ -587,7 +589,7 @@ macro = bq.execute(bql.Request(
     </div>
     <div class="endpoint">
       <span class="ep-method post">POST</span><code>/api/risk/var/regime-conditioned</code>
-      <p>Returns VaR split by HMM regime. Loads <code>regime_history.parquet</code> from BQuant artifacts.</p>
+      <p>Returns VaR split by HMM regime. Loads <code>regime_history.parquet</code> from research artifacts.</p>
       <strong>Response:</strong>
       <pre><code>{
   "current_regime": 0, "current_regime_label": "low_vol",
@@ -627,10 +629,10 @@ macro = bq.execute(bql.Request(
     <h3>5.6 Factor Research Endpoints</h3>
     <div class="endpoint">
       <span class="ep-method get">GET</span><code>/api/factor/signal-ranking</code>
-      <p>Loads pre-computed signal ranking from BQuant artifact <code>factor_ic_results.json</code>.</p>
+      <p>Loads pre-computed signal ranking from research artifact <code>factor_ic_results.json</code>.</p>
       <strong>Response:</strong>
       <pre><code>{
-  "source": "bquant_artifact", "computed_at": "2026-05-13",
+  "source": "research_artifact", "computed_at": "2026-05-13",
   "rankings": [
     {"factor": "brent", "lag_days": 2, "ic_mean": 0.082, "icir": 1.24,
      "t_stat": 3.18, "p_value": 0.0018, "pct_positive": 0.61,
@@ -645,12 +647,12 @@ macro = bq.execute(bql.Request(
     </div>
     <div class="endpoint">
       <span class="ep-method get">GET</span><code>/api/factor/granger</code>
-      <p>Loads Granger causality results from BQuant artifact. Returns commodity × sector × lag matrix.</p>
-      <strong>Response:</strong> <code>{"source": "bquant_artifact", "results": [{"commodity": "brent", "sector": "Oil & Gas", "lag": 2, "f_stat": 8.42, "p_value": 0.0038, "significant": true}]}</code>
+      <p>Loads Granger causality results from research artifact. Returns commodity × sector × lag matrix.</p>
+      <strong>Response:</strong> <code>{"source": "research_artifact", "results": [{"commodity": "brent", "sector": "Oil & Gas", "lag": 2, "f_stat": 8.42, "p_value": 0.0038, "significant": true}]}</code>
     </div>
     <div class="endpoint">
       <span class="ep-method get">GET</span><code>/api/factor/walk-forward</code>
-      <p>Loads walk-forward backtest results from BQuant artifact.</p>
+      <p>Loads walk-forward backtest results from research artifact.</p>
       <strong>Response:</strong> <code>{"factor": "brent", "lag": 2, "oos_sharpe": 0.74, "max_drawdown": -0.21, "win_rate": 0.58, "cumulative_return_series": [...]}</code>
     </div>
     <div class="endpoint">
@@ -663,8 +665,8 @@ macro = bq.execute(bql.Request(
     <h3>5.7 ML / Regime Endpoints</h3>
     <div class="endpoint">
       <span class="ep-method get">GET</span><code>/api/ml/regime/current</code>
-      <p>Returns current regime from latest BQuant regime history artifact.</p>
-      <strong>Response:</strong> <code>{"date": "2026-05-14", "regime": 0, "label": "low_vol", "regime_prob": [0.91, 0.09], "consecutive_days_in_regime": 14, "source": "bquant_artifact"}</code>
+      <p>Returns current regime from latest research regime history artifact.</p>
+      <strong>Response:</strong> <code>{"date": "2026-05-14", "regime": 0, "label": "low_vol", "regime_prob": [0.91, 0.09], "consecutive_days_in_regime": 14, "source": "research_artifact"}</code>
     </div>
     <div class="endpoint">
       <span class="ep-method get">GET</span><code>/api/ml/regime/history</code>
@@ -673,7 +675,7 @@ macro = bq.execute(bql.Request(
     </div>
     <div class="endpoint">
       <span class="ep-method get">GET</span><code>/api/ml/models/status</code>
-      <strong>Response:</strong> <code>{"hmm": {"fitted": true, "n_states": 2, "fitted_at": "2026-05-13", "source": "bquant"}, "breach_classifier": {"fitted": false}}</code>
+      <strong>Response:</strong> <code>{"hmm": {"fitted": true, "n_states": 2, "fitted_at": "2026-05-13", "source": "research"}, "breach_classifier": {"fitted": false}}</code>
     </div>
 
     <h3>5.8 Commodity Spillover Endpoints</h3>
@@ -741,8 +743,8 @@ macro = bq.execute(bql.Request(
       <p>Loads adjusted close prices for all symbols from Bloomberg cache, aligns to common trading dates (Indian calendar), computes simple daily returns, reports dropped dates and missing symbols.</p>
     </div>
     <div class="method">
-      <h3><code>BQuantArtifactLoader.load(artifact_name) -> dict | pd.DataFrame</code></h3>
-      <p>Loads a named artifact from <code>data/cache/bquant_artifacts/</code>. Validates schema on load. Raises <code>ArtifactNotFoundError</code> with clear message if artifact hasn't been exported from BQuant yet.</p>
+      <h3><code>ResearchArtifactLoader.load(artifact_name) -> dict | pd.DataFrame</code></h3>
+      <p>Loads a named artifact from <code>data/cache/research_artifacts/</code>. Validates schema on load. Raises <code>ArtifactNotFoundError</code> with clear message if artifact hasn't been exported from research yet.</p>
     </div>
 
     <h3>6.2 Risk Engine</h3>
@@ -781,7 +783,15 @@ macro = bq.execute(bql.Request(
       <p>Independence test on violation sequence. Estimates transition probabilities between violation/no-violation states. Tests whether violations cluster (independence hypothesis). LR statistic, p-value, interpretation.</p>
     </div>
 
-    <h3>6.4 Factor Research (Local Complement to BQuant)</h3>
+    <h3>6.4 Spillover &amp; Factor Research</h3>
+    <div class="method">
+      <h3><code>fit_dcc_garch(returns_matrix) -> DCCResult</code></h3>
+      <p>Univariate GARCH(1,1) per series, then a DCC model; returns time-varying conditional correlations between each sector index and the commodity/macro factors. Surfaces crisis correlation spikes (COVID-2020, 2022) — the headline spillover result.</p>
+    </div>
+    <div class="method">
+      <h3><code>diebold_yilmaz_connectedness(returns_matrix, var_lag, fevd_horizon) -> SpilloverTable</code></h3>
+      <p>Fits a VAR, computes the generalized forecast-error variance decomposition, and returns total / directional (to, from) / net / pairwise connectedness across sectors + commodities + macro. Identifies who transmits and who receives risk.</p>
+    </div>
     <div class="method">
       <h3><code>calculate_ic(factor_returns_lagged, forward_stock_returns) -> ICResult</code></h3>
       <p>Rank correlation (Spearman) between lagged factor return and forward stock return cross-section. Returns IC, IC standard deviation, ICIR = IC_mean / IC_std, t-stat = ICIR * sqrt(n_periods), p-value.</p>
@@ -795,7 +805,7 @@ macro = bq.execute(bql.Request(
       <p>OLS regression of portfolio returns on lagged commodity factor returns. Reports beta, t-stat, R-squared, and confidence indicator per factor-lag pair. Flags "not significant" explicitly.</p>
     </div>
 
-    <h3>6.5 ML Layer (Loads BQuant Artifacts)</h3>
+    <h3>6.5 ML Layer (Loads research Artifacts)</h3>
     <div class="method">
       <h3><code>RegimeDetector.current_regime(date) -> RegimeLabel</code></h3>
       <p>Loads <code>regime_history.parquet</code> artifact. Returns regime label (0=low_vol, 1=high_vol), posterior probabilities, and consecutive days in current regime for the requested date.</p>
@@ -839,7 +849,7 @@ macro = bq.execute(bql.Request(
     "missing_symbols": [],
     "price_history_start": "2021-01-04",
     "price_history_end": "2026-05-13",
-    "bquant_artifacts_loaded": ["regime_history", "factor_ic_results"]
+    "research_artifacts_loaded": ["regime_history", "factor_ic_results"]
   },
   "portfolio": {
     "total_value": 845000.0,
@@ -921,7 +931,7 @@ macro = bq.execute(bql.Request(
   "n_periods": 654,
   "significant": true,
   "oos_sharpe": 0.74,
-  "source": "bquant_artifact"
+  "source": "research_artifact"
 }</code></pre>
       </div>
       <div>
@@ -934,7 +944,7 @@ macro = bq.execute(bql.Request(
   "regime_0_mean_vol": 0.142,
   "regime_1_mean_vol": 0.318,
   "consecutive_days": 14,
-  "source": "bquant_hmm_artifact"
+  "source": "research_hmm_artifact"
 }</code></pre>
       </div>
       <div>
@@ -1053,7 +1063,7 @@ macro = bq.execute(bql.Request(
         <tr><td><code>BLOOMBERG_SESSION_FAILED</code></td><td>BLPAPI connection refused</td><td>Bloomberg data unavailable. Using local cache if available.</td></tr>
         <tr><td><code>BLOOMBERG_TICKER_NOT_FOUND</code></td><td>Symbol not in ticker registry</td><td>Symbol {X} could not be mapped to Bloomberg. Manual ticker entry required.</td></tr>
         <tr><td><code>CACHE_STALE</code></td><td>Parquet file older than threshold</td><td>Price data for {X} is {N} days old. Showing stale data with warning.</td></tr>
-        <tr><td><code>BQUANT_ARTIFACT_MISSING</code></td><td>Required artifact not exported from BQuant</td><td>BQuant artifact "{name}" not found. Run BQuant notebook and export before using this feature.</td></tr>
+        <tr><td><code>ARTIFACT_MISSING</code></td><td>Required artifact not exported from research</td><td>research artifact "{name}" not found. Run research notebook and export before using this feature.</td></tr>
         <tr><td><code>AUTH_ZERODHA_FAILED</code></td><td>OAuth or callback failed</td><td>Zerodha connection failed. Use sample or CSV portfolio.</td></tr>
         <tr><td><code>PORTFOLIO_EMPTY</code></td><td>No modeled holdings</td><td>No supported holdings found for risk analysis.</td></tr>
         <tr><td><code>PRICE_DATA_MISSING</code></td><td>Symbol lacks cached price history</td><td>Some holdings excluded — run data pull for {symbols}.</td></tr>
@@ -1073,8 +1083,8 @@ macro = bq.execute(bql.Request(
       <tbody>
         <tr><td>Bloomberg cache load</td><td>Pre-populated Parquet for RELIANCE, TCS, CO1</td><td>Return matrix aligned to Indian trading calendar with no NaN gaps.</td></tr>
         <tr><td>Ticker registry resolution</td><td>Zerodha symbol "RELIANCE" → BBG ticker</td><td>Returns "RELIANCE IN Equity".</td></tr>
-        <tr><td>BQuant artifact load</td><td><code>factor_ic_results.json</code> in artifacts folder</td><td>Signal ranking returns sorted table with IC, t-stat, p-value fields.</td></tr>
-        <tr><td>BQuant artifact missing</td><td>Remove <code>regime_history.parquet</code></td><td>Returns <code>BQUANT_ARTIFACT_MISSING</code> error with clear notebook instruction.</td></tr>
+        <tr><td>research artifact load</td><td><code>factor_ic_results.json</code> in artifacts folder</td><td>Signal ranking returns sorted table with IC, t-stat, p-value fields.</td></tr>
+        <tr><td>research artifact missing</td><td>Remove <code>regime_history.parquet</code></td><td>Returns <code>ARTIFACT_MISSING</code> error with clear notebook instruction.</td></tr>
         <tr><td>Historical VaR synthetic</td><td>Known return vector, known 99th-percentile loss</td><td>VaR matches expected value within 0.1%.</td></tr>
         <tr><td>Parametric vs historical divergence</td><td>Return series with fat tails</td><td>Parametric VaR lower than historical — method difference surfaced in output.</td></tr>
         <tr><td>Kupiec test — good model</td><td>Inject exactly 1% violation rate</td><td>LR stat below critical value; pass = true.</td></tr>
@@ -1103,12 +1113,12 @@ macro = bq.execute(bql.Request(
       <li>Bloomberg raw price files gitignored — cite data source in code comments and reports only.</li>
       <li>Validate CSV file type, row count, numeric fields, and symbol format before processing.</li>
       <li>Session-scoped portfolio IDs — never expose local file paths in API responses.</li>
-      <li>BQuant notebooks should not contain hardcoded credentials — use Bloomberg session authentication natively.</li>
+      <li>research notebooks should not contain hardcoded credentials — use Bloomberg session authentication natively.</li>
       <li>Add visible disclaimer in UI and all reports: "For educational risk analytics only. Not investment advice."</li>
     </ul>
   </section>
 
-  <p class="footer">Drishti LLD — Bloomberg BLPAPI + BQuant research layer + full endpoint registry. Data: Bloomberg Terminal, FRTL, IIM Calcutta.</p>
+  <p class="footer">Drishti LLD — Bloomberg BLPAPI + local research layer + full endpoint registry. Data: Bloomberg Terminal, FRTL, IIM Calcutta.</p>
 </main>
 </body>
 </html>
