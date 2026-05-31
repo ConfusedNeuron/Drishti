@@ -96,147 +96,230 @@ SLEEP_SECONDS = 0.25
 
 # ── Ticker lists ──────────────────────────────────────────────────────────────
 
-# NSE sector indices -- primary DCC-GARCH / Diebold-Yilmaz spillover targets.
-# Banks excluded: commodity→CPI→RBI repo→banks is a mediated channel captured
-# via the G-Sec yield factor, not as a direct sector target.
+# NSE sector indices.
 #
-# If NSEOILGS or NSEMETAL return [invalid], look up the exact ticker on the terminal:
-#   Type "NSE OIL GAS" or "NSE METAL" in Bloomberg search (yellow key) and pick the Index.
-# Alternative tickers to try if these fail:
-#   Oil & Gas: "NSEOGEN Index", "NSEOILGAS Index"
-#   Metals:    "NSEMETL Index"
+# NSEFMCG, NSEIT, NSEBANK, NSEAUTO, NSEPHRM all confirmed working on FRTL.
+# NSEOILGS and NSEMETAL fail with securityError -- likely a Bloomberg subscription
+# issue on this terminal, not a ticker format issue. If they keep failing:
+#   1. On the Bloomberg terminal type:  NSEOILGS Index <EQUITY> <GO>
+#      If it loads a security page, the ticker is right but the API entitlement
+#      is missing -- contact FRTL coordinator (Prof. Samit Paul).
+#   2. If the security page doesn't load, try these alternatives:
+#      Oil & Gas: "NSEOGEN Index"  |  Metals: "NSEMETL Index"
 SECTOR_TICKERS: dict[str, str] = {
-    "NSEOILGS Index": "energy",
-    "NSEMETAL Index":  "metals",
+    "NSEOILGS Index": "energy",    # ⚠ failing on FRTL -- see note above
+    "NSEMETAL Index":  "metals",   # ⚠ failing on FRTL -- see note above
     "NSEFMCG Index":   "fmcg",
     "NSEIT Index":     "it",
-    "NSEBANK Index":   "banks",     # pulled for completeness; excluded from DY targets
+    "NSEBANK Index":   "banks",    # pulled for completeness; excluded from DY targets
     "NSEAUTO Index":   "auto",
     "NSEPHRM Index":   "pharma",
+    "NSEREALTY Index": "realty",   # added: rate-sensitive, useful for G-Sec factor analysis
+    "NSEPBKIDX Index": "psu_banks",# added: PSU banks -- high G-Sec sensitivity
 }
 
 # Broad market benchmarks
 BENCHMARK_TICKERS: dict[str, str] = {
     "NIFTY Index":  "nifty50",
     "SENSEX Index": "sensex",
+    "NIFTYJR Index": "nifty_next50",  # NIFTY Next 50 -- broader universe
 }
 
 # Front-month continuous commodity futures.
 # CO1 = Brent, CL1 = WTI, GC1 = Gold, HG1 = Copper, NG1 = Natural Gas.
-# Roll bias is documented but not adjusted -- small for daily return analysis.
+# PX_LAST with adj_split=True, adj_normal=True in BDH request = roll-adjusted.
 COMMODITY_TICKERS: dict[str, str] = {
     "CO1 Comdty": "brent",
     "CL1 Comdty": "wti",
     "GC1 Comdty": "gold",
     "HG1 Comdty": "copper",
     "NG1 Comdty": "natgas",
+    "S 1 Comdty":  "soybean",   # added: India imports ~15 Mt/yr; FMCG input cost driver
+    "W 1 Comdty":  "wheat",     # added: global food prices → Indian CPI → RBI rates
 }
 
 # Macro factor series
 MACRO_TICKERS: dict[str, str] = {
     "USDINR Curncy":  "usdinr",
-    "GIND10YR Index": "gsec10y",    # India 10Y G-Sec yield -- use as a level, diff for returns
-    "INVIXN Index":   "indiavix",   # India VIX -- HMM feature + regime indicator
+    "GIND10YR Index": "gsec10y",   # India 10Y G-Sec yield; diff for returns, level for HMM
+    "INVIXN Index":   "indiavix",  # India VIX; HMM feature + regime indicator
+    "SENSEX Index":   "sensex",    # duplicated here so macro loader gets it too
 }
 
-# NIFTY 50 equities for the sample portfolio and cross-sectional research.
-# Ticker format: "{NSE_SYMBOL} IN Equity" -- confirmed via Bloomberg FRTL guide.
-# A handful of symbols differ from their NSE display name (noted inline).
+# ── NIFTY 50 equities ─────────────────────────────────────────────────────────
 #
-# NOTE: NIFTY 50 composition is reviewed semi-annually (March and September).
-# This list reflects the 2024-2025 composition. If any ticker fails validation
-# (securityError from BDP), look up the current name on Bloomberg with:
-#   NIFTY Index MEMB <GO>  →  Actions  →  Export to Excel
-# Then run: python scripts/pull_drishti_data.py --validate
+# Bloomberg ticker codes for Indian equities are NOT always the NSE trading symbol.
+# Bloomberg uses its own shorter codes. Format: "{BBG_CODE} IN Equity"
 #
-# INDX_MEMBERS via BLPAPI returns 0 rows on FRTL (entitlement issue) so the
-# list must be maintained manually.
+# Key: NSE_SYMBOL → BBG_TICKER
+#
+# How to verify a failing ticker on the terminal:
+#   Type the NSE symbol in Bloomberg search → select the NSE-listed equity →
+#   read the ticker shown top-left (e.g. "HDFCB IN Equity").
+#
+# The 15 tickers that failed in the previous run were using NSE symbols directly.
+# Corrected Bloomberg codes are listed below.
+#
+# NIFTY 50 composition reviewed semi-annually. This list = 2024-2025 composition.
+# INDX_MEMBERS via BLPAPI returns 0 rows on FRTL (entitlement issue) so this
+# list is maintained manually. Source: NSE India factsheet + Bloomberg lookup.
 EQUITY_TICKERS: list[str] = [
+
     # ── Financials ──────────────────────────────────────────────────────────
-    "HDFCBANK IN Equity",
-    "ICICIBANK IN Equity",
+    # NSE: HDFCBANK  →  BBG: HDFCB    (Bloomberg shortens to 5 chars)
+    "HDFCB IN Equity",
+    # NSE: ICICIBANK →  BBG: ICICIBC
+    "ICICIBC IN Equity",
+    # NSE: SBIN      →  BBG: SBIN     (matches NSE)
     "SBIN IN Equity",
-    "KOTAKBANK IN Equity",
-    "AXSB IN Equity",           # NSE: AXISBANK
-    "IIB IN Equity",            # NSE: INDUSINDBK
-    "BAJFINANCE IN Equity",
-    "BJFIN IN Equity",          # NSE: BAJAJFINSV
-    "HDFCLIFE IN Equity",       # NSE: HDFCLIFE -- validate on terminal, may be HLIFE IN Equity
+    # NSE: KOTAKBANK →  BBG: KMB      (Kotak Mahindra Bank abbreviated)
+    "KMB IN Equity",
+    # NSE: AXISBANK  →  BBG: AXSB
+    "AXSB IN Equity",
+    # NSE: INDUSINDBK → BBG: IIB
+    "IIB IN Equity",
+    # NSE: BAJFINANCE → BBG: BAF
+    "BAF IN Equity",
+    # NSE: BAJAJFINSV → BBG: BJFIN
+    "BJFIN IN Equity",
+    # NSE: HDFCLIFE  →  BBG: HDFCLIFE (verify on terminal; may be HLIFE)
+    "HDFCLIFE IN Equity",
 
     # ── Information Technology ───────────────────────────────────────────────
+    # NSE: TCS       →  BBG: TCS      (matches NSE)
     "TCS IN Equity",
-    "INFY IN Equity",
-    "HCLTECH IN Equity",
-    "WIPRO IN Equity",
+    # NSE: INFY      →  BBG: INFO     (Infosys listed as INFO on BBG)
+    "INFO IN Equity",
+    # NSE: HCLTECH   →  BBG: HCLT
+    "HCLT IN Equity",
+    # NSE: WIPRO     →  BBG: WPRO
+    "WPRO IN Equity",
+    # NSE: TECHM     →  BBG: TECHM    (matches NSE)
     "TECHM IN Equity",
-    "LTIM IN Equity",           # NSE: LTIM (LTI Mindtree, post-merger 2023)
+    # NSE: LTIM      →  BBG: LTIM     (LTI Mindtree post-2023 merger; verify on terminal)
+    "LTIM IN Equity",
 
     # ── Energy ──────────────────────────────────────────────────────────────
+    # NSE: RELIANCE  →  BBG: RELIANCE (matches NSE)
     "RELIANCE IN Equity",
+    # NSE: ONGC      →  BBG: ONGC     (matches NSE)
     "ONGC IN Equity",
+    # NSE: BPCL      →  BBG: BPCL     (matches NSE)
     "BPCL IN Equity",
-    "IOCL IN Equity",           # NSE: IOC
+    # NSE: IOC       →  BBG: IOCL     (Indian Oil Corp)
+    "IOCL IN Equity",
 
     # ── Consumer Staples ────────────────────────────────────────────────────
-    "HINDUNILVR IN Equity",
+    # NSE: HINDUNILVR → BBG: HUVR     (Hindustan Unilever)
+    "HUVR IN Equity",
+    # NSE: ITC       →  BBG: ITC      (matches NSE)
     "ITC IN Equity",
-    "NESTLEIND IN Equity",
-    "BRIT IN Equity",           # NSE: BRITANNIA
-    "TATACONSUM IN Equity",     # NSE: TATACONSUM (Tata Consumer Products, in since 2020)
+    # NSE: NESTLEIND →  BBG: NEST
+    "NEST IN Equity",
+    # NSE: BRITANNIA →  BBG: BRIT
+    "BRIT IN Equity",
+    # NSE: TATACONSUM → BBG: TATACONSUM (Tata Consumer Products; verify on terminal)
+    "TATACONSUM IN Equity",
 
     # ── Consumer Discretionary ──────────────────────────────────────────────
-    "MARUTI IN Equity",
-    "TATAMOTORS IN Equity",
-    "MM IN Equity",             # NSE: M&M
-    "BJAUT IN Equity",          # NSE: BAJAJ-AUTO
-    "HMCL IN Equity",           # NSE: HEROMOTOCO
-    "EIM IN Equity",            # NSE: EICHERMOT
-    "TITAN IN Equity",
+    # NSE: MARUTI    →  BBG: MSIL     (Maruti Suzuki India Ltd)
+    "MSIL IN Equity",
+    # NSE: TATAMOTORS → BBG: TTMT
+    "TTMT IN Equity",
+    # NSE: M&M       →  BBG: MM
+    "MM IN Equity",
+    # NSE: BAJAJ-AUTO → BBG: BJAUT
+    "BJAUT IN Equity",
+    # NSE: HEROMOTOCO → BBG: HMCL
+    "HMCL IN Equity",
+    # NSE: EICHERMOT →  BBG: EIM
+    "EIM IN Equity",
+    # NSE: TITAN     →  BBG: TTAN
+    "TTAN IN Equity",
 
     # ── Industrials / Infrastructure ─────────────────────────────────────────
+    # NSE: LT        →  BBG: LT       (matches NSE)
     "LT IN Equity",
+    # NSE: NTPC      →  BBG: NTPC     (matches NSE)
     "NTPC IN Equity",
-    "POWERGRID IN Equity",
+    # NSE: POWERGRID →  BBG: PWGR
+    "PWGR IN Equity",
 
     # ── Materials ───────────────────────────────────────────────────────────
-    "TATASTEEL IN Equity",
-    "HINDALCO IN Equity",
-    "JSTL IN Equity",           # NSE: JSWSTEEL
-    "COAL IN Equity",           # NSE: COALINDIA
+    # NSE: TATASTEEL →  BBG: TATA     (Bloomberg uses TATA for Tata Steel)
+    "TATA IN Equity",
+    # NSE: HINDALCO  →  BBG: HNDL
+    "HNDL IN Equity",
+    # NSE: JSWSTEEL  →  BBG: JSTL
+    "JSTL IN Equity",
+    # NSE: COALINDIA →  BBG: COAL
+    "COAL IN Equity",
+    # NSE: GRASIM    →  BBG: GRASIM   (matches NSE)
     "GRASIM IN Equity",
-    "UTCEM IN Equity",          # NSE: ULTRACEMCO
-    "ASIANPAINT IN Equity",
+    # NSE: ULTRACEMCO → BBG: UTCEM
+    "UTCEM IN Equity",
+    # NSE: ASIANPAINT → BBG: APNT
+    "APNT IN Equity",
 
     # ── Health Care ─────────────────────────────────────────────────────────
-    "SUNP IN Equity",           # NSE: SUNPHARMA
+    # NSE: SUNPHARMA →  BBG: SUNP
+    "SUNP IN Equity",
+    # NSE: CIPLA     →  BBG: CIPLA    (matches NSE)
     "CIPLA IN Equity",
-    "DRRD IN Equity",           # NSE: DRREDDY
-    "DIVI IN Equity",           # NSE: DIVISLAB
-    "APHS IN Equity",           # NSE: APOLLOHOSP
+    # NSE: DRREDDY   →  BBG: DRRD
+    "DRRD IN Equity",
+    # NSE: DIVISLAB  →  BBG: DIVI
+    "DIVI IN Equity",
+    # NSE: APOLLOHOSP → BBG: APHS
+    "APHS IN Equity",
 
     # ── Communication Services ──────────────────────────────────────────────
-    "BHARTI IN Equity",         # NSE: BHARTIARTL
+    # NSE: BHARTIARTL → BBG: BHARTI
+    "BHARTI IN Equity",
 
     # ── Conglomerates / Other ────────────────────────────────────────────────
-    "ADE IN Equity",            # NSE: ADANIENT
-    "ADSEZ IN Equity",          # NSE: ADANIPORTS
-    "UPLL IN Equity",           # NSE: UPL
+    # NSE: ADANIENT  →  BBG: ADE
+    "ADE IN Equity",
+    # NSE: ADANIPORTS → BBG: ADSEZ
+    "ADSEZ IN Equity",
+    # NSE: UPL       →  BBG: UPLL
+    "UPLL IN Equity",
 ]
 
-# PX_ADJ_CLOSE returns 100% null on FRTL (entitlement issue, confirmed by --validate).
-# Use PX_LAST only -- it is the unadjusted close but is the only field that works here.
-EQUITY_FIELDS = ["PX_LAST"]
+# ── Field definitions ─────────────────────────────────────────────────────────
 
-# All non-equity series use PX_LAST (they are index/futures levels, not equity prices).
+# Daily price + volume.
+# PX_LAST with adj_split=True + adj_normal=True in the BDH request =
+# split-and-dividend-adjusted close. PX_ADJ_CLOSE is an alias for this but
+# requires a terminal entitlement not available on FRTL -- use PX_LAST instead.
+# PX_VOLUME: daily traded volume. Used for liquidity screening and concentration.
+EQUITY_DAILY_FIELDS = ["PX_LAST", "PX_VOLUME"]
+
+# Annual fundamental data. Pulled at YEARLY periodicity.
+# All confirmed working on FRTL (see BLOOMBERG_TERMINAL_GUIDE.md).
+# IS_* fields (IS_NET_INC, IS_EPS_*) are 100% null on FRTL -- DO NOT USE.
+# TRAIL_12M_* fields are null in HistoricalDataRequest -- DO NOT USE.
+EQUITY_ANNUAL_FIELDS = [
+    "RETURN_COM_EQY",           # Return on common equity (ROE). Use this, not RETURN_ON_EQY.
+    "BS_TOT_ASSET",             # Total assets
+    "NET_INCOME",               # Net income. Use this, not IS_NET_INC.
+    "SHORT_AND_LONG_TERM_DEBT", # Total debt. Use this, not BS_TOT_DEBT.
+    "BOOK_VAL_PER_SH",          # Book value per share
+    "EQY_DPS",                  # Dividends per share
+    "CF_CASH_FROM_OPER",        # Operating cash flow
+    "EQY_SH_OUT",               # Shares outstanding (for market cap reconstruction)
+]
+
+# All non-equity index/futures/macro series use only PX_LAST.
 INDEX_FIELDS = ["PX_LAST"]
 
-# Validation tickers -- 5 stable large-caps used to test fields before a full pull.
+# Validation tickers -- corrected Bloomberg codes, 5 confirmed large-caps.
 VALIDATE_TICKERS = [
-    "RELIANCE IN Equity",
-    "TCS IN Equity",
-    "HDFCBANK IN Equity",
-    "INFY IN Equity",
-    "ONGC IN Equity",
+    "RELIANCE IN Equity",   # confirmed working
+    "TCS IN Equity",        # confirmed working
+    "HDFCB IN Equity",      # corrected from HDFCBANK
+    "INFO IN Equity",       # corrected from INFY
+    "ONGC IN Equity",       # confirmed working
 ]
 
 
@@ -627,37 +710,51 @@ def pull_equities(
     end_date: str,
     cache_dir: Path,
     skip_existing: bool = True,
+    periodicity: str = "DAILY",
+    file_suffix: str = "",
+    desc: str = "Equity chunks",
 ) -> list[str]:
     """
-    Pull equity price series, 100 tickers per request.
+    Pull equity data in 100-ticker chunks, one parquet file per ticker.
 
-    Each ticker gets its own parquet file immediately after the chunk completes.
+    Parameters
+    ----------
+    periodicity  : "DAILY", "MONTHLY", or "YEARLY"
+    file_suffix  : appended to filename before .parquet -- use "_annual" for
+                   fundamentals so they don't overwrite daily price files.
+    desc         : tqdm bar label
+
+    Each ticker is saved immediately after its chunk completes.
     If interrupted, already-saved tickers are skipped on rerun.
-
-    Equities take ~45-60 min for a full NIFTY 50 pull. Run with --skip-equities
-    first to verify all other data, then rerun without it for the equity pull.
     """
+    def _path(ticker: str) -> Path:
+        base = cache_path_for(ticker, cache_dir)
+        if file_suffix:
+            return base.parent / (base.stem + file_suffix + ".parquet")
+        return base
+
     # Filter out tickers already cached
     remaining = [t for t in tickers
-                 if not skip_existing or not cache_path_for(t, cache_dir).exists()]
+                 if not skip_existing or not _path(t).exists()]
     n_skipped  = len(tickers) - len(remaining)
 
     if n_skipped:
-        print(f"  Skipping {n_skipped} already-cached equity tickers.")
+        print(f"  Skipping {n_skipped} already-cached tickers ({periodicity}).")
 
     if not remaining:
-        print("  All equity tickers already cached.")
+        print(f"  All {periodicity.lower()} tickers already cached.")
         return []
 
     all_errors: list[str] = []
     ticker_chunks = chunks(remaining, CHUNK_SIZE)
 
-    print(f"  Pulling {len(remaining)} equities in {len(ticker_chunks)} chunks "
-          f"({CHUNK_SIZE} tickers/chunk, {SLEEP_SECONDS}s sleep) ...")
+    print(f"  Pulling {len(remaining)} tickers ({periodicity}) in "
+          f"{len(ticker_chunks)} chunks ({CHUNK_SIZE}/chunk, {SLEEP_SECONDS}s sleep) ...")
 
-    for chunk in tqdm(ticker_chunks, desc="Equity chunks", unit="chunk"):
+    for chunk in tqdm(ticker_chunks, desc=desc, unit="chunk"):
         try:
-            df, errors = bdh(session, chunk, fields, start_date, end_date)
+            df, errors = bdh(session, chunk, fields, start_date, end_date,
+                             periodicity=periodicity)
         except Exception as exc:
             tqdm.write(f"  [chunk error] {exc}")
             all_errors.extend(chunk)
@@ -669,7 +766,7 @@ def pull_equities(
         if not df.empty and "ticker" in df.columns:
             # Split the multi-ticker response into one file per ticker
             for ticker, ticker_df in df.groupby("ticker"):
-                path     = cache_path_for(ticker, cache_dir)
+                path     = _path(ticker)
                 clean_df = ticker_df.drop(columns=["ticker"])
                 write_to_cache(path, clean_df)
 
@@ -801,13 +898,28 @@ def main() -> None:
         # ── Validate mode: test fields, print report, exit ────────────────
         if args.validate:
             print("\n── Field validation mode ───────────────────────────────────────")
+
+            # Test corrected equity tickers + daily fields
             validate_fields(
                 session,
                 tickers=VALIDATE_TICKERS,
-                fields=EQUITY_FIELDS,
+                fields=EQUITY_DAILY_FIELDS,
                 start_date="20200101",
                 end_date="20231231",
+                periodicity="DAILY",
             )
+
+            # Test annual fundamental fields
+            validate_fields(
+                session,
+                tickers=VALIDATE_TICKERS,
+                fields=EQUITY_ANNUAL_FIELDS,
+                start_date="20200101",
+                end_date="20231231",
+                periodicity="YEARLY",
+            )
+
+            # Test commodity + macro
             validate_fields(
                 session,
                 tickers=list(COMMODITY_TICKERS.keys()),
@@ -828,7 +940,7 @@ def main() -> None:
         all_errors: dict[str, list[str]] = {}
 
         # ── 1. Sector indices ─────────────────────────────────────────────
-        print("\n── 1 / 4  Sector indices ───────────────────────────────────────")
+        print("\n── 1 / 5  Sector indices ───────────────────────────────────────")
         errors = pull_group(
             session, SECTOR_TICKERS, INDEX_FIELDS,
             start_date, end_date, cache_dir,
@@ -838,7 +950,7 @@ def main() -> None:
             all_errors["sector_indices"] = errors
 
         # ── 2. Benchmark indices ──────────────────────────────────────────
-        print("\n── 2 / 4  Benchmark indices ────────────────────────────────────")
+        print("\n── 2 / 5  Benchmark indices ────────────────────────────────────")
         errors = pull_group(
             session, BENCHMARK_TICKERS, INDEX_FIELDS,
             start_date, end_date, cache_dir,
@@ -848,7 +960,7 @@ def main() -> None:
             all_errors["benchmarks"] = errors
 
         # ── 3. Commodity futures ──────────────────────────────────────────
-        print("\n── 3 / 4  Commodity futures ────────────────────────────────────")
+        print("\n── 3 / 5  Commodity futures ────────────────────────────────────")
         errors = pull_group(
             session, COMMODITY_TICKERS, INDEX_FIELDS,
             start_date, end_date, cache_dir,
@@ -858,7 +970,7 @@ def main() -> None:
             all_errors["commodities"] = errors
 
         # ── 4. Macro series ───────────────────────────────────────────────
-        print("\n── 4 / 4  Macro series ─────────────────────────────────────────")
+        print("\n── 4 / 5  Macro series ─────────────────────────────────────────")
         errors = pull_group(
             session, MACRO_TICKERS, INDEX_FIELDS,
             start_date, end_date, cache_dir,
@@ -867,26 +979,45 @@ def main() -> None:
         if errors:
             all_errors["macro"] = errors
 
-        # ── 5. Equity prices (slow, ~45-60 min) ──────────────────────────
+        # ── 5. Equity prices + fundamentals ──────────────────────────────
         if args.skip_equities:
             print("\n── Equities skipped (--skip-equities) ──────────────────────────")
             print("  Rerun without --skip-equities to pull equity prices.")
         else:
-            print("\n── 5 / 5  NIFTY 50 equity prices ──────────────────────────────")
-            print("  Note: using PX_LAST (PX_ADJ_CLOSE not available on FRTL terminal).")
-            print("  Note: this step takes ~45-60 min. Session will resume from last")
-            print("  completed ticker if interrupted.\n")
+            # ── 5a. Daily prices (PX_LAST + PX_VOLUME) ───────────────────
+            print("\n── 5a / 5  NIFTY 50 daily prices ──────────────────────────────")
+            print("  PX_LAST with adj_split + adj_normal = split-and-dividend adjusted.")
+            print("  PX_VOLUME for liquidity and concentration analysis.")
+            print("  ~45-60 min. Resumable -- already-cached tickers are skipped.\n")
 
-            # Skip BDP pre-validation -- on FRTL, BDP for large batches returns partial
-            # responses and falsely flags valid tickers as invalid. BDH handles ticker
-            # errors gracefully (securityError in response), so no pre-check needed.
             errors = pull_equities(
-                session, EQUITY_TICKERS, EQUITY_FIELDS,
+                session, EQUITY_TICKERS, EQUITY_DAILY_FIELDS,
                 start_date, end_date, cache_dir,
                 skip_existing=skip_exist,
+                periodicity="DAILY",
+                desc="Daily prices",
             )
             if errors:
-                all_errors["equities"] = errors
+                all_errors["equities_daily"] = errors
+
+            # ── 5b. Annual fundamentals ───────────────────────────────────
+            # Saved as {ticker}_annual.parquet alongside daily files so they
+            # don't overwrite each other. ~5-10 min (YEARLY = far fewer rows).
+            print("\n── 5b / 5  NIFTY 50 annual fundamentals ───────────────────────")
+            print("  ROE, total assets, net income, debt, book value, DPS, op. cashflow.")
+            print("  Saved as {ticker}_annual.parquet. ~5-10 min.\n")
+
+            errors = pull_equities(
+                session, EQUITY_TICKERS, EQUITY_ANNUAL_FIELDS,
+                "20100101",   # longer window for fundamentals -- 15 years of annual data
+                end_date, cache_dir,
+                skip_existing=skip_exist,
+                periodicity="YEARLY",
+                file_suffix="_annual",
+                desc="Annual fundamentals",
+            )
+            if errors:
+                all_errors["equities_annual"] = errors
 
     finally:
         # Always stop the session cleanly, even if an exception was raised
