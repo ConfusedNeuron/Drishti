@@ -97,25 +97,19 @@ SLEEP_SECONDS = 0.25
 # ── Ticker lists ──────────────────────────────────────────────────────────────
 
 # NSE sector indices.
-#
-# NSEFMCG, NSEIT, NSEBANK, NSEAUTO, NSEPHRM all confirmed working on FRTL.
-# NSEOILGS and NSEMETAL fail with securityError -- likely a Bloomberg subscription
-# issue on this terminal, not a ticker format issue. If they keep failing:
-#   1. On the Bloomberg terminal type:  NSEOILGS Index <EQUITY> <GO>
-#      If it loads a security page, the ticker is right but the API entitlement
-#      is missing -- contact FRTL coordinator (Prof. Samit Paul).
-#   2. If the security page doesn't load, try these alternatives:
-#      Oil & Gas: "NSEOGEN Index"  |  Metals: "NSEMETL Index"
+# All tickers confirmed from Bloomberg's own index CSV (data/csv/all nse index.csv).
+# NSEOILGS and NSEMETAL do not exist on Bloomberg -- corrected to NSENRG and NSEMET.
 SECTOR_TICKERS: dict[str, str] = {
-    "NSEOILGS Index": "energy",    # ⚠ failing on FRTL -- see note above
-    "NSEMETAL Index":  "metals",   # ⚠ failing on FRTL -- see note above
+    "NSENRG Index":    "energy",    # NSE Nifty Energy Index (confirmed from Bloomberg CSV)
+    "NSEMET Index":    "metals",    # NSE Nifty Metal Index (confirmed from Bloomberg CSV)
     "NSEFMCG Index":   "fmcg",
     "NSEIT Index":     "it",
-    "NSEBANK Index":   "banks",    # pulled for completeness; excluded from DY targets
+    "NSEBANK Index":   "banks",     # pulled for completeness; excluded from DY targets
     "NSEAUTO Index":   "auto",
     "NSEPHRM Index":   "pharma",
-    "NSEREALTY Index": "realty",   # added: rate-sensitive, useful for G-Sec factor analysis
-    "NSEPBKIDX Index": "psu_banks",# added: PSU banks -- high G-Sec sensitivity
+    "NSEREALTY Index": "realty",    # rate-sensitive; useful for G-Sec factor analysis
+    "NSEPSBK Index":   "psu_banks", # NSE Nifty PSU Bank Index (confirmed from Bloomberg CSV)
+    "NSE200 Index":    "nifty200",  # Nifty 200 -- cross-sectional research universe
 }
 
 # Broad market benchmarks
