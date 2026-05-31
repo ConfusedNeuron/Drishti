@@ -10,30 +10,33 @@ Drishti is a local-first quant risk research platform for Indian equity portfoli
 
 ## Current status (as of 2026-06-01)
 
-**Real Bloomberg data is pulled and loaded.** The full NIFTY 50 equity pull, all sector indices, commodities, and macro series are cached at `data/cache/bloomberg/`. The dashboard runs on real data. Synthetic fallback still works for offline development.
+**Session 1 complete.** Real Bloomberg data pulled at FRTL and loaded. All core modules built and working. Dashboard verified on real data. Context window reached — start a fresh session from here.
 
 ### What's working end-to-end
-- Bloomberg data pipeline (FRTL → parquet cache → dashboard)
-- Portfolio import (sample, CSV, Zerodha)
-- All three VaR methods (historical, parametric, GARCH-FHS)
-- ES, Kupiec + Christoffersen backtest, component VaR, drawdown, stress scenarios
-- HMM regime detection + regime-conditioned VaR
-- DCC-GARCH dynamic correlations
-- Diebold-Yilmaz connectedness (VAR + generalized FEVD)
-- Time-series IC + Granger causality + BH FDR correction
-- Deterministic risk memo
-- FastAPI backend + Plotly.js single-page dashboard
-- 14 unit tests passing
+- ✅ Bloomberg data pipeline (FRTL → parquet cache → dashboard)
+- ✅ Portfolio import (sample, CSV, Zerodha)
+- ✅ All three VaR methods (historical non-overlapping, parametric, GARCH-FHS)
+- ✅ ES, Kupiec + Christoffersen backtest, component VaR, drawdown, stress scenarios
+- ✅ HMM 2-state regime detection + regime-conditioned VaR
+- ✅ DCC-GARCH dynamic correlations (2-step Engle estimator)
+- ✅ Diebold-Yilmaz connectedness (VAR + Pesaran-Shin GFEVD)
+- ✅ Time-series IC + Granger causality + BH FDR correction
+- ✅ Deterministic risk memo (no LLM required)
+- ✅ FastAPI backend + Plotly.js single-page dashboard (5 tabs)
+- ✅ 14 unit tests passing
+- ✅ `pull_drishti_data.py` — production Bloomberg pull script (tqdm, resumable, --validate)
+- ✅ 7 BQuant research notebook specs (`notebooks/01-07.md`)
+- ✅ `lessons.md` — all FRTL/methodology/engineering learnings documented
 
 ### What's left to build
-| Priority | Item | Notes |
-|----------|------|-------|
-| High | **Walk-forward OOS Sharpe** | `src/research/walk_forward.py` + `/api/research/walkforward` route. Spec in `notebooks/05_walk_forward_backtest.md`. |
-| High | **Risk MCP server** | `mcp/server.py` + `mcp/tools.py`. All analytics exposed as MCP tools for AI copilot. |
-| Medium | **Fix JS regime tab bug** | `src/dashboard/static/index.html` — `showTab` override at bottom of file doesn't work; regime data loads on every tab switch instead of once. |
-| Medium | **Rolling Diebold-Yilmaz route** | `rolling_spillover()` already implemented in `src/research/diebold_yilmaz.py`; needs an API route and dashboard chart. |
-| Low | **News RSS + FinBERT** | `src/research/news.py` — Cogencis/SEBI RSS + sentiment scoring. Lower priority for demo. |
-| Low | **BQuant notebooks** | Markdown specs in `notebooks/01-07.md`. User fills in cells manually in BQuant environment at FRTL. |
+| Priority | Item | File | Notes |
+|----------|------|------|-------|
+| 🔴 High | **Walk-forward OOS Sharpe** | `src/research/walk_forward.py` + route `/api/research/walkforward` | Spec in `notebooks/05_walk_forward_backtest.md`. Rolling 252-day train, monthly OOS Sharpe per factor-sector pair. |
+| 🔴 High | **Risk MCP server** | `mcp/server.py` + `mcp/tools.py` | All analytics as MCP tools. Tools: `calculate_portfolio_risk`, `get_var_backtest`, `get_current_regime`, `get_factor_signals`, `run_stress_test`, `generate_risk_memo`. |
+| 🟡 Medium | **Fix JS regime tab bug** | `src/dashboard/static/index.html` | `showTab` override at bottom of file is broken — regime data reloads on every tab switch. Fix: use a flag `_regimeLoaded = false`, set true after first load. |
+| 🟡 Medium | **Rolling Diebold-Yilmaz route** | New route in `src/dashboard/routes/research.py` | `rolling_spillover()` already in `src/research/diebold_yilmaz.py`. Just needs `/api/research/spillover/rolling` endpoint + dashboard chart. |
+| 🟢 Low | **News RSS + FinBERT** | `src/research/news.py` | Cogencis/SEBI RSS + FinBERT sentiment. Lower priority — not needed for core demo. |
+| 🟢 Low | **XGBoost VaR breach classifier** | `src/research/breach_classifier.py` | Optional ML stretch goal. 1% tail events → severe class imbalance, needs SMOTE. |
 
 ---
 
@@ -105,6 +108,7 @@ drishti/
 ├── tests/                           # pytest — 14 tests passing
 ├── requirements.txt
 ├── .env.example
+├── lessons.md                       # FRTL Bloomberg learnings, methodology fixes, engineering patterns
 └── README.md
 ```
 
