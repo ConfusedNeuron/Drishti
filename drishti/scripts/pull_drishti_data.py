@@ -136,52 +136,84 @@ MACRO_TICKERS: dict[str, str] = {
 # NIFTY 50 equities for the sample portfolio and cross-sectional research.
 # Ticker format: "{NSE_SYMBOL} IN Equity" -- confirmed via Bloomberg FRTL guide.
 # A handful of symbols differ from their NSE display name (noted inline).
+#
+# NOTE: NIFTY 50 composition is reviewed semi-annually (March and September).
+# This list reflects the 2024-2025 composition. If any ticker fails validation
+# (securityError from BDP), look up the current name on Bloomberg with:
+#   NIFTY Index MEMB <GO>  →  Actions  →  Export to Excel
+# Then run: python scripts/pull_drishti_data.py --validate
+#
+# INDX_MEMBERS via BLPAPI returns 0 rows on FRTL (entitlement issue) so the
+# list must be maintained manually.
 EQUITY_TICKERS: list[str] = [
-    "RELIANCE IN Equity",
-    "TCS IN Equity",
+    # ── Financials ──────────────────────────────────────────────────────────
     "HDFCBANK IN Equity",
-    "INFY IN Equity",
     "ICICIBANK IN Equity",
-    "HINDUNILVR IN Equity",
-    "ITC IN Equity",
     "SBIN IN Equity",
-    "BAJFINANCE IN Equity",
     "KOTAKBANK IN Equity",
-    "LT IN Equity",
-    "ASIANPAINT IN Equity",
-    "TITAN IN Equity",
-    "NESTLEIND IN Equity",
-    "MARUTI IN Equity",
-    "ONGC IN Equity",
-    "NTPC IN Equity",
-    "POWERGRID IN Equity",
-    "WIPRO IN Equity",
+    "AXSB IN Equity",           # NSE: AXISBANK
+    "IIB IN Equity",            # NSE: INDUSINDBK
+    "BAJFINANCE IN Equity",
+    "BJFIN IN Equity",          # NSE: BAJAJFINSV
+    "HDFCLIFE IN Equity",       # NSE: HDFCLIFE -- validate on terminal, may be HLIFE IN Equity
+
+    # ── Information Technology ───────────────────────────────────────────────
+    "TCS IN Equity",
+    "INFY IN Equity",
     "HCLTECH IN Equity",
-    "BJAUT IN Equity",          # NSE: BAJAJ-AUTO
-    "TATAMOTORS IN Equity",
-    "TATASTEEL IN Equity",
-    "HINDALCO IN Equity",
-    "COAL IN Equity",           # NSE: COALINDIA
-    "JSTL IN Equity",           # NSE: JSWSTEEL
-    "CIPLA IN Equity",
-    "DRRD IN Equity",           # NSE: DRREDDY
-    "SUNP IN Equity",           # NSE: SUNPHARMA
-    "ADE IN Equity",            # NSE: ADANIENT
-    "ADSEZ IN Equity",          # NSE: ADANIPORTS
-    "UTCEM IN Equity",          # NSE: ULTRACEMCO
-    "GRASIM IN Equity",
-    "BRIT IN Equity",           # NSE: BRITANNIA
-    "EIM IN Equity",            # NSE: EICHERMOT
-    "HMCL IN Equity",           # NSE: HEROMOTOCO
-    "DIVI IN Equity",           # NSE: DIVISLAB
-    "APHS IN Equity",           # NSE: APOLLOHOSP
-    "BHARTI IN Equity",         # NSE: BHARTIARTL
+    "WIPRO IN Equity",
+    "TECHM IN Equity",
+    "LTIM IN Equity",           # NSE: LTIM (LTI Mindtree, post-merger 2023)
+
+    # ── Energy ──────────────────────────────────────────────────────────────
+    "RELIANCE IN Equity",
+    "ONGC IN Equity",
     "BPCL IN Equity",
     "IOCL IN Equity",           # NSE: IOC
+
+    # ── Consumer Staples ────────────────────────────────────────────────────
+    "HINDUNILVR IN Equity",
+    "ITC IN Equity",
+    "NESTLEIND IN Equity",
+    "BRIT IN Equity",           # NSE: BRITANNIA
+    "TATACONSUM IN Equity",     # NSE: TATACONSUM (Tata Consumer Products, in since 2020)
+
+    # ── Consumer Discretionary ──────────────────────────────────────────────
+    "MARUTI IN Equity",
+    "TATAMOTORS IN Equity",
     "MM IN Equity",             # NSE: M&M
-    "TECHM IN Equity",
-    "IIB IN Equity",            # NSE: INDUSINDBK
-    "BJFIN IN Equity",          # NSE: BAJAJFINSV
+    "BJAUT IN Equity",          # NSE: BAJAJ-AUTO
+    "HMCL IN Equity",           # NSE: HEROMOTOCO
+    "EIM IN Equity",            # NSE: EICHERMOT
+    "TITAN IN Equity",
+
+    # ── Industrials / Infrastructure ─────────────────────────────────────────
+    "LT IN Equity",
+    "NTPC IN Equity",
+    "POWERGRID IN Equity",
+
+    # ── Materials ───────────────────────────────────────────────────────────
+    "TATASTEEL IN Equity",
+    "HINDALCO IN Equity",
+    "JSTL IN Equity",           # NSE: JSWSTEEL
+    "COAL IN Equity",           # NSE: COALINDIA
+    "GRASIM IN Equity",
+    "UTCEM IN Equity",          # NSE: ULTRACEMCO
+    "ASIANPAINT IN Equity",
+
+    # ── Health Care ─────────────────────────────────────────────────────────
+    "SUNP IN Equity",           # NSE: SUNPHARMA
+    "CIPLA IN Equity",
+    "DRRD IN Equity",           # NSE: DRREDDY
+    "DIVI IN Equity",           # NSE: DIVISLAB
+    "APHS IN Equity",           # NSE: APOLLOHOSP
+
+    # ── Communication Services ──────────────────────────────────────────────
+    "BHARTI IN Equity",         # NSE: BHARTIARTL
+
+    # ── Conglomerates / Other ────────────────────────────────────────────────
+    "ADE IN Equity",            # NSE: ADANIENT
+    "ADSEZ IN Equity",          # NSE: ADANIPORTS
     "UPLL IN Equity",           # NSE: UPL
 ]
 
