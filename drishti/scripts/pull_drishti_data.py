@@ -99,6 +99,12 @@ SLEEP_SECONDS = 0.25
 # NSE sector indices -- primary DCC-GARCH / Diebold-Yilmaz spillover targets.
 # Banks excluded: commodity→CPI→RBI repo→banks is a mediated channel captured
 # via the G-Sec yield factor, not as a direct sector target.
+#
+# If NSEOILGS or NSEMETAL return [invalid], look up the exact ticker on the terminal:
+#   Type "NSE OIL GAS" or "NSE METAL" in Bloomberg search (yellow key) and pick the Index.
+# Alternative tickers to try if these fail:
+#   Oil & Gas: "NSEOGEN Index", "NSEOILGAS Index"
+#   Metals:    "NSEMETL Index"
 SECTOR_TICKERS: dict[str, str] = {
     "NSEOILGS Index": "energy",
     "NSEMETAL Index":  "metals",
@@ -217,11 +223,9 @@ EQUITY_TICKERS: list[str] = [
     "UPLL IN Equity",           # NSE: UPL
 ]
 
-# Fields for equity historical data requests.
-# PX_ADJ_CLOSE: adjusted for splits and dividends -- use for returns.
-# PX_LAST: unadjusted close -- kept as fallback.
-# Confirmed working on FRTL (see BLOOMBERG_TERMINAL_GUIDE.md).
-EQUITY_FIELDS = ["PX_ADJ_CLOSE", "PX_LAST"]
+# PX_ADJ_CLOSE returns 100% null on FRTL (entitlement issue, confirmed by --validate).
+# Use PX_LAST only -- it is the unadjusted close but is the only field that works here.
+EQUITY_FIELDS = ["PX_LAST"]
 
 # All non-equity series use PX_LAST (they are index/futures levels, not equity prices).
 INDEX_FIELDS = ["PX_LAST"]
@@ -261,7 +265,12 @@ def cache_path_for(ticker: str, cache_dir: Path) -> Path:
         cat = "commodities"
     elif "CURNCY" in t:
         cat = "macro"
-    elif any(x in t for x in ("INDEX", "NIFTY", "SENSEX", "NSE", "GIND", "INVIXN")):
+    # Check specific macro tickers before the generic INDEX/NSE rule.
+    # GIND10YR and INVIXN have "Index" in their Bloomberg name but are macro
+    # factors -- they must land in macro/ not indices/.
+    elif "GIND10YR" in t or "INVIXN" in t:
+        cat = "macro"
+    elif any(x in t for x in ("INDEX", "NIFTY", "SENSEX", "NSE")):
         cat = "indices"
     else:
         cat = "equities"
@@ -864,17 +873,15 @@ def main() -> None:
             print("  Rerun without --skip-equities to pull equity prices.")
         else:
             print("\n── 5 / 5  NIFTY 50 equity prices ──────────────────────────────")
-            print("  Note: PX_ADJ_CLOSE adjusted for splits and dividends.")
+            print("  Note: using PX_LAST (PX_ADJ_CLOSE not available on FRTL terminal).")
             print("  Note: this step takes ~45-60 min. Session will resume from last")
             print("  completed ticker if interrupted.\n")
 
-            # Validate tickers first -- ~2% of historical tickers are typically invalid
-            valid_equities, invalid = validate_tickers(session, EQUITY_TICKERS)
-            if invalid:
-                all_errors["equity_invalid_tickers"] = invalid
-
+            # Skip BDP pre-validation -- on FRTL, BDP for large batches returns partial
+            # responses and falsely flags valid tickers as invalid. BDH handles ticker
+            # errors gracefully (securityError in response), so no pre-check needed.
             errors = pull_equities(
-                session, valid_equities, EQUITY_FIELDS,
+                session, EQUITY_TICKERS, EQUITY_FIELDS,
                 start_date, end_date, cache_dir,
                 skip_existing=skip_exist,
             )
