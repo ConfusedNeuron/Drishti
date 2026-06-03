@@ -1,0 +1,45 @@
+.tip-icon{
+  display:inline-block;
+  width:14px;height:14px;
+  border-radius:50%;
+  background:rgba(201,162,39,0.15);
+  color:var(--primary);
+  font-size:9px;
+  font-family:'JetBrains Mono',monospace;
+  font-weight:700;
+  text-align:center;
+  line-height:14px;
+  cursor:help;
+  vertical-align:middle;
+  margin-left:3px;
+  border:1px solid rgba(201,162,39,0.3);
+  transition:.15s;
+}
+.tip-icon:hover{background:var(--primary-dim);border-color:var(--primary)}
+
+.tip-popover{
+  background:var(--surface);
+  border:1px solid var(--line-2);
+  border-radius:10px;
+  padding:12px 14px;
+  width:240px;
+  box-shadow:0 12px 40px rgba(0,0,0,0.5);
+}
+.tip-title{
+  font-family:'JetBrains Mono',monospace;
+  font-size:10px;
+  font-weight:700;
+  color:var(--primary);
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  margin-bottom:6px;
+}
+.tip-summary{font-size:12.5px;color:var(--ink-2);line-height:1.55;margin-bottom:8px;}
+.tip-link{
+  font-family:'JetBrains Mono',monospace;
+  font-size:10px;
+  color:var(--primary);
+  text-decoration:none;
+  opacity:.8;
+}
+.tip-link:hover{opacity:1}
