@@ -8,9 +8,28 @@ Drishti is a local-first quant risk research platform for Indian equity portfoli
 
 ---
 
-## Current status (as of 2026-06-01)
+## Current status (as of 2026-06-04)
 
-**Session 1 complete.** Real Bloomberg data pulled at FRTL and loaded. All core modules built and working. Dashboard verified on real data. Context window reached — start a fresh session from here.
+**Session 3 in progress — branch `feature/frontend-data-overhaul`.** Full design spec approved and committed. Now writing the implementation plan. Two major tracks underway: (A) frontend overhaul and (B) data layer.
+
+### Active branch
+`feature/frontend-data-overhaul` — all work for the overhaul goes here. PR to `main` when done.
+
+### Design spec (read this before touching anything in this branch)
+`docs/superpowers/specs/2026-06-03-drishti-frontend-data-overhaul-design.md`
+
+### Frontend code guide (read before any frontend work — saves token context)
+`docs/frontend/code.md` — **does not exist yet, created in Task A11 of the implementation plan**
+
+### For all frontend changes
+1. Read `docs/frontend/code.md` first (once it exists)
+2. CSS variables live in `src/dashboard/static/css/theme.css` (once split)
+3. JS functions are split across `src/dashboard/static/js/*.js` (once split)
+4. HTML templates live in `src/dashboard/templates/` (once migrated)
+
+---
+
+**Session 2 complete.** Dashboard frontend fully redesigned and a 6-preset multi-theme system added.
 
 ### What's working end-to-end
 - ✅ Bloomberg data pipeline (FRTL → parquet cache → dashboard)
@@ -27,13 +46,15 @@ Drishti is a local-first quant risk research platform for Indian equity portfoli
 - ✅ `pull_drishti_data.py` — production Bloomberg pull script (tqdm, resumable, --validate)
 - ✅ 7 BQuant research notebook specs (`notebooks/01-07.md`)
 - ✅ `lessons.md` — all FRTL/methodology/engineering learnings documented
+- ✅ **Dashboard dark theme redesign** — Playfair Display + DM Sans + JetBrains Mono; deep navy-black bg (#07090E), gold accent (#C9A227); all Plotly charts updated to dark palette
+- ✅ **Multi-theme system** — 6 presets × 8 accent swatches; ⬡ icon button in header opens popover picker; CSS variable injection (zero reload); localStorage persistence
+- ✅ **JS showTab bug fixed** — regime and IC data now load lazily via `_regimeLoaded` / `_icLoaded` flags, not on every tab switch
 
 ### What's left to build
 | Priority | Item | File | Notes |
 |----------|------|------|-------|
 | 🔴 High | **Walk-forward OOS Sharpe** | `src/research/walk_forward.py` + route `/api/research/walkforward` | Spec in `notebooks/05_walk_forward_backtest.md`. Rolling 252-day train, monthly OOS Sharpe per factor-sector pair. |
 | 🔴 High | **Risk MCP server** | `mcp/server.py` + `mcp/tools.py` | All analytics as MCP tools. Tools: `calculate_portfolio_risk`, `get_var_backtest`, `get_current_regime`, `get_factor_signals`, `run_stress_test`, `generate_risk_memo`. |
-| 🟡 Medium | **Fix JS regime tab bug** | `src/dashboard/static/index.html` | `showTab` override at bottom of file is broken — regime data reloads on every tab switch. Fix: use a flag `_regimeLoaded = false`, set true after first load. |
 | 🟡 Medium | **Rolling Diebold-Yilmaz route** | New route in `src/dashboard/routes/research.py` | `rolling_spillover()` already in `src/research/diebold_yilmaz.py`. Just needs `/api/research/spillover/rolling` endpoint + dashboard chart. |
 | 🟢 Low | **News RSS + FinBERT** | `src/research/news.py` | Cogencis/SEBI RSS + FinBERT sentiment. Lower priority — not needed for core demo. |
 | 🟢 Low | **XGBoost VaR breach classifier** | `src/research/breach_classifier.py` | Optional ML stretch goal. 1% tail events → severe class imbalance, needs SMOTE. |
@@ -199,6 +220,40 @@ LLM receives only the structured risk memo — never raw holdings or prices. buy
 
 ---
 
+## Dashboard theme system (added 2026-06-03)
+
+All theme logic lives entirely inside `src/dashboard/static/index.html` — no separate files.
+
+### Presets (6)
+| ID | Name | Background | Default accent |
+|---|---|---|---|
+| `dark-gold` | Dark Gold | `#07090E` | gold |
+| `dark-ocean` | Dark Ocean | `#080D18` | ocean |
+| `dark-emerald` | Dark Emerald | `#07100C` | emerald |
+| `dark-crimson` | Dark Crimson | `#100808` | crimson |
+| `dark-violet` | Dark Violet | `#0D0814` | violet |
+| `light-ivory` | Light Ivory | `#F8F5EE` | gold (dark variant) |
+
+### Accent swatches (8)
+`gold` (#C9A227) · `ocean` (#3891F0) · `emerald` (#34C76C) · `crimson` (#DC4040) · `violet` (#8B5CF6) · `teal` (#2EC4B6) · `amber` (#F59E0B) · `rose` (#EC4899)
+
+`light-ivory` uses darkened accent variants (`ivoryHex`) for contrast on the warm-white background.
+
+### How it works
+- `applyTheme(presetId, accentId)` injects CSS variables onto `:root` via `style.setProperty()` — zero page reload.
+- Sets `--bg`, `--surface`, `--surface-2`, `--ink`, `--ink-2`, `--muted`, `--line`, `--line-2`, `--ok`, `--warn`, `--danger` from the preset, then `--primary`, `--primary-light`, `--primary-dim` from the accent.
+- `rethemeCharts()` calls `Plotly.relayout()` on all 6 chart divs to update `plot_bgcolor` and `font.color`.
+- `initTheme()` runs on page load — reads `localStorage.getItem('drishti-theme')`, falls back to `{presetId:'dark-gold', accentId:'gold'}`.
+- Every `applyTheme()` call saves `{presetId, accentId}` to `localStorage` under key `'drishti-theme'`.
+
+### Picker UI
+- `⬡` button in header right-side, next to regime badge.
+- Click toggles `<div id="theme-popover">` (`display:none` / `display:block`).
+- Popover contains: 3×2 grid of preset cards (`#tp-presets`) + 8 accent dots (`#tp-accents`), both rendered by `renderThemePicker()`.
+- Closes on click-outside (`mousedown` on `document`) or Escape key.
+
+---
+
 ## Bloomberg data policy
 
 `data/cache/bloomberg/` is gitignored. Never commit parquet files. Cite "Bloomberg Terminal, FRTL, IIM Calcutta" in all research outputs and the dashboard memo.
@@ -213,3 +268,66 @@ LLM receives only the structured risk memo — never raw holdings or prices. buy
 - Bloomberg tickers in full format: `"HDFCB IN Equity"`, `"CO1 Comdty"`, `"NSENRG Index"`.
 - Comments only for non-obvious WHY — never what the code does.
 - No investment advice language anywhere in generated output.
+
+---
+
+## Overhaul context (Session 3 — branch feature/frontend-data-overhaul)
+
+### What is being built (two independent tracks)
+
+**Track A — Frontend overhaul:**
+- Migrate from single `src/dashboard/static/index.html` (1059 lines) to Jinja2 templates
+- New directory: `src/dashboard/templates/` with `base.html`, `index.html`, `learn.html`
+- New directory: `src/dashboard/static/css/` with `theme.css`, `layout.css`, `components.css`, `tooltip.css`
+- New directory: `src/dashboard/static/js/` with `theme.js`, `api.js`, `charts.js`, `portfolio.js`, `risk.js`, `research.js`, `spillover.js`, `copilot.js`, `tooltip.js`
+- New file: `src/dashboard/static/data/glossary.json` — tooltip content, served at `/static/data/glossary.json`
+- New route: `src/dashboard/routes/static_data.py` → `/api/static-data`
+- New page: `/learn` — Know/Learn page with methodology, broker guides, glossary, findings
+- `app.py` gets: `StaticFiles` mount at `/static`, `Jinja2Templates`, `/learn` route
+- `docs/frontend/code.md` — structure guide (Claude reads before any frontend work)
+
+**Track B — Data layer:**
+- New script: `scripts/pull_public_data.py` — yfinance + FRED gap-fill from last Bloomberg date (2026-05-29) onwards
+- New file: `data/mappings/yahoo_tickers.json` — Bloomberg ticker → Yahoo Finance ticker map
+- Updated: `src/bloomberg/cache.py` — add `read_merged()` method (Bloomberg rows win on overlap)
+- New: `requirements.txt` gets `yfinance` and `fredapi`
+- New: `.env.example` gets `FRED_API_KEY`
+- New: `.github/workflows/weekly.yml` — Sunday 2 AM UTC: synthetic refresh + pytest + Render deploy
+- New: `render.yaml` at repo root — Render.com deploy config
+
+### Critical facts about the current app.py
+- Currently serves `index.html` via raw `HTMLResponse(file.read_text())` — NO StaticFiles mount
+- This means any CSS/JS in `static/` will 404 until `app.mount("/static", StaticFiles(...))` is added
+- `Jinja2` (3.1.4) is already in `requirements.txt` — no new dependency needed
+- `/learn` route does not exist yet — will 404 until added
+
+### Current Bloomberg data
+- Date range: 2018-01-01 → 2026-05-29 (essentially current, ~5 days stale)
+- 49 NSE equities (daily + annual fundamentals), 15 indices, 7 commodities, 3 macro series
+- Parquets are gitignored — never commit them
+- Annual fundamentals: 8 fields — RETURN_COM_EQY, BS_TOT_ASSET, NET_INCOME, SHORT_AND_LONG_TERM_DEBT, BOOK_VAL_PER_SH, EQY_DPS, CF_CASH_FROM_OPER, EQY_SH_OUT
+
+### JS load order (strict — do not reorder)
+Plotly CDN → theme.js → api.js → charts.js → portfolio.js → risk.js → research.js → spillover.js → copilot.js → tooltip.js
+
+### CSS load order (strict)
+theme.css → layout.css → components.css → tooltip.css
+
+### JS global scope contracts
+- `window.API = ""` declared in `api.js` — all other files use `window.API`
+- `riskData`, `_regimeLoaded`, `_icLoaded` declared in `portfolio.js` — global state
+- `CL`, `CONF`, `COLORS` declared in `charts.js` — Plotly config shared by all tab files
+- `PRESETS`, `ACCENTS`, `_theme` declared in `theme.js`
+- `initTheme()` called immediately at bottom of `theme.js` — only immediate execution in any JS file
+
+### Tooltip system
+- `data-tip="key"` attribute on any HTML element
+- `tooltip.js` loads `glossary.json` on DOMContentLoaded, attaches mouseenter/mouseleave to all `[data-tip]` elements
+- Single shared popover div, positioned via getBoundingClientRect
+- "Read more →" links to `/learn#glossary`
+
+### Data strategy
+- Bloomberg parquets (2018→2026-05-29): immutable backbone, never overwritten
+- Public cache (`data/cache/public/`): yfinance + FRED gap-fill, committed to repo (not gitignored)
+- `read_merged()` in cache.py: reads both, concatenates, Bloomberg rows win on overlap
+- `pull_public_data.py`: reads last date from parquet, fetches only the gap, appends to public cache
