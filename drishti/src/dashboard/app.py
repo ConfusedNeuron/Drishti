@@ -1,11 +1,12 @@
 """FastAPI application entry point."""
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
 from pathlib import Path
 
 from src.dashboard.routes import portfolio, risk, research, copilot
+from src.dashboard.routes import static_data
 
 app = FastAPI(
     title="Drishti — Portfolio Risk Analytics",
@@ -24,17 +25,26 @@ app.include_router(portfolio.router, prefix="/api/portfolio", tags=["portfolio"]
 app.include_router(risk.router,      prefix="/api/risk",      tags=["risk"])
 app.include_router(research.router,  prefix="/api/research",  tags=["research"])
 app.include_router(copilot.router,   prefix="/api/copilot",   tags=["copilot"])
+app.include_router(static_data.router, tags=["static"])
 
-# Serve frontend HTML
 _STATIC = Path(__file__).parent / "static"
+_TEMPLATES = Path(__file__).parent / "templates"
 _STATIC.mkdir(exist_ok=True)
+_TEMPLATES.mkdir(exist_ok=True)
 
-@app.get("/", response_class=HTMLResponse)
-async def root():
-    html_file = _STATIC / "index.html"
-    if html_file.exists():
-        return HTMLResponse(html_file.read_text())
-    return HTMLResponse("<h1>Drishti starting…</h1><p>Run the build to generate frontend.</p>")
+app.mount("/static", StaticFiles(directory=str(_STATIC)), name="static")
+templates = Jinja2Templates(directory=str(_TEMPLATES))
+
+
+@app.get("/")
+async def root(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
+
+
+@app.get("/learn")
+async def learn(request: Request):
+    return templates.TemplateResponse("learn.html", {"request": request})
+
 
 @app.get("/health")
 async def health():
