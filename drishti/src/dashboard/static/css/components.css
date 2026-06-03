@@ -150,7 +150,7 @@ button.btn{
   padding:18px 20px;
   max-height:600px;
   overflow:auto;
-  color:#C9A227;
+  color:var(--primary);
   line-height:1.65;
 }
 .chat-box{display:flex;gap:10px;margin-top:12px}
