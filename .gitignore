@@ -4,3 +4,9 @@ data/cache/bloomberg/
 __pycache__/
 *.pyc
 .venv/
+.DS_Store
+.superpowers/
+Reading materials/
+Financial Research and Trading Laboratory (FRTL)-2.pdf
+docs/superpowers/
+BLOOMBERG_TERMINAL_GUIDE.md
