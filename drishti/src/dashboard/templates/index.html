@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block nav %}
+<nav>
+  <button class="active" onclick="showTab('overview',this)">Overview</button>
+  <button onclick="showTab('risk',this)">Risk Detail</button>
+  <button onclick="showTab('research',this)">Factor Research</button>
+  <button onclick="showTab('spillover',this)">Spillover</button>
+  <button onclick="showTab('copilot',this)">Copilot</button>
+</nav>
+{% endblock %}
+
+{% block content %}
+
+<!-- ── OVERVIEW ──────────────────────────────────────────────────────────── -->
+<div id="tab-overview" class="tab-panel active">
+  <div class="import-bar">
+    <button class="btn btn-primary" onclick="importSample()">Load Sample Portfolio</button>
+    <label class="btn btn-outline" style="cursor:pointer">
+      Upload CSV <input type="file" accept=".csv" style="display:none" onchange="importCSV(this)">
+    </label>
+    <button class="btn btn-outline" onclick="runRisk()" id="run-btn" disabled>Run Risk Analysis</button>
+  </div>
+
+  <div class="grid-4" id="kpi-row">
+    <div class="card"><h3>Portfolio Value</h3><div class="big" id="kpi-value">—</div><div class="sub" id="kpi-source">No portfolio loaded</div></div>
+    <div class="card"><h3><span data-tip="var-historical">Historical VaR 99% <i class="tip-icon">ⓘ</i></span></h3><div class="big" id="kpi-var">—</div><div class="sub">10-day, empirical</div></div>
+    <div class="card"><h3><span data-tip="expected-shortfall">Expected Shortfall <i class="tip-icon">ⓘ</i></span></h3><div class="big" id="kpi-es">—</div><div class="sub">Tail beyond VaR</div></div>
+    <div class="card"><h3><span data-tip="backtest">VaR Backtest <i class="tip-icon">ⓘ</i></span></h3><div class="big" id="kpi-bt">—</div><div class="sub" id="kpi-bt-sub">Kupiec + Christoffersen</div></div>
+  </div>
+
+  <div class="grid-2" style="margin-top:16px">
+    <div class="section">
+      <h2>VaR Comparison — Three Methods</h2>
+      <div class="chart-wrap"><div id="var-chart" style="height:240px"></div></div>
+      <div class="warn-box" style="margin-top:10px">
+        Historical: empirical non-overlapping windows · Parametric: normal assumption · GARCH-FHS: fat-tailed bootstrap
+      </div>
+    </div>
+    <div class="section">
+      <h2>Top Risk Contributors</h2>
+      <div class="chart-wrap"><div id="contrib-chart" style="height:240px"></div></div>
+    </div>
+  </div>
+
+  <div class="section" style="margin-top:16px">
+    <h2>Drawdown History</h2>
+    <div class="chart-wrap"><div id="dd-chart" style="height:200px"></div></div>
+  </div>
+
+  <div class="disclaimer">
+    ⚠ <strong>Disclaimer:</strong> For educational risk analytics only. Not investment advice.
+    Data: Bloomberg Terminal, FRTL, IIM Calcutta (or synthetic if running offline).
+  </div>
+</div>
+
+<!-- ── RISK DETAIL ────────────────────────────────────────────────────────── -->
+<div id="tab-risk" class="tab-panel">
+  <div class="section">
+    <h2><span data-tip="backtest">VaR Backtest — Kupiec &amp; Christoffersen <i class="tip-icon">ⓘ</i></span></h2>
+    <div id="backtest-table"></div>
+  </div>
+  <div class="section" style="margin-top:16px">
+    <h2>Stress Scenarios</h2>
+    <div id="stress-table"></div>
+  </div>
+  <div class="section" style="margin-top:16px">
+    <h2><span data-tip="hmm">Volatility Regime (HMM 2-State) <i class="tip-icon">ⓘ</i></span></h2>
+    <div class="spinner" id="regime-spinner">Loading regime data</div>
+    <div id="regime-info"></div>
+    <div class="chart-wrap" style="margin-top:12px"><div id="regime-chart" style="height:200px"></div></div>
+  </div>
+</div>
+
+<!-- ── FACTOR RESEARCH ────────────────────────────────────────────────────── -->
+<div id="tab-research" class="tab-panel">
+  <div class="section">
+    <h2><span data-tip="ic">Commodity Factor Signals (Time-Series IC + Granger) <i class="tip-icon">ⓘ</i></span></h2>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:14px;font-family:'JetBrains Mono',monospace;letter-spacing:.04em">
+      IC = rolling Pearson correlation between lagged factor return and sector return.
+      BH = significant after <span data-tip="bh-fdr">Benjamini-Hochberg FDR correction <i class="tip-icon">ⓘ</i></span> (α=0.05).
+    </p>
+    <div class="spinner" id="ic-spinner">Computing IC / Granger</div>
+    <div id="ic-table"></div>
+  </div>
+</div>
+
+<!-- ── SPILLOVER ──────────────────────────────────────────────────────────── -->
+<div id="tab-spillover" class="tab-panel">
+  <div class="section">
+    <h2><span data-tip="diebold-yilmaz">Diebold-Yilmaz Connectedness Index <i class="tip-icon">ⓘ</i></span></h2>
+    <div class="spinner" id="dy-spinner">Computing spillover</div>
+    <div id="dy-total" style="font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700;color:var(--primary);margin:12px 0"></div>
+    <div class="chart-wrap"><div id="dy-chart" style="height:280px"></div></div>
+  </div>
+  <div class="section" style="margin-top:16px">
+    <h2><span data-tip="dcc-garch">DCC-GARCH: Time-Varying Correlations <i class="tip-icon">ⓘ</i></span></h2>
+    <div class="spinner" id="dcc-spinner">Computing DCC-GARCH</div>
+    <div class="chart-wrap"><div id="dcc-chart" style="height:300px"></div></div>
+  </div>
+</div>
+
+<!-- ── COPILOT ────────────────────────────────────────────────────────────── -->
+<div id="tab-copilot" class="tab-panel">
+  <div class="section">
+    <h2>Risk Memo (Deterministic)</h2>
+    <button class="btn btn-primary" onclick="loadMemo()">Generate Memo</button>
+    <div style="margin-top:14px" id="memo-output">Click Generate Memo after loading a portfolio.</div>
+  </div>
+  <div class="section" style="margin-top:16px">
+    <h2>Ask the Copilot</h2>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:12px;font-family:'JetBrains Mono',monospace;letter-spacing:.04em">
+      Copilot answers using only structured risk outputs — will not give investment advice.
+    </p>
+    <div class="chat-box">
+      <input id="q-input" type="text" placeholder="e.g. What is my biggest risk? Is the VaR model reliable?">
+      <button class="btn btn-primary" onclick="askCopilot()">Ask</button>
+    </div>
+    <div id="answer-box"></div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/portfolio.js"></script>
+<script src="/static/js/risk.js"></script>
+<script src="/static/js/research.js"></script>
+<script src="/static/js/spillover.js"></script>
+<script src="/static/js/copilot.js"></script>
+{% endblock %}

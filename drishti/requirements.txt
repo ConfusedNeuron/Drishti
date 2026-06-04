@@ -22,3 +22,5 @@ pytest==8.2.0
 pytest-asyncio==0.23.6
 # blpapi: install separately via Bloomberg index
 # pip install --index-url https://blpapi.bloomberg.com/repository/releases/python/simple/ blpapi
+yfinance==0.2.40
+fredapi==0.5.2

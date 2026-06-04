@@ -2,23 +2,24 @@
 Bloomberg parquet cache.
 
 Layout: data/cache/bloomberg/{category}/{ticker_safe}.parquet
-Each file is a DataFrame with DatetimeIndex and one column per field.
-Cache is append-only: new date ranges are merged in.
+Public gap-fill: data/cache/public/{category}/{ticker_safe}.parquet
+Bloomberg rows win on date overlap in read_merged().
 """
 from __future__ import annotations
 import re
-from datetime import date, timedelta
+from datetime import date
 from pathlib import Path
 
 import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
 
-from src.config import CACHE_DIR
+from src.config import CACHE_DIR, DATA_DIR
+
+PUBLIC_CACHE_DIR = DATA_DIR / "cache" / "public"
 
 
 def _safe(ticker: str) -> str:
-    """Convert Bloomberg ticker to a filesystem-safe filename."""
     return re.sub(r"[^A-Za-z0-9_-]", "_", ticker)
 
 
@@ -52,8 +53,24 @@ def read_cache(ticker: str) -> pd.DataFrame | None:
     return df.sort_index()
 
 
+def read_merged(ticker: str) -> pd.DataFrame | None:
+    """Merge Bloomberg cache with public gap-fill. Bloomberg rows win on overlap."""
+    bbg = read_cache(ticker)
+    pub_path = PUBLIC_CACHE_DIR / _category(ticker) / f"{_safe(ticker)}.parquet"
+    if not pub_path.exists():
+        return bbg
+    pub = pd.read_parquet(pub_path)
+    if not isinstance(pub.index, pd.DatetimeIndex):
+        pub.index = pd.to_datetime(pub.index)
+    pub = pub.sort_index()
+    if bbg is None:
+        return pub
+    combined = pd.concat([pub, bbg]).sort_index()
+    combined = combined[~combined.index.duplicated(keep="last")]
+    return combined
+
+
 def write_cache(ticker: str, df: pd.DataFrame) -> None:
-    """Merge new data into existing cache (union of dates)."""
     if df.empty:
         return
     existing = read_cache(ticker)
@@ -74,15 +91,10 @@ def get_prices(ticker: str,
                start: date,
                end: date,
                field: str = "PX_LAST") -> pd.Series | None:
-    """
-    Return cached daily price series for a ticker.
-    Returns None if no cache exists or range not covered.
-    """
-    df = read_cache(ticker)
+    df = read_merged(ticker)
     if df is None:
         return None
     if field not in df.columns:
-        # Try first column
         if df.empty:
             return None
         field = df.columns[0]
@@ -101,8 +113,8 @@ def list_cached_tickers() -> list[str]:
 
 
 def cache_freshness_days(ticker: str) -> int | None:
-    """Days since last cached date. None if not cached."""
     _, last = get_cached_range(ticker)
     if last is None:
         return None
-    return (date.today() - last).days
+    from datetime import date as _date
+    return (_date.today() - last).days

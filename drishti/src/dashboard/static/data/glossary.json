@@ -1,0 +1,62 @@
+{
+  "var-historical": {
+    "title": "Historical VaR (99%, 10-day)",
+    "summary": "Empirical 99th-percentile loss using non-overlapping 10-day windows. No distribution assumption — uses actual past return distribution.",
+    "learn": "/learn#glossary"
+  },
+  "var-parametric": {
+    "title": "Parametric VaR (Delta-Normal)",
+    "summary": "Assumes portfolio returns are multivariate normal. VaR = portfolio vol × 2.326 (99th percentile z-score). 10-day via √10 scaling.",
+    "learn": "/learn#methodology"
+  },
+  "var-garch-fhs": {
+    "title": "GARCH-FHS VaR",
+    "summary": "Filtered Historical Simulation: GARCH(1,1) standardises residuals; bootstrap from them using GARCH-forecast vol. Preserves empirical tail shape.",
+    "learn": "/learn#methodology"
+  },
+  "expected-shortfall": {
+    "title": "Expected Shortfall (CVaR)",
+    "summary": "Average loss in scenarios where VaR is breached — the tail expectation beyond VaR. Coherent risk measure used in Basel IV (97.5% ES).",
+    "learn": "/learn#glossary"
+  },
+  "backtest": {
+    "title": "VaR Backtest (Kupiec + Christoffersen)",
+    "summary": "Kupiec tests if violation rate matches 1%. Christoffersen tests if violations are independent (no clustering). Both should pass for a well-calibrated model.",
+    "learn": "/learn#methodology"
+  },
+  "hmm": {
+    "title": "HMM Volatility Regimes",
+    "summary": "2-state Hidden Markov Model fitted to portfolio returns. States: low-vol (calm) and high-vol (stress). Regime-conditioned VaR adjusts estimates by current state.",
+    "learn": "/learn#methodology"
+  },
+  "ic": {
+    "title": "IC — Information Coefficient",
+    "summary": "Rolling Pearson correlation between a lagged commodity return and a sector return. Measures predictive signal strength over a 63-day window. ICIR = IC mean / IC std.",
+    "learn": "/learn#glossary"
+  },
+  "bh-fdr": {
+    "title": "Benjamini-Hochberg FDR Correction",
+    "summary": "Multiple-testing correction applied to ~200+ IC p-values. Controls expected fraction of false discoveries at α=0.05. BH-significant = signal survives correction.",
+    "learn": "/learn#glossary"
+  },
+  "diebold-yilmaz": {
+    "title": "Diebold-Yilmaz Connectedness",
+    "summary": "Measures cross-market shock transmission via VAR forecast-error variance decomposition. Total connectedness = % of variance from cross-market shocks.",
+    "learn": "/learn#glossary"
+  },
+  "dcc-garch": {
+    "title": "DCC-GARCH Correlations",
+    "summary": "Dynamic Conditional Correlation (Engle 2002): time-varying correlation matrix from GARCH-standardised residuals. Shows how commodity–sector correlations evolve.",
+    "learn": "/learn#methodology"
+  },
+  "component-var": {
+    "title": "Component VaR",
+    "summary": "Each stock's marginal contribution to total portfolio VaR. Computed as w_i × ∂VaR/∂w_i. All components sum to total portfolio VaR.",
+    "learn": "/learn#glossary"
+  },
+  "drawdown": {
+    "title": "Portfolio Drawdown",
+    "summary": "Percentage decline from the rolling peak portfolio value. Max drawdown = largest trough-to-peak decline. Measures realised downside risk.",
+    "learn": "/learn#glossary"
+  }
+}
