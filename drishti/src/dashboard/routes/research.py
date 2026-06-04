@@ -1,10 +1,10 @@
 """Research routes — DCC-GARCH, Diebold-Yilmaz, HMM regime, IC/Granger."""
 from __future__ import annotations
 import dataclasses
-from datetime import date, timedelta
 
 from fastapi import APIRouter, HTTPException
 
+from src.config import default_dates as _default_dates
 from src.dashboard.routes.portfolio import get_snapshot
 from src.risk.returns import (
     build_return_matrix, portfolio_returns,
@@ -12,12 +12,6 @@ from src.risk.returns import (
 )
 
 router = APIRouter()
-
-
-def _default_dates() -> tuple[date, date]:
-    end = date.today() - timedelta(days=1)
-    start = end - timedelta(days=365 * 5)
-    return start, end
 
 
 @router.get("/regime")

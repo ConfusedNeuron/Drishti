@@ -1,3 +1,4 @@
+from datetime import date, timedelta
 from pathlib import Path
 from pydantic_settings import BaseSettings
 
@@ -10,6 +11,13 @@ ARTIFACTS_DIR = DATA_DIR / "cache" / "research_artifacts"
 
 for _d in [CACHE_DIR, SAMPLES_DIR, MAPPINGS_DIR, ARTIFACTS_DIR]:
     _d.mkdir(parents=True, exist_ok=True)
+
+
+def default_dates() -> tuple[date, date]:
+    """Return (start, end) spanning the last 5 years ending yesterday."""
+    end = date.today() - timedelta(days=1)
+    start = end - timedelta(days=365 * 5)
+    return start, end
 
 
 class Settings(BaseSettings):

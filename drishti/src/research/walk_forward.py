@@ -132,7 +132,7 @@ def _select_pairs(ic_results: list[dict]) -> list[dict]:
     df = pd.DataFrame(ic_results)
     bh_sig = df[df["bh_significant"]].copy()
     if bh_sig.empty:
-        bh_sig = df.nlargest(5, "t_stat", key=abs)
+        bh_sig = df.reindex(df["t_stat"].abs().nlargest(5).index)
 
     best = (
         bh_sig.assign(_abs_t=bh_sig["t_stat"].abs())

@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from src.research.walk_forward import run_walk_forward, _compute_ic_on_window
+from src.research.walk_forward import run_walk_forward, _compute_ic_on_window, _select_pairs
 from src.models import WalkForwardResult, WalkForwardMetrics
 
 SEED = 42
@@ -104,3 +104,27 @@ def test_walk_forward_insufficient_data():
     # n_pairs may be 0 because 100 < 252 + 21*3 = 315
     assert isinstance(result, WalkForwardResult)
     assert result.n_pairs == 0
+
+
+def test_select_pairs_fallback_no_bh_significant(factor_returns, sector_returns):
+    """
+    When all ic_results have bh_significant=False, _select_pairs must not raise
+    and must return between 0 and 5 pairs (top-5 by |t_stat| fallback).
+    run_walk_forward must also complete without error.
+    """
+    ic_results = [
+        {"factor": "brent", "target": "energy",  "lag_days": 1,  "t_stat":  3.5, "bh_significant": False},
+        {"factor": "brent", "target": "metals",  "lag_days": 1,  "t_stat": -2.8, "bh_significant": False},
+        {"factor": "gold",  "target": "energy",  "lag_days": 2,  "t_stat":  1.9, "bh_significant": False},
+        {"factor": "gold",  "target": "metals",  "lag_days": 5,  "t_stat": -1.2, "bh_significant": False},
+        {"factor": "brent", "target": "energy",  "lag_days": 5,  "t_stat":  2.1, "bh_significant": False},
+        {"factor": "gold",  "target": "energy",  "lag_days": 10, "t_stat": -0.8, "bh_significant": False},
+    ]
+
+    # _select_pairs must not raise
+    pairs = _select_pairs(ic_results)
+    assert 0 <= len(pairs) <= 5, f"Expected 0-5 pairs, got {len(pairs)}"
+
+    # run_walk_forward must complete without error
+    result = run_walk_forward(factor_returns, sector_returns, ic_results=ic_results)
+    assert isinstance(result, WalkForwardResult)

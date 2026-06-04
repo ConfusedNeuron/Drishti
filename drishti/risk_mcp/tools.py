@@ -12,7 +12,7 @@ Safety contract (enforced in every tool):
 from __future__ import annotations
 
 import dataclasses
-from datetime import date, timedelta
+import re
 
 import numpy as np
 import pandas as pd
@@ -30,7 +30,7 @@ def _check_prompt(text: str) -> str | None:
     or None if the text is acceptable.
     """
     lower = text.lower()
-    flagged = [kw for kw in _ADVICE_KEYWORDS if kw in lower]
+    flagged = [kw for kw in _ADVICE_KEYWORDS if re.search(r'\b' + re.escape(kw) + r'\b', lower)]
     if flagged:
         return (
             "Drishti is an educational risk analytics platform and cannot provide "
@@ -43,10 +43,7 @@ def _check_prompt(text: str) -> str | None:
     return None
 
 
-def _default_dates() -> tuple[date, date]:
-    end = date.today() - timedelta(days=1)
-    start = end - timedelta(days=365 * 5)
-    return start, end
+from src.config import default_dates as _default_dates
 
 
 def _load_portfolio():

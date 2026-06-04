@@ -1,11 +1,11 @@
 """Risk routes — VaR, ES, backtest, contribution, drawdown, stress."""
 from __future__ import annotations
 import dataclasses
-from datetime import date, timedelta
 
 import numpy as np
 from fastapi import APIRouter, HTTPException
 
+from src.config import default_dates as _default_dates
 from src.dashboard.routes.portfolio import get_snapshot
 from src.risk.returns import build_return_matrix, portfolio_returns, covariance_matrix
 from src.risk.var import all_var_methods
@@ -16,12 +16,6 @@ from src.risk.drawdown import max_drawdown
 from src.risk.stress import run_all_scenarios
 
 router = APIRouter()
-
-
-def _default_dates() -> tuple[date, date]:
-    end = date.today() - timedelta(days=1)
-    start = end - timedelta(days=365 * 5)
-    return start, end
 
 
 @router.post("/summary")
