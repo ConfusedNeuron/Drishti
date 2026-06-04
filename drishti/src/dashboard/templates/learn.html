@@ -24,7 +24,6 @@
 {% block content %}
 <div style="max-width:860px;margin:0 auto;padding-top:8px">
 
-<!-- ── HOW TO USE ─────────────────────────────────────────────────────────── -->
 <section id="how-to-use" class="learn-section">
   <h2>How to Use Drishti</h2>
   <h3>Option 1 — Sample Portfolio (Instant)</h3>
@@ -43,7 +42,6 @@
   <p>The CSV must have columns: <code style="font-family:'JetBrains Mono',monospace;font-size:12px">symbol, quantity, avg_price</code>. NSE symbols only (e.g. <code style="font-family:'JetBrains Mono',monospace;font-size:12px">RELIANCE</code>, not <code style="font-family:'JetBrains Mono',monospace;font-size:12px">RELIANCE.NS</code>).</p>
 </section>
 
-<!-- ── BROKER GUIDES ───────────────────────────────────────────────────────── -->
 <section id="brokers" class="learn-section">
   <h2>Broker CSV Download Guides</h2>
   <details>
@@ -51,16 +49,14 @@
     <ol>
       <li>Log in to <strong>kite.zerodha.com</strong></li>
       <li>Go to <strong>Portfolio → Holdings</strong></li>
-      <li>Click the download icon (↓) at the top right</li>
-      <li>Select <strong>CSV</strong> — file contains Symbol, Quantity, Avg. Cost</li>
+      <li>Click the download icon (↓) at the top right → select <strong>CSV</strong></li>
       <li>Rename columns: <code style="font-family:'JetBrains Mono',monospace;font-size:12px">Symbol → symbol, Qty. → quantity, Avg. cost → avg_price</code></li>
     </ol>
   </details>
   <details>
     <summary>Groww</summary>
     <ol>
-      <li>Log in to <strong>groww.in</strong></li>
-      <li>Go to <strong>Portfolio → Stocks</strong></li>
+      <li>Log in to <strong>groww.in</strong> → Portfolio → Stocks</li>
       <li>Click <strong>Download</strong> at the top right → CSV</li>
       <li>Map: <code style="font-family:'JetBrains Mono',monospace;font-size:12px">Stock Symbol → symbol, Quantity → quantity, Average Price → avg_price</code></li>
     </ol>
@@ -68,179 +64,123 @@
   <details>
     <summary>Upstox</summary>
     <ol>
-      <li>Log in to <strong>upstox.com</strong></li>
-      <li>Go to <strong>Portfolio → Holdings</strong></li>
-      <li>Click the export icon → Download CSV</li>
+      <li>Log in to <strong>upstox.com</strong> → Portfolio → Holdings</li>
+      <li>Export icon → Download CSV</li>
       <li>Map: <code style="font-family:'JetBrains Mono',monospace;font-size:12px">Instrument → symbol, Quantity → quantity, Average Price → avg_price</code></li>
     </ol>
   </details>
   <details>
     <summary>AngelOne</summary>
     <ol>
-      <li>Log in to <strong>angelone.in</strong></li>
-      <li>Navigate to <strong>My Portfolio → Holdings</strong></li>
-      <li>Click <strong>Download</strong> → CSV/Excel</li>
+      <li>Log in to <strong>angelone.in</strong> → My Portfolio → Holdings</li>
+      <li>Download → CSV/Excel</li>
       <li>Map: <code style="font-family:'JetBrains Mono',monospace;font-size:12px">NSE Code → symbol, Quantity → quantity, Avg Price → avg_price</code></li>
     </ol>
   </details>
   <details>
     <summary>5Paisa</summary>
     <ol>
-      <li>Log in to <strong>5paisa.com</strong></li>
-      <li>Go to <strong>Holdings</strong> from the main menu</li>
-      <li>Use the export button → Download as CSV</li>
+      <li>Log in to <strong>5paisa.com</strong> → Holdings</li>
+      <li>Export → Download as CSV</li>
       <li>Map: <code style="font-family:'JetBrains Mono',monospace;font-size:12px">Script Name → symbol, Qty → quantity, Avg Rate → avg_price</code></li>
     </ol>
   </details>
 </section>
 
-<!-- ── ZERODHA MCP ─────────────────────────────────────────────────────────── -->
 <section id="zerodha-mcp" class="learn-section">
   <h2>Zerodha MCP Server Setup</h2>
-  <p>The Zerodha MCP server (<code style="font-family:'JetBrains Mono',monospace;font-size:12px">kite-mcp</code>) lets AI copilots read your live holdings directly via the Kite Connect API — no manual CSV export needed.</p>
+  <p>The <code style="font-family:'JetBrains Mono',monospace;font-size:12px">kite-mcp</code> server lets AI copilots read live holdings via Kite Connect API — no manual CSV export needed.</p>
   <h3>Prerequisites</h3>
   <ul>
-    <li>Zerodha account with Kite Connect API access (₹2000/month subscription)</li>
+    <li>Zerodha account with Kite Connect API access (₹2000/month)</li>
     <li>API key and secret from <strong>developers.kite.trade</strong></li>
     <li>Node.js 18+ installed</li>
   </ul>
-  <h3>Setup Steps</h3>
+  <h3>Setup</h3>
   <ol>
-    <li>Clone the kite-mcp server: <code style="font-family:'JetBrains Mono',monospace;font-size:12px">git clone https://github.com/zerodha/kite-mcp</code></li>
-    <li>Install dependencies: <code style="font-family:'JetBrains Mono',monospace;font-size:12px">cd kite-mcp && npm install</code></li>
-    <li>Set environment variables: <code style="font-family:'JetBrains Mono',monospace;font-size:12px">KITE_API_KEY</code>, <code style="font-family:'JetBrains Mono',monospace;font-size:12px">KITE_API_SECRET</code></li>
-    <li>Start the server: <code style="font-family:'JetBrains Mono',monospace;font-size:12px">npm start</code> — runs on port 3000 by default</li>
-    <li>In your MCP client config, add the Kite MCP server endpoint</li>
+    <li>Clone: <code style="font-family:'JetBrains Mono',monospace;font-size:12px">git clone https://github.com/zerodha/kite-mcp</code></li>
+    <li>Install: <code style="font-family:'JetBrains Mono',monospace;font-size:12px">cd kite-mcp && npm install</code></li>
+    <li>Set env vars: <code style="font-family:'JetBrains Mono',monospace;font-size:12px">KITE_API_KEY</code>, <code style="font-family:'JetBrains Mono',monospace;font-size:12px">KITE_API_SECRET</code></li>
+    <li>Start: <code style="font-family:'JetBrains Mono',monospace;font-size:12px">npm start</code> (port 3000)</li>
     <li>Authenticate via the Kite login URL provided by the server</li>
   </ol>
-  <div class="warn-box">kite-mcp gives live portfolio data but requires a paid Kite Connect API subscription. For course demo purposes, the CSV upload method is sufficient.</div>
+  <div class="warn-box">kite-mcp requires a paid Kite Connect subscription. For course demo purposes, CSV upload is sufficient.</div>
 </section>
 
-<!-- ── METHODOLOGY ────────────────────────────────────────────────────────── -->
 <section id="methodology" class="learn-section">
   <h2>Methodology</h2>
 
   <h3>Value at Risk (VaR)</h3>
-  <p>VaR at confidence level $\alpha$ is the loss threshold not exceeded with probability $\alpha$. For a portfolio with P&amp;L series $r_t$:</p>
+  <p>VaR at confidence level $\alpha$ is the loss threshold not exceeded with probability $\alpha$:</p>
   <div class="katex-block">$$\text{VaR}_\alpha = -\text{Quantile}_{1-\alpha}(r_1, \ldots, r_T)$$</div>
-  <p><strong>Three methods implemented:</strong></p>
   <ul>
-    <li><strong>Historical (non-overlapping windows):</strong> Empirical quantile of 10-day non-overlapping block returns. No distribution assumption. Uses $\lfloor T/10 \rfloor$ observations.</li>
-    <li><strong>Parametric (delta-normal):</strong> Assumes multivariate normal; VaR = $\sigma_p \cdot z_\alpha$ where $\sigma_p = \sqrt{w^\top \Sigma w}$. 10-day horizon via $\sqrt{10}$ scaling (stated assumption).</li>
-    <li><strong>GARCH-FHS:</strong> GARCH(1,1) filters residuals; bootstrap from standardized residuals using GARCH-forecasted vol. Preserves empirical tail shape without normal assumption.</li>
+    <li><strong>Historical (non-overlapping):</strong> Empirical quantile of 10-day block returns. No distribution assumption.</li>
+    <li><strong>Parametric (delta-normal):</strong> $\text{VaR} = \sigma_p \cdot z_\alpha$, $\sigma_p = \sqrt{w^\top \Sigma w}$. $\sqrt{10}$ horizon scaling.</li>
+    <li><strong>GARCH-FHS:</strong> GARCH(1,1) standardises residuals; bootstrap preserves empirical tail shape.</li>
   </ul>
 
-  <h3>Expected Shortfall (CVaR)</h3>
-  <p>Expected loss <em>given</em> that VaR is breached — the average of the worst $(1-\alpha)$ fraction of outcomes:</p>
+  <h3>Expected Shortfall</h3>
   <div class="katex-block">$$\text{ES}_\alpha = -\frac{1}{(1-\alpha) T} \sum_{t:\, r_t < -\text{VaR}_\alpha} r_t$$</div>
-  <p>ES is coherent (satisfies subadditivity) whereas VaR is not. ES is used in the Basel III/IV standardised approach for market risk.</p>
+  <p>ES is coherent (subadditive); used in Basel IV at 97.5% confidence.</p>
 
   <h3>VaR Backtesting</h3>
-  <p><strong>Kupiec (1995) Proportion-of-Failures test:</strong> Tests whether the observed violation rate equals the theoretical rate $p = 1 - \alpha$. Likelihood ratio:</p>
+  <p><strong>Kupiec (1995):</strong> LR test on violation frequency.</p>
   <div class="katex-block">$$LR_{POF} = -2\ln\frac{p^x(1-p)^{T-x}}{\hat{p}^x(1-\hat{p})^{T-x}} \sim \chi^2_1$$</div>
-  <p><strong>Christoffersen (1998) Independence test:</strong> Tests whether violations cluster. A correct VaR model produces i.i.d. Bernoulli hits; clustering implies the model underestimates tail dependence.</p>
+  <p><strong>Christoffersen (1998):</strong> Tests whether violations cluster (independence test).</p>
 
   <h3>HMM Volatility Regimes</h3>
-  <p>A 2-state Gaussian Hidden Markov Model fits the portfolio return series. States are canonically labeled by emission mean of rolling realised volatility: state 0 = low-vol, state 1 = high-vol.</p>
   <div class="katex-block">$$r_t \mid s_t = k \sim \mathcal{N}(\mu_k, \sigma_k^2), \quad P(s_t \mid s_{t-1}) = A$$</div>
-  <p>Walk-forward refitting every 21 trading days prevents label-switching. Regime-conditioned VaR conditions the return quantile on the current state posterior.</p>
+  <p>2-state Gaussian HMM. Walk-forward refit every 21 days. Canonical labeling by rolling-vol emission mean prevents label-switching.</p>
 
   <h3>DCC-GARCH Dynamic Correlations</h3>
-  <p>Engle (2002) 2-step estimator. Step 1: fit univariate GARCH(1,1) to each series, extract standardised residuals $\epsilon_t$. Step 2: fit DCC to the $\epsilon_t$ matrix:</p>
   <div class="katex-block">$$Q_t = (1-a-b)\bar{Q} + a\,\epsilon_{t-1}\epsilon_{t-1}^\top + b\,Q_{t-1}$$</div>
   <div class="katex-block">$$R_t = \text{diag}(Q_t)^{-1/2}\,Q_t\,\text{diag}(Q_t)^{-1/2}$$</div>
-  <p>$R_t$ is the time-varying correlation matrix. The chart shows $R_t[i,j]$ for the most informative factor–sector pairs.</p>
+  <p>Engle (2002) 2-step estimator. $R_t$ is the time-varying correlation matrix.</p>
 
   <h3>Diebold-Yilmaz Connectedness</h3>
-  <p>Pesaran-Shin generalised FEVD (order-invariant). VAR($p$) fitted to the commodity/macro + sector return panel; lag $p$ selected by AIC, capped at 5:</p>
   <div class="katex-block">$$\theta_{ij}^g(H) = \frac{\sigma_{jj}^{-1}\sum_{h=0}^{H-1}(e_i^\top A_h \Sigma e_j)^2}{\sum_{h=0}^{H-1}e_i^\top A_h \Sigma A_h^\top e_i}$$</div>
-  <p>Total connectedness = share of forecast-error variance attributable to cross-market shocks.</p>
+  <p>Pesaran-Shin GFEVD — order-invariant. VAR lag by AIC, capped at 5.</p>
 
-  <h3>Time-Series IC (Information Coefficient)</h3>
-  <p>A commodity return at time $t$ is scalar — identical for all stocks — so cross-sectional IC is undefined. Rolling Pearson correlation between lagged factor return and sector return:</p>
-  <div class="katex-block">$$IC_t(\text{lag}) = \text{Corr}(r_{\text{factor},\, t-\text{lag}},\, r_{\text{sector},\, t}) \quad \text{over a 63-day window}$$</div>
-  <p><strong>ICIR</strong> = mean IC / std IC. <strong>Granger causality</strong> tests predictive power beyond autoregressive terms. Benjamini-Hochberg FDR correction at α = 0.05 applied to all p-values.</p>
+  <h3>Time-Series IC</h3>
+  <div class="katex-block">$$IC_t(\text{lag}) = \text{Corr}(r_{\text{factor},\, t-\text{lag}},\, r_{\text{sector},\, t}) \quad \text{63-day window}$$</div>
+  <p>ICIR = mean IC / std IC. Benjamini-Hochberg FDR correction at α=0.05 across ~200+ tests.</p>
 </section>
 
-<!-- ── GLOSSARY ────────────────────────────────────────────────────────────── -->
 <section id="glossary" class="learn-section">
   <h2>Glossary</h2>
   <dl style="display:grid;gap:16px">
-    <div>
-      <dt style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--primary)">BH FDR (Benjamini-Hochberg)</dt>
-      <dd style="font-size:13.5px;color:var(--ink-2);margin-left:0;margin-top:4px">Multiple-testing correction that controls the <em>False Discovery Rate</em> — the expected fraction of rejected nulls that are false positives. Applied to all IC p-values at α = 0.05.</dd>
-    </div>
-    <div>
-      <dt style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--primary)">Component VaR</dt>
-      <dd style="font-size:13.5px;color:var(--ink-2);margin-left:0;margin-top:4px">Contribution of stock $i$ to portfolio VaR: $\text{CVaR}_i = w_i \cdot (\partial \text{VaR}/\partial w_i)$. Components sum to total portfolio VaR.</dd>
-    </div>
-    <div>
-      <dt style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--primary)">DCC-GARCH</dt>
-      <dd style="font-size:13.5px;color:var(--ink-2);margin-left:0;margin-top:4px">Dynamic Conditional Correlation GARCH. Models time-varying correlations between return series. Engle (2002). Captures changing co-movement during stress periods.</dd>
-    </div>
-    <div>
-      <dt style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--primary)">Diebold-Yilmaz (DY) Index</dt>
-      <dd style="font-size:13.5px;color:var(--ink-2);margin-left:0;margin-top:4px">Measures cross-market shock transmission via Pesaran-Shin generalised FEVD. Total connectedness = % of variance from cross-market shocks. High → tight co-movement, less diversification benefit.</dd>
-    </div>
-    <div>
-      <dt style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--primary)">ES (Expected Shortfall / CVaR)</dt>
-      <dd style="font-size:13.5px;color:var(--ink-2);margin-left:0;margin-top:4px">Average loss in the worst $(1-\alpha)$ fraction of scenarios. ES is coherent (subadditive); Basel IV uses 97.5% ES as the primary market risk measure.</dd>
-    </div>
-    <div>
-      <dt style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--primary)">GARCH-FHS</dt>
-      <dd style="font-size:13.5px;color:var(--ink-2);margin-left:0;margin-top:4px">Filtered Historical Simulation. GARCH(1,1) standardises residuals; bootstrap from them using GARCH-forecast vol. Captures fat tails without full parametric assumption.</dd>
-    </div>
-    <div>
-      <dt style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--primary)">Granger Causality</dt>
-      <dd style="font-size:13.5px;color:var(--ink-2);margin-left:0;margin-top:4px">Tests whether lagged values of $X$ improve prediction of $Y$ beyond $Y$'s own lags. Predictive causality, not structural.</dd>
-    </div>
-    <div>
-      <dt style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--primary)">HMM (Hidden Markov Model)</dt>
-      <dd style="font-size:13.5px;color:var(--ink-2);margin-left:0;margin-top:4px">Probabilistic model where an unobserved discrete state sequence (here: low-vol / high-vol regime) generates observed returns. State inference via Baum-Welch EM; prediction via Viterbi.</dd>
-    </div>
-    <div>
-      <dt style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--primary)">IC (Information Coefficient)</dt>
-      <dd style="font-size:13.5px;color:var(--ink-2);margin-left:0;margin-top:4px">Rolling Pearson correlation between a lagged factor return and a sector return. Measures predictive signal strength. ICIR = IC mean / IC std = signal-to-noise ratio.</dd>
-    </div>
-    <div>
-      <dt style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--primary)">Kupiec Test</dt>
-      <dd style="font-size:13.5px;color:var(--ink-2);margin-left:0;margin-top:4px">Proportion-of-Failures (POF) likelihood-ratio test for VaR. Tests $H_0$: observed violation rate = $(1-\alpha)$. $\chi^2_1$ under $H_0$. Does not test independence of violations.</dd>
-    </div>
-    <div>
-      <dt style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--primary)">VaR (Value at Risk)</dt>
-      <dd style="font-size:13.5px;color:var(--ink-2);margin-left:0;margin-top:4px">Maximum portfolio loss not exceeded with probability $\alpha$ over horizon $h$. At 99% 10-day: 1% chance the 10-day loss exceeds VaR. Not a worst-case — just a quantile.</dd>
-    </div>
+    <div><dt style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--primary)">BH FDR (Benjamini-Hochberg)</dt><dd style="font-size:13.5px;color:var(--ink-2);margin-left:0;margin-top:4px">Controls the False Discovery Rate across multiple tests. Applied to all IC p-values at α=0.05.</dd></div>
+    <div><dt style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--primary)">Component VaR</dt><dd style="font-size:13.5px;color:var(--ink-2);margin-left:0;margin-top:4px">Stock $i$'s contribution to portfolio VaR: $w_i \cdot (\partial \text{VaR}/\partial w_i)$. Components sum to total VaR.</dd></div>
+    <div><dt style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--primary)">DCC-GARCH</dt><dd style="font-size:13.5px;color:var(--ink-2);margin-left:0;margin-top:4px">Dynamic Conditional Correlation GARCH (Engle 2002). Time-varying correlation matrix from GARCH-standardised residuals.</dd></div>
+    <div><dt style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--primary)">Diebold-Yilmaz Index</dt><dd style="font-size:13.5px;color:var(--ink-2);margin-left:0;margin-top:4px">Cross-market shock transmission via Pesaran-Shin GFEVD. Total connectedness = % forecast-error variance from cross-market shocks.</dd></div>
+    <div><dt style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--primary)">ES (Expected Shortfall)</dt><dd style="font-size:13.5px;color:var(--ink-2);margin-left:0;margin-top:4px">Average loss when VaR is breached. Coherent risk measure. Basel IV: 97.5% ES.</dd></div>
+    <div><dt style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--primary)">GARCH-FHS</dt><dd style="font-size:13.5px;color:var(--ink-2);margin-left:0;margin-top:4px">Filtered Historical Simulation. GARCH standardises residuals; bootstrap preserves empirical fat tails.</dd></div>
+    <div><dt style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--primary)">Granger Causality</dt><dd style="font-size:13.5px;color:var(--ink-2);margin-left:0;margin-top:4px">Tests whether lagged $X$ improves prediction of $Y$ beyond $Y$'s own lags. Predictive, not structural causality.</dd></div>
+    <div><dt style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--primary)">HMM (Hidden Markov Model)</dt><dd style="font-size:13.5px;color:var(--ink-2);margin-left:0;margin-top:4px">Unobserved discrete state (low-vol/high-vol) generates observed returns. Baum-Welch EM inference.</dd></div>
+    <div><dt style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--primary)">IC (Information Coefficient)</dt><dd style="font-size:13.5px;color:var(--ink-2);margin-left:0;margin-top:4px">Rolling Pearson correlation between lagged factor and sector return. ICIR = IC mean / IC std.</dd></div>
+    <div><dt style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--primary)">Kupiec Test</dt><dd style="font-size:13.5px;color:var(--ink-2);margin-left:0;margin-top:4px">Proportion-of-Failures LR test for VaR. $H_0$: violation rate = $1-\alpha$. $\chi^2_1$ distribution.</dd></div>
+    <div><dt style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--primary)">VaR (Value at Risk)</dt><dd style="font-size:13.5px;color:var(--ink-2);margin-left:0;margin-top:4px">Max loss not exceeded with probability $\alpha$ over horizon $h$. Not a worst-case — just a quantile.</dd></div>
   </dl>
 </section>
 
-<!-- ── FINDINGS ────────────────────────────────────────────────────────────── -->
 <section id="findings" class="learn-section">
   <h2>Key Findings — NIFTY 200 Bloomberg Analysis</h2>
-  <div class="warn-box">
-    These findings are from the NIFTY 200 Bloomberg analysis (2018–2026).
-    <strong>Replace the placeholders below with your actual results after running the full BQuant pipeline.</strong>
-  </div>
-
+  <div class="warn-box"><strong>Replace the placeholders below with actual results after running the BQuant pipeline.</strong></div>
   <h3>Regime Characterisation</h3>
-  <p>[Replace with: HMM state characterisation — approximate date ranges for high-vol periods (COVID March 2020, 2022 inflation spike), median duration of each regime, and regime-conditioned VaR ratio (high-vol / low-vol).]</p>
-
+  <p>[Replace: HMM state characterisation — high-vol periods (COVID 2020, 2022 inflation), median regime duration, regime-conditioned VaR ratio.]</p>
   <h3>Commodity Factor Signals</h3>
-  <p>[Replace with: Which commodity × sector × lag combinations survived BH FDR correction? List top pairs by |IC mean|. Note dominant lags. Granger p-values for significant pairs.]</p>
-
+  <p>[Replace: Top commodity × sector × lag pairs surviving BH FDR correction. Dominant lags. Granger p-values.]</p>
   <h3>Spillover Structure</h3>
-  <p>[Replace with: Total DY connectedness value. Net transmitters vs receivers. Does connectedness spike during the COVID and 2022 stress periods?]</p>
-
+  <p>[Replace: Total DY connectedness. Net transmitters vs receivers. Connectedness during stress.]</p>
   <h3>VaR Model Comparison</h3>
-  <p>[Replace with: GARCH-FHS vs parametric divergence for the sample portfolio. Backtest violation counts. Which method is best calibrated for the NIFTY 200 universe?]</p>
-
+  <p>[Replace: GARCH-FHS vs parametric divergence. Backtest violation counts. Best-calibrated method.]</p>
   <div class="disclaimer">⚠ For educational risk analytics only. Not investment advice. Data: Bloomberg Terminal, FRTL, IIM Calcutta.</div>
 </section>
 
-<!-- ── DATA PROVENANCE ────────────────────────────────────────────────────── -->
 <section id="data" class="learn-section">
   <h2>Data Sources &amp; Provenance</h2>
   <h3>Bloomberg Terminal (FRTL, IIM Calcutta)</h3>
-  <p>All historical data pulled via BLPAPI at the Financial Research and Trading Laboratory (FRTL), IIM Calcutta. Citation: <em>Bloomberg Terminal, FRTL, IIM Calcutta.</em></p>
+  <p>All historical data via BLPAPI at the Financial Research and Trading Laboratory (FRTL), IIM Calcutta. Citation: <em>Bloomberg Terminal, FRTL, IIM Calcutta.</em></p>
   <table>
     <tr><th>Category</th><th>Tickers</th><th>Fields</th><th>Date Range</th></tr>
     <tr><td>NSE Equities (daily)</td><td>49 stocks (HDFCB, RELIANCE, TCS, SBIN, …)</td><td>PX_LAST (adj), PX_VOLUME</td><td>2018-01-01 → 2026-05-29</td></tr>
@@ -250,9 +190,9 @@
     <tr><td>Macro</td><td>USDINR, GIND10YR, INVIXN</td><td>PX_LAST</td><td>2018 → 2026-05-29</td></tr>
   </table>
   <h3>What Is Gitignored</h3>
-  <p>Bloomberg parquet files (<code style="font-family:'JetBrains Mono',monospace;font-size:12px">data/cache/bloomberg/</code>) are never committed — they contain licensed Bloomberg data. The synthetic cache (<code style="font-family:'JetBrains Mono',monospace;font-size:12px">scripts/generate_synthetic_cache.py</code>) provides a free-standing offline demo.</p>
+  <p>Bloomberg parquet files (<code style="font-family:'JetBrains Mono',monospace;font-size:12px">data/cache/bloomberg/</code>) are never committed. Synthetic cache available via <code style="font-family:'JetBrains Mono',monospace;font-size:12px">scripts/generate_synthetic_cache.py</code>.</p>
   <h3>Public Gap-Fill Cache</h3>
-  <p>After the Bloomberg pull ended (2026-05-29), a public data layer fills the gap using yfinance and FRED. Files are committed to <code style="font-family:'JetBrains Mono',monospace;font-size:12px">data/cache/public/</code>. Bloomberg rows win on overlapping dates.</p>
+  <p>yfinance + FRED gap-fill committed to <code style="font-family:'JetBrains Mono',monospace;font-size:12px">data/cache/public/</code>. Bloomberg rows win on overlapping dates.</p>
 </section>
 
 </div>
