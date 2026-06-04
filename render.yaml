@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: drishti
+    runtime: python
+    rootDir: drishti
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn src.dashboard.app:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: FRED_API_KEY
+        sync: false
+      - key: PYTHONPATH
+        value: .
+    plan: free

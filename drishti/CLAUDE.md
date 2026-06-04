@@ -11,7 +11,7 @@ Drishti is a local-first quant risk research platform for Indian equity portfoli
 ## Current status (as of 2026-06-04)
 
 **Track A — Frontend overhaul: COMPLETE ✅** Branch `feature/frontend-data-overhaul`.
-Track B (data layer) in progress.
+**Track B — Data layer: COMPLETE ✅**
 
 ### Active branch
 `feature/frontend-data-overhaul` — all work for the overhaul goes here. PR to `main` when done.
@@ -334,3 +334,17 @@ theme.css → layout.css → components.css → tooltip.css
 - Public cache (`data/cache/public/`): yfinance + FRED gap-fill, committed to repo (not gitignored)
 - `read_merged()` in cache.py: reads both, concatenates, Bloomberg rows win on overlap
 - `pull_public_data.py`: reads last date from parquet, fetches only the gap, appends to public cache
+
+**Track B — Data layer: COMPLETE ✅**
+
+### Public data gap-fill architecture
+- `data/mappings/yahoo_tickers.json` — Bloomberg → Yahoo Finance ticker map (4 categories)
+- `scripts/pull_public_data.py` — gap-fill script; reads Bloomberg last date, fetches yfinance + FRED gap
+- `src/bloomberg/cache.py:read_merged()` — transparent merge of Bloomberg + public cache (Bloomberg wins)
+- `data/cache/public/` — committed to repo (not gitignored); yfinance + FRED rows only
+
+### CI/CD and deployment
+- `.github/workflows/weekly.yml` — Sunday 2 AM UTC: synthetic refresh + public pull + pytest + Render deploy
+- `render.yaml` at repo root — free tier Render.com web service (spins down after 15 min idle)
+- Secrets needed in GitHub repo settings: `FRED_API_KEY`, `RENDER_DEPLOY_HOOK`
+- On Render dashboard: set `FRED_API_KEY` environment variable manually
