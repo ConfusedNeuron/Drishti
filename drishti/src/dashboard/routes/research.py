@@ -106,6 +106,78 @@ async def spillover_endpoint(fevd_horizon: int = 10):
     }
 
 
+@router.get("/walkforward")
+async def walkforward_endpoint():
+    start, end = _default_dates()
+    factors = load_factor_series(["brent", "gold", "copper", "usdinr", "gsec10y"], start, end)
+    sectors = load_sector_returns(["energy", "metals", "fmcg", "it"], start, end)
+
+    if factors.empty or sectors.empty:
+        raise HTTPException(status_code=503, detail="No factor/sector data cached.")
+
+    # Try to load pre-computed IC results from BQuant artifact export
+    import json
+    from src.config import ARTIFACTS_DIR
+    ic_results: list[dict] | None = None
+    artifact_path = ARTIFACTS_DIR / "factor_ic_results.json"
+    if artifact_path.exists():
+        try:
+            with open(artifact_path) as f:
+                ic_data = json.load(f)
+            ic_results = ic_data.get("results", [])
+        except Exception:
+            ic_results = None
+
+    from src.research.walk_forward import run_walk_forward
+    import dataclasses
+    try:
+        result = run_walk_forward(factors, sectors, ic_results=ic_results)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Walk-forward failed: {e}")
+
+    return {
+        "n_pairs": result.n_pairs,
+        "factors": result.factors,
+        "sectors": result.sectors,
+        "sharpe_matrix": result.sharpe_matrix,
+        "metrics": [dataclasses.asdict(m) for m in result.metrics],
+        "note": (
+            "OOS Sharpe from rolling 252-day expanding-window walk-forward. "
+            "Long sector when IC estimate > 0, flat otherwise. No transaction costs assumed."
+        ),
+    }
+
+
+@router.get("/spillover/rolling")
+async def rolling_spillover_endpoint(window: int = 200, step: int = 21):
+    start, end = _default_dates()
+    factors = load_factor_series(["brent", "gold", "copper", "usdinr"], start, end)
+    sectors = load_sector_returns(["energy", "metals", "fmcg", "it"], start, end)
+
+    if factors.empty or sectors.empty:
+        raise HTTPException(status_code=503, detail="No factor/sector data cached.")
+
+    import pandas as pd
+    combined = pd.concat([sectors, factors], axis=1).dropna()
+
+    from src.research.diebold_yilmaz import rolling_spillover
+    try:
+        series = rolling_spillover(combined, window=window, step=step)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Rolling spillover failed: {e}")
+
+    if series.empty:
+        raise HTTPException(status_code=503, detail="Insufficient data for rolling spillover.")
+
+    return {
+        "dates": [str(d.date()) for d in series.index],
+        "values": [round(float(v), 2) for v in series.values],
+        "window": window,
+        "step": step,
+        "note": "Rolling Diebold-Yilmaz total connectedness index (%). VAR + Pesaran-Shin GFEVD.",
+    }
+
+
 @router.get("/dcc")
 async def dcc_endpoint():
     start, end = _default_dates()

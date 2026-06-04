@@ -172,3 +172,28 @@ class SpilloverTable:
     pairwise: pd.DataFrame
     var_lag: int
     fevd_horizon: int
+
+
+@dataclass
+class WalkForwardMetrics:
+    """OOS performance metrics for a single (factor, sector, lag) triple."""
+    factor: str
+    target: str
+    lag_days: int
+    oos_sharpe: float
+    oos_max_dd: float
+    oos_win_rate: float
+    oos_total_return: float
+    oos_obs: int
+    cumulative_return_dates: list
+    cumulative_return_values: list
+
+
+@dataclass
+class WalkForwardResult:
+    """Aggregated walk-forward results across all (factor, sector) pairs."""
+    metrics: list[WalkForwardMetrics]
+    sharpe_matrix: dict[str, dict]   # factor → {sector → sharpe | None}
+    factors: list[str]
+    sectors: list[str]
+    n_pairs: int

@@ -9,7 +9,7 @@ function showTab(name, btn) {
   btn.classList.add("active");
 
   if (name === "research" && !_icLoaded) loadIC();
-  if (name === "spillover") { loadDY(); loadDCC(); }
+  if (name === "spillover") { loadDY(); loadDCC(); loadRollingSpillover(); }
   if (name === "risk") {
     if (riskData) renderRiskDetail(riskData);
     if (!_regimeLoaded) loadRegime();
