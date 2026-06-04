@@ -1,3 +1,177 @@
+// ── Market Sentiment (FinBERT) ─────────────────────────────────────────────
+
+async function loadNews() {
+  const panel = document.getElementById("news-panel");
+  if (!panel) return;
+
+  const statusEl = document.getElementById("news-status");
+  if (statusEl) statusEl.textContent = "Loading…";
+
+  try {
+    const r = await fetch(window.API + "/api/research/news");
+    const d = await r.json();
+    if (!r.ok || d.status === "no_cache") {
+      _renderNewsEmpty();
+      return;
+    }
+    _renderNews(d);
+  } catch (e) {
+    if (statusEl) statusEl.textContent = "News unavailable.";
+  }
+}
+
+async function refreshNews() {
+  const btn = document.getElementById("news-refresh-btn");
+  const statusEl = document.getElementById("news-status");
+  if (btn) { btn.disabled = true; btn.textContent = "Refreshing…"; }
+  if (statusEl) statusEl.textContent = "Fetching RSS + running FinBERT (may take 20–30 s)…";
+
+  try {
+    const r = await fetch(window.API + "/api/research/news/refresh", { method: "POST" });
+    const d = await r.json();
+    if (!r.ok) {
+      if (statusEl) statusEl.textContent = d.detail || "Refresh failed.";
+      return;
+    }
+    _renderNews(d);
+  } catch (e) {
+    if (statusEl) statusEl.textContent = "Refresh error: " + e;
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = "Refresh"; }
+  }
+}
+
+function _renderNewsEmpty() {
+  const statusEl = document.getElementById("news-status");
+  if (statusEl) statusEl.textContent = "No cached data. Click Refresh to fetch headlines.";
+  const badges = document.getElementById("news-badges");
+  if (badges) badges.innerHTML = "";
+  const list = document.getElementById("news-list");
+  if (list) list.innerHTML = "";
+}
+
+function _sentimentColor(label) {
+  if (label === "positive") return "var(--ok)";
+  if (label === "negative") return "var(--danger)";
+  return "var(--muted)";
+}
+
+function _aggregateColor(agg) {
+  if (agg === "Bullish") return "var(--ok)";
+  if (agg === "Bearish") return "var(--danger)";
+  return "var(--muted)";
+}
+
+function _renderNews(d) {
+  const statusEl = document.getElementById("news-status");
+  if (statusEl) {
+    const ts = d.fetched_at ? new Date(d.fetched_at).toLocaleString() : "unknown";
+    statusEl.textContent = `${d.n_sources} sources · ${d.headlines.length} headlines · fetched ${ts}`;
+  }
+
+  // Aggregate badges
+  const badges = document.getElementById("news-badges");
+  if (badges) {
+    const aggColor = _aggregateColor(d.aggregate);
+    badges.innerHTML = `
+      <span style="color:${aggColor};font-weight:700;font-size:15px;margin-right:16px">${d.aggregate}</span>
+      <span class="news-badge" style="color:var(--ok)">Bullish ${d.positive_pct.toFixed(0)}%</span>
+      <span class="news-badge" style="color:var(--muted)">Neutral ${d.neutral_pct.toFixed(0)}%</span>
+      <span class="news-badge" style="color:var(--danger)">Bearish ${d.negative_pct.toFixed(0)}%</span>`;
+  }
+
+  // Headline list — max 8 visible, scrollable
+  const list = document.getElementById("news-list");
+  if (!list) return;
+  const top8 = (d.headlines || []).slice(0, 8);
+  list.innerHTML = top8.map(h => {
+    const chipColor = _sentimentColor(h.sentiment_label);
+    const chip = `<span style="color:${chipColor};font-size:10px;font-weight:600;text-transform:uppercase;border:1px solid ${chipColor};border-radius:3px;padding:1px 5px">${h.sentiment_label}</span>`;
+    const src = `<span style="color:var(--primary);font-size:10px;font-family:'JetBrains Mono',monospace;margin-right:8px">[${h.source}]</span>`;
+    const link = h.link
+      ? `<a href="${h.link}" target="_blank" rel="noopener" style="color:var(--ink);text-decoration:none">${h.title}</a>`
+      : h.title;
+    return `<div class="news-row">${src}${link}&nbsp;${chip}</div>`;
+  }).join("");
+}
+
+
+// ── Breach Risk (XGBoost) ──────────────────────────────────────────────────
+
+async function loadBreach() {
+  const panel = document.getElementById("breach-panel");
+  if (!panel) return;
+  const statusEl = document.getElementById("breach-status");
+  if (statusEl) statusEl.textContent = "Loading…";
+
+  try {
+    const r = await fetch(window.API + "/api/research/breach");
+    const d = await r.json();
+    if (!r.ok) {
+      if (statusEl) statusEl.textContent = d.detail || "Breach data unavailable.";
+      return;
+    }
+    _renderBreach(d);
+  } catch (e) {
+    if (statusEl) statusEl.textContent = "Breach endpoint error: " + e;
+  }
+}
+
+function _breachColor(risk_level) {
+  if (risk_level === "High")     return "var(--danger)";
+  if (risk_level === "Elevated") return "var(--warn)";
+  return "var(--ok)";
+}
+
+function _renderBreach(d) {
+  const statusEl = document.getElementById("breach-status");
+
+  if (!d.model_available) {
+    if (statusEl) statusEl.textContent = d.note || "Model not available.";
+    const probEl = document.getElementById("breach-prob");
+    if (probEl) probEl.innerHTML = `<span style="color:var(--muted);font-size:13px">${d.note}</span>`;
+    return;
+  }
+
+  if (statusEl) statusEl.textContent = "";
+
+  const probEl = document.getElementById("breach-prob");
+  const color = _breachColor(d.risk_level);
+  if (probEl) {
+    probEl.innerHTML = `
+      <span style="font-size:42px;font-weight:700;color:${color};font-family:'JetBrains Mono',monospace">
+        ${(d.breach_probability * 100).toFixed(1)}%
+      </span>
+      <span style="color:${color};font-size:13px;margin-left:10px;font-weight:600">${d.risk_level}</span>`;
+  }
+
+  // Feature importance bar chart
+  const chartEl = document.getElementById("breach-chart");
+  if (!chartEl || !d.top_features || !d.top_features.length) return;
+
+  const feats = d.top_features.slice(0, 8);
+  Plotly.newPlot(chartEl, [{
+    type: "bar",
+    orientation: "h",
+    x: feats.map(f => f.importance),
+    y: feats.map(f => f.feature),
+    marker: { color: COLORS.gold },
+    hovertemplate: "%{y}: %{x:.4f}<extra></extra>",
+  }], {
+    ...CL,
+    margin: { t: 10, b: 30, l: 130, r: 20 },
+    xaxis: {
+      ...CL.xaxis,
+      title: { text: "Importance (gain)", font: { size: 10 } },
+    },
+    yaxis: { ...CL.yaxis, autorange: "reversed" },
+    height: 220,
+  }, CONF);
+}
+
+
+// ── IC / Walk-forward (existing) ───────────────────────────────────────────
+
 async function loadIC() {
   document.getElementById("ic-spinner").style.display = "block";
   try {

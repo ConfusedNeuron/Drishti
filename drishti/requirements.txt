@@ -25,3 +25,7 @@ pytest-asyncio==0.23.6
 yfinance==0.2.40
 fredapi==0.5.2
 mcp>=1.27.0
+transformers>=4.40.0
+torch>=2.2.0
+xgboost>=2.0.0
+imbalanced-learn>=0.12.0

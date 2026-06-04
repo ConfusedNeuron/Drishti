@@ -75,7 +75,35 @@
 
 <!-- ── FACTOR RESEARCH ────────────────────────────────────────────────────── -->
 <div id="tab-research" class="tab-panel">
-  <div class="section">
+
+  <!-- Market Sentiment -->
+  <div class="section" id="news-panel">
+    <h2>Market Sentiment (FinBERT — RSS Headlines)</h2>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:10px;font-family:'JetBrains Mono',monospace;letter-spacing:.04em">
+      ET Markets · NSE · Mint · MoneyControl · SEBI — FinBERT (ProsusAI) finance-domain sentiment.
+    </p>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+      <div id="news-badges" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"></div>
+      <button class="btn btn-outline" id="news-refresh-btn" onclick="refreshNews()" style="margin-left:auto">Refresh</button>
+    </div>
+    <p id="news-status" style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-bottom:8px">No cached data. Click Refresh to fetch headlines.</p>
+    <div id="news-list" style="max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:6px"></div>
+  </div>
+
+  <!-- Breach Risk -->
+  <div class="section" id="breach-panel" style="margin-top:16px">
+    <h2>VaR Breach Risk (XGBoost Classifier)</h2>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:10px;font-family:'JetBrains Mono',monospace;letter-spacing:.04em">
+      P(next-day return &lt; −VaR) from trained XGBoost on vol/regime/macro features.
+      Train via: <code style="font-size:11px">PYTHONPATH=. python scripts/train_breach_classifier.py</code>
+    </p>
+    <p id="breach-status" style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-bottom:6px"></p>
+    <div id="breach-prob" style="margin-bottom:12px"></div>
+    <div class="chart-wrap"><div id="breach-chart" style="height:220px"></div></div>
+  </div>
+
+  <!-- IC / Granger -->
+  <div class="section" style="margin-top:16px">
     <h2><span data-tip="ic">Commodity Factor Signals (Time-Series IC + Granger) <i class="tip-icon">ⓘ</i></span></h2>
     <p style="font-size:12px;color:var(--muted);margin-bottom:14px;font-family:'JetBrains Mono',monospace;letter-spacing:.04em">
       IC = rolling Pearson correlation between lagged factor return and sector return.
@@ -85,6 +113,7 @@
     <div id="ic-table"></div>
   </div>
 
+  <!-- Walk-forward -->
   <div class="section" style="margin-top:16px">
     <h2>Walk-Forward OOS Sharpe — Factor × Sector Heatmap</h2>
     <p style="font-size:12px;color:var(--muted);margin-bottom:14px;font-family:'JetBrains Mono',monospace;letter-spacing:.04em">
