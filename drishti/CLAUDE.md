@@ -10,7 +10,8 @@ Drishti is a local-first quant risk research platform for Indian equity portfoli
 
 ## Current status (as of 2026-06-04)
 
-**Session 3 in progress — branch `feature/frontend-data-overhaul`.** Full design spec approved and committed. Now writing the implementation plan. Two major tracks underway: (A) frontend overhaul and (B) data layer.
+**Track A — Frontend overhaul: COMPLETE ✅** Branch `feature/frontend-data-overhaul`.
+Track B (data layer) in progress.
 
 ### Active branch
 `feature/frontend-data-overhaul` — all work for the overhaul goes here. PR to `main` when done.
@@ -19,10 +20,10 @@ Drishti is a local-first quant risk research platform for Indian equity portfoli
 `docs/superpowers/specs/2026-06-03-drishti-frontend-data-overhaul-design.md`
 
 ### Frontend code guide (read before any frontend work — saves token context)
-`docs/frontend/code.md` — **does not exist yet, created in Task A11 of the implementation plan**
+`docs/frontend/code.md` — **exists — read before any frontend work**
 
 ### For all frontend changes
-1. Read `docs/frontend/code.md` first (once it exists)
+1. Read `docs/frontend/code.md` first (now exists — always read before any frontend work)
 2. CSS variables live in `src/dashboard/static/css/theme.css` (once split)
 3. JS functions are split across `src/dashboard/static/js/*.js` (once split)
 4. HTML templates live in `src/dashboard/templates/` (once migrated)
@@ -49,6 +50,8 @@ Drishti is a local-first quant risk research platform for Indian equity portfoli
 - ✅ **Dashboard dark theme redesign** — Playfair Display + DM Sans + JetBrains Mono; deep navy-black bg (#07090E), gold accent (#C9A227); all Plotly charts updated to dark palette
 - ✅ **Multi-theme system** — 6 presets × 8 accent swatches; ⬡ icon button in header opens popover picker; CSS variable injection (zero reload); localStorage persistence
 - ✅ **JS showTab bug fixed** — regime and IC data now load lazily via `_regimeLoaded` / `_icLoaded` flags, not on every tab switch
+- ✅ **Jinja2 template migration** — base.html + index.html + learn.html; CSS/JS split into 16 files; tooltip system; /api/static-data endpoint
+- ✅ **`/learn` knowledge page** — methodology (KaTeX), glossary, broker guides, findings placeholder
 
 ### What's left to build
 | Priority | Item | File | Notes |
