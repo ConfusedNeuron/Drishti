@@ -23,6 +23,38 @@ async function loadDY() {
   }
 }
 
+async function loadRollingSpillover() {
+  const spinner = document.getElementById("rolling-dy-spinner");
+  const chartEl = document.getElementById("rolling-dy-chart");
+  if (!spinner || !chartEl) return;
+  spinner.style.display = "block";
+  try {
+    const r = await fetch(window.API + "/api/research/spillover/rolling");
+    if (!r.ok) { chartEl.textContent = "Rolling spillover unavailable"; return; }
+    const d = await r.json();
+    Plotly.newPlot("rolling-dy-chart", [{
+      type: "scatter",
+      mode: "lines",
+      name: "Total Connectedness",
+      x: d.dates,
+      y: d.values,
+      line: { color: COLORS.gold, width: 1.8 },
+      fill: "tozeroy",
+      fillcolor: "rgba(201,162,39,0.08)",
+      hovertemplate: "%{x}<br>Connectedness: %{y:.1f}%<extra></extra>",
+    }], {
+      ...CL,
+      margin: { t: 10, b: 60, l: 60, r: 16 },
+      yaxis: { ...CL.yaxis, title: { text: "Connectedness (%)", font: { size: 10 } }, rangemode: "tozero" },
+      xaxis: { ...CL.xaxis, type: "date" },
+    }, CONF);
+    document.getElementById("rolling-dy-note").textContent =
+      `${d.note} Window: ${d.window}d, step: ${d.step}d.`;
+  } finally {
+    spinner.style.display = "none";
+  }
+}
+
 async function loadDCC() {
   document.getElementById("dcc-spinner").style.display = "block";
   try {

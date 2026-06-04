@@ -24,3 +24,4 @@ pytest-asyncio==0.23.6
 # pip install --index-url https://blpapi.bloomberg.com/repository/releases/python/simple/ blpapi
 yfinance==0.2.40
 fredapi==0.5.2
+mcp>=1.27.0

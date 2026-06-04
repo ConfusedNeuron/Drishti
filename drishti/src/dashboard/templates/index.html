@@ -84,6 +84,21 @@
     <div class="spinner" id="ic-spinner">Computing IC / Granger</div>
     <div id="ic-table"></div>
   </div>
+
+  <div class="section" style="margin-top:16px">
+    <h2>Walk-Forward OOS Sharpe — Factor × Sector Heatmap</h2>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:14px;font-family:'JetBrains Mono',monospace;letter-spacing:.04em">
+      Rolling 252-day expanding training window, 21-day OOS steps.
+      Long sector when IC estimate &gt; 0, flat otherwise. No transaction costs.
+      OOS Sharpe &gt; 0.5 is considered promising for a prototype.
+    </p>
+    <button class="btn btn-outline" onclick="loadWalkForward()" style="margin-bottom:12px">Run Walk-Forward Backtest</button>
+    <div class="spinner" id="wf-spinner" style="display:none">Running walk-forward backtest…</div>
+    <div id="wf-container" style="display:none">
+      <div class="chart-wrap"><div id="wf-heatmap" style="height:280px"></div></div>
+      <div style="margin-top:14px" id="wf-table"></div>
+    </div>
+  </div>
 </div>
 
 <!-- ── SPILLOVER ──────────────────────────────────────────────────────────── -->
@@ -94,6 +109,18 @@
     <div id="dy-total" style="font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700;color:var(--primary);margin:12px 0"></div>
     <div class="chart-wrap"><div id="dy-chart" style="height:280px"></div></div>
   </div>
+
+  <div class="section" style="margin-top:16px">
+    <h2>Rolling Connectedness — Diebold-Yilmaz (200-day window)</h2>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:14px;font-family:'JetBrains Mono',monospace;letter-spacing:.04em">
+      Total connectedness index over time. Spikes indicate stress or contagion periods.
+      VAR + Pesaran-Shin GFEVD (order-invariant).
+    </p>
+    <div class="spinner" id="rolling-dy-spinner">Computing rolling spillover</div>
+    <div class="chart-wrap"><div id="rolling-dy-chart" style="height:240px"></div></div>
+    <p id="rolling-dy-note" style="font-size:11px;color:var(--muted);margin-top:6px;font-family:'JetBrains Mono',monospace"></p>
+  </div>
+
   <div class="section" style="margin-top:16px">
     <h2><span data-tip="dcc-garch">DCC-GARCH: Time-Varying Correlations <i class="tip-icon">ⓘ</i></span></h2>
     <div class="spinner" id="dcc-spinner">Computing DCC-GARCH</div>
