@@ -12,25 +12,23 @@ Drishti is a local-first quant risk research platform for Indian equity portfoli
 
 **Track A — Frontend overhaul: COMPLETE ✅** Branch `feature/frontend-data-overhaul`.
 **Track B — Data layer: COMPLETE ✅**
+**Track C — Walk-forward + MCP + Rolling DY: COMPLETE ✅** Branch `feature/walkforward-mcp-rolling-spillover`.
 
 ### Active branch
-`feature/frontend-data-overhaul` — all work for the overhaul goes here. PR to `main` when done.
-
-### Design spec (read this before touching anything in this branch)
-`docs/superpowers/specs/2026-06-03-drishti-frontend-data-overhaul-design.md`
+`feature/walkforward-mcp-rolling-spillover` — ready to PR into `main`.
 
 ### Frontend code guide (read before any frontend work — saves token context)
 `docs/frontend/code.md` — **exists — read before any frontend work**
 
 ### For all frontend changes
-1. Read `docs/frontend/code.md` first (now exists — always read before any frontend work)
-2. CSS variables live in `src/dashboard/static/css/theme.css` (once split)
-3. JS functions are split across `src/dashboard/static/js/*.js` (once split)
-4. HTML templates live in `src/dashboard/templates/` (once migrated)
+1. Read `docs/frontend/code.md` first (always read before any frontend work)
+2. CSS variables live in `src/dashboard/static/css/theme.css`
+3. JS functions are split across `src/dashboard/static/js/*.js`
+4. HTML templates live in `src/dashboard/templates/`
 
 ---
 
-**Session 2 complete.** Dashboard frontend fully redesigned and a 6-preset multi-theme system added.
+**Session 3 complete.** Walk-forward OOS Sharpe, Risk MCP server, and rolling Diebold-Yilmaz route all built, reviewed, and bug-fixed.
 
 ### What's working end-to-end
 - ✅ Bloomberg data pipeline (FRTL → parquet cache → dashboard)
@@ -43,7 +41,7 @@ Drishti is a local-first quant risk research platform for Indian equity portfoli
 - ✅ Time-series IC + Granger causality + BH FDR correction
 - ✅ Deterministic risk memo (no LLM required)
 - ✅ FastAPI backend + Plotly.js single-page dashboard (5 tabs)
-- ✅ 14 unit tests passing
+- ✅ 28 unit tests passing
 - ✅ `pull_drishti_data.py` — production Bloomberg pull script (tqdm, resumable, --validate)
 - ✅ 7 BQuant research notebook specs (`notebooks/01-07.md`)
 - ✅ `lessons.md` — all FRTL/methodology/engineering learnings documented
@@ -52,14 +50,14 @@ Drishti is a local-first quant risk research platform for Indian equity portfoli
 - ✅ **JS showTab bug fixed** — regime and IC data now load lazily via `_regimeLoaded` / `_icLoaded` flags, not on every tab switch
 - ✅ **Jinja2 template migration** — base.html + index.html + learn.html; CSS/JS split into 16 files; tooltip system; /api/static-data endpoint
 - ✅ **`/learn` knowledge page** — methodology (KaTeX), glossary, broker guides, findings placeholder
+- ✅ **Walk-forward OOS Sharpe** — `src/research/walk_forward.py`; rolling 252-day train / monthly OOS step; IC-guided pair selection with BH-fallback; Plotly heatmap (factor × sector) in Research tab; 28 tests passing
+- ✅ **Risk MCP server** — `risk_mcp/server.py` + `risk_mcp/tools.py`; 6 tools wrapping existing analytics; word-boundary safety filter blocks investment-advice prompts; boots via `python risk_mcp/server.py`
+- ✅ **Rolling Diebold-Yilmaz** — `/api/research/spillover/rolling` route; wires pre-existing `rolling_spillover()`; filled-area connectedness chart auto-loads in Spillover tab
 
 ### What's left to build
 | Priority | Item | File | Notes |
 |----------|------|------|-------|
-| 🔴 High | **Walk-forward OOS Sharpe** | `src/research/walk_forward.py` + route `/api/research/walkforward` | Spec in `notebooks/05_walk_forward_backtest.md`. Rolling 252-day train, monthly OOS Sharpe per factor-sector pair. |
-| 🔴 High | **Risk MCP server** | `mcp/server.py` + `mcp/tools.py` | All analytics as MCP tools. Tools: `calculate_portfolio_risk`, `get_var_backtest`, `get_current_regime`, `get_factor_signals`, `run_stress_test`, `generate_risk_memo`. |
-| 🟡 Medium | **Rolling Diebold-Yilmaz route** | New route in `src/dashboard/routes/research.py` | `rolling_spillover()` already in `src/research/diebold_yilmaz.py`. Just needs `/api/research/spillover/rolling` endpoint + dashboard chart. |
-| 🟢 Low | **News RSS + FinBERT** | `src/research/news.py` | Cogencis/SEBI RSS + FinBERT sentiment. Lower priority — not needed for core demo. |
+| 🟢 Low | **News RSS + FinBERT** | `src/research/news.py` | Cogencis/SEBI RSS + FinBERT sentiment. Not needed for core demo. |
 | 🟢 Low | **XGBoost VaR breach classifier** | `src/research/breach_classifier.py` | Optional ML stretch goal. 1% tail events → severe class imbalance, needs SMOTE. |
 
 ---
@@ -105,14 +103,17 @@ drishti/
 │   │   ├── hmm.py                 # 2-state Gaussian HMM; walk-forward; canonical labeling
 │   │   ├── ic.py                  # Time-series IC + Granger causality + BH FDR correction
 │   │   ├── dcc_garch.py           # DCC-GARCH dynamic correlations (2-step Engle 2002)
-│   │   └── diebold_yilmaz.py      # Connectedness index (VAR + Pesaran-Shin GFEVD)
+│   │   ├── diebold_yilmaz.py      # Connectedness index (VAR + Pesaran-Shin GFEVD)
+│   │   └── walk_forward.py        # Rolling 252-day OOS Sharpe per (factor × sector) pair
 │   ├── copilot/
 │   │   └── memo.py                # Deterministic risk memo (no LLM required)
 │   └── dashboard/
 │       ├── app.py                 # FastAPI app entry point
 │       ├── routes/                # portfolio / risk / research / copilot routes
 │       └── static/index.html      # Single-page Plotly.js dashboard (5 tabs)
-├── mcp/                           # ← NOT YET BUILT: Risk MCP server goes here
+├── risk_mcp/                      # Risk MCP server (named risk_mcp/ to avoid shadowing the mcp PyPI package)
+│   ├── server.py                  # FastMCP server; boot with: python risk_mcp/server.py
+│   └── tools.py                   # 6 tools wrapping src/risk/ + src/research/; word-boundary safety filter
 ├── notebooks/                     # BQuant research notebook specs (01-07.md)
 ├── scripts/
 │   ├── generate_synthetic_cache.py  # Offline demo: 5yr synthetic correlated prices
@@ -165,6 +166,13 @@ python scripts\pull_drishti_data.py --skip-equities     # fast first pass (~5 mi
 python scripts\pull_drishti_data.py                     # full pull (~60 min)
 ```
 Copy `data\cache\bloomberg\` to Mac at `drishti/data/cache/bloomberg/` after pull.
+
+**Risk MCP server (standalone):**
+```bash
+source .venv/bin/activate
+python risk_mcp/server.py
+```
+Connect any MCP-compatible client (Claude Desktop, etc.) to this server. Six tools available: `calculate_portfolio_risk`, `get_var_backtest`, `get_current_regime`, `get_factor_signals`, `run_stress_test`, `generate_risk_memo`.
 
 **Tests:**
 ```bash
@@ -269,8 +277,18 @@ All theme logic lives entirely inside `src/dashboard/static/index.html` — no s
 - All risk functions return typed dataclasses from `src/models.py`.
 - Routes in `src/dashboard/routes/` are thin: call service functions, return JSON.
 - Bloomberg tickers in full format: `"HDFCB IN Equity"`, `"CO1 Comdty"`, `"NSENRG Index"`.
+- `default_dates()` lives in `src/config.py` — import from there, do not redefine locally.
 - Comments only for non-obvious WHY — never what the code does.
 - No investment advice language anywhere in generated output.
+- MCP safety filter uses word-boundary regex (`\b`), not substring — "shortfall" and "holdings" must not be blocked.
+
+---
+
+## Session history
+
+- **Session 1:** Bloomberg data pipeline, all VaR/ES/backtest/HMM/DCC/DY analytics, deterministic risk memo
+- **Session 2:** Dashboard dark theme redesign, multi-theme system, Jinja2 migration, `/learn` page, Track B data layer (yfinance gap-fill, CI/CD, Render deploy)
+- **Session 3:** Walk-forward OOS Sharpe, Risk MCP server (6 tools), rolling DY chart, 28 tests
 
 ---
 
