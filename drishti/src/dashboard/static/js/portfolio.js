@@ -1,6 +1,8 @@
 let riskData = null;
 let _regimeLoaded = false;
 let _icLoaded = false;
+let _newsLoaded = false;
+let _breachLoaded = false;
 
 function showTab(name, btn) {
   document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
@@ -8,7 +10,11 @@ function showTab(name, btn) {
   document.getElementById("tab-" + name).classList.add("active");
   btn.classList.add("active");
 
-  if (name === "research" && !_icLoaded) loadIC();
+  if (name === "research") {
+    if (!_newsLoaded)   loadNews();
+    if (!_breachLoaded) loadBreach();
+    if (!_icLoaded)     loadIC();
+  }
   if (name === "spillover") { loadDY(); loadDCC(); loadRollingSpillover(); }
   if (name === "risk") {
     if (riskData) renderRiskDetail(riskData);

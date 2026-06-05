@@ -197,3 +197,37 @@ class WalkForwardResult:
     factors: list[str]
     sectors: list[str]
     n_pairs: int
+
+
+# ── News RSS + FinBERT sentiment ───────────────────────────────────────────
+
+@dataclass
+class NewsHeadline:
+    title: str
+    link: str
+    published: str
+    source: str
+    sentiment_label: str    # "positive", "negative", "neutral"
+    sentiment_score: float  # model confidence 0–1
+
+
+@dataclass
+class NewsSentimentResult:
+    headlines: list[NewsHeadline]
+    aggregate: str          # "Bullish", "Neutral", "Bearish"
+    positive_pct: float
+    negative_pct: float
+    neutral_pct: float
+    fetched_at: str         # ISO datetime string
+    n_sources: int
+
+
+# ── XGBoost VaR breach classifier ─────────────────────────────────────────
+
+@dataclass
+class BreachPrediction:
+    breach_probability: float      # P(next-day return < -VaR), 0–1
+    risk_level: str                # "Low" / "Elevated" / "High"
+    top_features: list[dict]       # [{"feature": str, "importance": float}, ...]
+    model_available: bool
+    note: str

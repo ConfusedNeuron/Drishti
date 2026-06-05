@@ -52,6 +52,15 @@ async def memo_endpoint():
     contribs = component_var(w_arr, common, cov, snap.total_value)
     stress = run_all_scenarios(snap)
 
+    # Inject cached news sentiment if available (12-hour freshness)
+    from pathlib import Path
+    from src.config import DATA_DIR
+    from src.research.news import load_cached_sentiment
+    import dataclasses
+    _news_cache = DATA_DIR / "cache" / "news" / "latest.json"
+    _news_result = load_cached_sentiment(_news_cache)
+    news_sentiment_dict = dataclasses.asdict(_news_result) if _news_result is not None else None
+
     memo_md = generate_memo(
         snapshot=snap,
         var_results=var_res,
@@ -59,6 +68,7 @@ async def memo_endpoint():
         backtest=bt,
         contributions=contribs,
         stress_results=stress,
+        news_sentiment=news_sentiment_dict,
     )
 
     return {"memo": memo_md, "missing_symbols": missing}

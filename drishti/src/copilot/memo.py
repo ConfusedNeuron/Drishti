@@ -25,6 +25,7 @@ def generate_memo(
     spillover_total: float | None = None,
     data_source: str = "Bloomberg Terminal, FRTL, IIM Calcutta",
     style: str = "academic",
+    news_sentiment: dict | None = None,   # NewsSentimentResult as dict, injected if available
 ) -> str:
     """Return a Markdown memo string."""
     now = datetime.now().strftime("%Y-%m-%d %H:%M")
@@ -37,6 +38,21 @@ def generate_memo(
         f"> Generated: {now} | Data source: {data_source}",
         f"> **Disclaimer:** For educational risk analytics only. Not investment advice.",
         f"",
+    ]
+
+    # Optional one-liner sentiment summary injected immediately after the data-source note
+    if news_sentiment:
+        agg  = news_sentiment.get("aggregate", "Neutral")
+        pos  = news_sentiment.get("positive_pct", 0)
+        neg  = news_sentiment.get("negative_pct", 0)
+        n_hl = len(news_sentiment.get("headlines", []))
+        lines.append(
+            f"> **Market Sentiment (FinBERT):** {agg} — "
+            f"{pos:.0f}% positive, {neg:.0f}% negative across {n_hl} headlines"
+        )
+        lines.append(f"")
+
+    lines += [
         f"---",
         f"",
         f"## 1. Portfolio Summary",

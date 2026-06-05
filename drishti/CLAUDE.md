@@ -8,14 +8,15 @@ Drishti is a local-first quant risk research platform for Indian equity portfoli
 
 ---
 
-## Current status (as of 2026-06-04)
+## Current status (as of 2026-06-05)
 
 **Track A — Frontend overhaul: COMPLETE ✅** Branch `feature/frontend-data-overhaul`.
 **Track B — Data layer: COMPLETE ✅**
 **Track C — Walk-forward + MCP + Rolling DY: COMPLETE ✅** Branch `feature/walkforward-mcp-rolling-spillover`.
+**Track D — News+FinBERT + XGBoost breach classifier: COMPLETE ✅** Branch `feature/news-finbert-xgboost`.
 
 ### Active branch
-`feature/walkforward-mcp-rolling-spillover` — ready to PR into `main`.
+`feature/news-finbert-xgboost` — ready to PR into `main`.
 
 ### Frontend code guide (read before any frontend work — saves token context)
 `docs/frontend/code.md` — **exists — read before any frontend work**
@@ -28,7 +29,7 @@ Drishti is a local-first quant risk research platform for Indian equity portfoli
 
 ---
 
-**Session 3 complete.** Walk-forward OOS Sharpe, Risk MCP server, and rolling Diebold-Yilmaz route all built, reviewed, and bug-fixed.
+**Session 4 complete.** News RSS + FinBERT sentiment and XGBoost VaR breach classifier built, reviewed, and bug-fixed. All planned features are now shipped.
 
 ### What's working end-to-end
 - ✅ Bloomberg data pipeline (FRTL → parquet cache → dashboard)
@@ -41,7 +42,7 @@ Drishti is a local-first quant risk research platform for Indian equity portfoli
 - ✅ Time-series IC + Granger causality + BH FDR correction
 - ✅ Deterministic risk memo (no LLM required)
 - ✅ FastAPI backend + Plotly.js single-page dashboard (5 tabs)
-- ✅ 28 unit tests passing
+- ✅ 69 unit tests passing
 - ✅ `pull_drishti_data.py` — production Bloomberg pull script (tqdm, resumable, --validate)
 - ✅ 7 BQuant research notebook specs (`notebooks/01-07.md`)
 - ✅ `lessons.md` — all FRTL/methodology/engineering learnings documented
@@ -50,15 +51,16 @@ Drishti is a local-first quant risk research platform for Indian equity portfoli
 - ✅ **JS showTab bug fixed** — regime and IC data now load lazily via `_regimeLoaded` / `_icLoaded` flags, not on every tab switch
 - ✅ **Jinja2 template migration** — base.html + index.html + learn.html; CSS/JS split into 16 files; tooltip system; /api/static-data endpoint
 - ✅ **`/learn` knowledge page** — methodology (KaTeX), glossary, broker guides, findings placeholder
-- ✅ **Walk-forward OOS Sharpe** — `src/research/walk_forward.py`; rolling 252-day train / monthly OOS step; IC-guided pair selection with BH-fallback; Plotly heatmap (factor × sector) in Research tab; 28 tests passing
+- ✅ **Walk-forward OOS Sharpe** — `src/research/walk_forward.py`; rolling 252-day train / monthly OOS step; IC-guided pair selection with BH-fallback; Plotly heatmap (factor × sector) in Research tab
 - ✅ **Risk MCP server** — `risk_mcp/server.py` + `risk_mcp/tools.py`; 6 tools wrapping existing analytics; word-boundary safety filter blocks investment-advice prompts; boots via `python risk_mcp/server.py`
 - ✅ **Rolling Diebold-Yilmaz** — `/api/research/spillover/rolling` route; wires pre-existing `rolling_spillover()`; filled-area connectedness chart auto-loads in Spillover tab
+- ✅ **News RSS + FinBERT** — `src/research/news.py`; 5 Indian finance RSS sources; `ProsusAI/finbert` sentiment scoring; file-cached (`data/cache/news/latest.json`); Refresh button in Research tab; sentiment injected into risk memo; module-level pipeline cache avoids reload cost
+- ✅ **XGBoost VaR breach classifier** — `src/research/breach_classifier.py` + `scripts/train_breach_classifier.py`; next-day breach probability (no look-ahead — target uses `r.shift(-1)`); SMOTE applied after train/test split; commodity lags (`brent_lag1`, `gold_lag1`, `copper_lag1`) + regime + rolling vol features; breach probability gauge + feature importance chart in Research tab
+- ✅ **69 unit tests passing**
 
 ### What's left to build
-| Priority | Item | File | Notes |
-|----------|------|------|-------|
-| 🟢 Low | **News RSS + FinBERT** | `src/research/news.py` | Cogencis/SEBI RSS + FinBERT sentiment. Not needed for core demo. |
-| 🟢 Low | **XGBoost VaR breach classifier** | `src/research/breach_classifier.py` | Optional ML stretch goal. 1% tail events → severe class imbalance, needs SMOTE. |
+
+Nothing — all planned features are shipped. See `design-choices.md` for items marked `REVISIT` that may be revisited before the final demo.
 
 ---
 
@@ -104,7 +106,9 @@ drishti/
 │   │   ├── ic.py                  # Time-series IC + Granger causality + BH FDR correction
 │   │   ├── dcc_garch.py           # DCC-GARCH dynamic correlations (2-step Engle 2002)
 │   │   ├── diebold_yilmaz.py      # Connectedness index (VAR + Pesaran-Shin GFEVD)
-│   │   └── walk_forward.py        # Rolling 252-day OOS Sharpe per (factor × sector) pair
+│   │   ├── walk_forward.py        # Rolling 252-day OOS Sharpe per (factor × sector) pair
+│   │   ├── news.py                # RSS fetch + FinBERT scoring + file cache + sentiment helpers
+│   │   └── breach_classifier.py   # XGBoost breach feature engineering + load/predict
 │   ├── copilot/
 │   │   └── memo.py                # Deterministic risk memo (no LLM required)
 │   └── dashboard/
@@ -117,7 +121,8 @@ drishti/
 ├── notebooks/                     # BQuant research notebook specs (01-07.md)
 ├── scripts/
 │   ├── generate_synthetic_cache.py  # Offline demo: 5yr synthetic correlated prices
-│   └── pull_drishti_data.py         # FRTL Bloomberg pull (50 equities + indices + factors)
+│   ├── pull_drishti_data.py         # FRTL Bloomberg pull (50 equities + indices + factors)
+│   └── train_breach_classifier.py   # One-time XGBoost training: split→SMOTE→fit→saves breach_classifier.pkl
 ├── data/
 │   ├── samples/nifty-demo-2026.json # 12-stock sample portfolio
 │   ├── csv/all nse index.csv        # Bloomberg NSE index ticker reference
@@ -129,8 +134,12 @@ drishti/
 │       │   ├── indices/             # NSENRG, NSEMET, NSEFMCG, NSEIT, NSEBANK, etc.
 │       │   ├── commodities/         # CO1, CL1, GC1, HG1, NG1, S 1, W 1
 │       │   └── macro/               # USDINR, GIND10YR, INVIXN
-│       └── research_artifacts/      # Exported from BQuant (gitignored, not yet populated)
-├── tests/                           # pytest — 14 tests passing
+│       ├── research_artifacts/      # Exported from BQuant (gitignored, not yet populated)
+│       ├── news/
+│       │   └── latest.json          # FinBERT-scored headlines cache (created by POST /api/research/news/refresh)
+│       └── models/
+│           └── breach_classifier.pkl  # Trained XGBoost model (created by scripts/train_breach_classifier.py)
+├── tests/                           # pytest — 69 tests passing
 ├── requirements.txt
 ├── .env.example
 ├── lessons.md                       # FRTL Bloomberg learnings, methodology fixes, engineering patterns
@@ -174,6 +183,22 @@ python risk_mcp/server.py
 ```
 Connect any MCP-compatible client (Claude Desktop, etc.) to this server. Six tools available: `calculate_portfolio_risk`, `get_var_backtest`, `get_current_regime`, `get_factor_signals`, `run_stress_test`, `generate_risk_memo`.
 
+**Train XGBoost breach classifier (one-time, requires Bloomberg cache):**
+```bash
+source .venv/bin/activate
+PYTHONPATH=. python scripts/train_breach_classifier.py
+# → saves data/cache/models/breach_classifier.pkl
+# → prints class distribution, AUC-PR, feature importances
+```
+
+**Refresh news sentiment (on demand, requires internet):**
+```bash
+# Via the dashboard: click "Refresh" in the Market Sentiment panel (Research tab)
+# Or via curl:
+curl -X POST http://localhost:8000/api/research/news/refresh
+# → downloads ProsusAI/finbert (~440 MB on first run), scores headlines, writes data/cache/news/latest.json
+```
+
 **Tests:**
 ```bash
 PYTHONPATH=. pytest tests/ -v
@@ -204,6 +229,13 @@ POWERGRID → PWGR    TATASTEEL → TATA    TITAN      → TTAN
 MARUTI   → MSIL
 ```
 All others match NSE symbol directly (e.g. RELIANCE, TCS, SBIN, ONGC, ITC, LT, NTPC).
+
+---
+
+## Design choices log
+
+All significant architectural and methodology decisions with alternatives and revisit status live in:
+**`design-choices.md`** — read this before making any methodology or architecture call. Update it when a decision changes.
 
 ---
 
@@ -289,6 +321,7 @@ All theme logic lives entirely inside `src/dashboard/static/index.html` — no s
 - **Session 1:** Bloomberg data pipeline, all VaR/ES/backtest/HMM/DCC/DY analytics, deterministic risk memo
 - **Session 2:** Dashboard dark theme redesign, multi-theme system, Jinja2 migration, `/learn` page, Track B data layer (yfinance gap-fill, CI/CD, Render deploy)
 - **Session 3:** Walk-forward OOS Sharpe, Risk MCP server (6 tools), rolling DY chart, 28 tests
+- **Session 4:** News RSS + FinBERT sentiment panel, XGBoost VaR breach classifier (next-day, no look-ahead, SMOTE after split), design-choices.md log, 69 tests
 
 ---
 
@@ -336,7 +369,7 @@ theme.css → layout.css → components.css → tooltip.css
 
 ### JS global scope contracts
 - `window.API = ""` declared in `api.js` — all other files use `window.API`
-- `riskData`, `_regimeLoaded`, `_icLoaded` declared in `portfolio.js` — global state
+- `riskData`, `_regimeLoaded`, `_icLoaded`, `_newsLoaded`, `_breachLoaded` declared in `portfolio.js` — global state; all flags set inside the async success path of their respective load functions (never synchronously)
 - `CL`, `CONF`, `COLORS` declared in `charts.js` — Plotly config shared by all tab files
 - `PRESETS`, `ACCENTS`, `_theme` declared in `theme.js`
 - `initTheme()` called immediately at bottom of `theme.js` — only immediate execution in any JS file
