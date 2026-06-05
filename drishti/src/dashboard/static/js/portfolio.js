@@ -11,9 +11,9 @@ function showTab(name, btn) {
   btn.classList.add("active");
 
   if (name === "research") {
-    if (!_newsLoaded)  { loadNews();  _newsLoaded  = true; }
-    if (!_breachLoaded){ loadBreach(); _breachLoaded = true; }
-    if (!_icLoaded)    loadIC();
+    if (!_newsLoaded)   loadNews();
+    if (!_breachLoaded) loadBreach();
+    if (!_icLoaded)     loadIC();
   }
   if (name === "spillover") { loadDY(); loadDCC(); loadRollingSpillover(); }
   if (name === "risk") {

@@ -28,6 +28,23 @@ log = logging.getLogger(__name__)
 # Twelve-hour cache staleness threshold
 _CACHE_MAX_AGE_HOURS = 12
 
+# Module-level pipeline cache — loaded once, reused across calls (avoids 3–8 s
+# reload penalty on every refresh even after the model is on disk).
+_finbert_pipeline = None
+
+
+def _get_pipeline():
+    global _finbert_pipeline
+    if _finbert_pipeline is None:
+        from transformers import pipeline as hf_pipeline  # lazy import — large dep
+        _finbert_pipeline = hf_pipeline(
+            "sentiment-analysis",
+            model="ProsusAI/finbert",
+            truncation=True,
+            max_length=512,
+        )
+    return _finbert_pipeline
+
 DEFAULT_FEEDS: list[str] = [
     "https://economictimes.indiatimes.com/markets/rss.cms",
     "https://www.nseindia.com/rss/rss.aspx",
@@ -95,15 +112,7 @@ def score_headlines(headlines: list[dict]) -> list[NewsHeadline]:
     Returns NewsHeadline dataclasses with sentiment_label and sentiment_score.
     Heavy: first call downloads ~440 MB model if not cached by HuggingFace.
     """
-    from transformers import pipeline as hf_pipeline  # lazy import — large dep
-
-    # truncation=True: FinBERT is BERT-base (512 tokens); headlines are short
-    classifier = hf_pipeline(
-        "sentiment-analysis",
-        model="ProsusAI/finbert",
-        truncation=True,
-        max_length=512,
-    )
+    classifier = _get_pipeline()
 
     scored: list[NewsHeadline] = []
     for h in headlines:
@@ -129,6 +138,27 @@ def score_headlines(headlines: list[dict]) -> list[NewsHeadline]:
         ))
 
     return scored
+
+
+def compute_sentiment_percentages(headlines: list[NewsHeadline]) -> dict:
+    """
+    Compute positive/negative/neutral breakdown as percentages.
+
+    Returns a dict with keys ``positive_pct``, ``negative_pct``, ``neutral_pct``
+    (each a float rounded to 1 dp, summing to 100).  Keeps this business logic
+    out of the route handler so the route stays thin.
+    """
+    n = len(headlines)
+    if n == 0:
+        return {"positive_pct": 0.0, "negative_pct": 0.0, "neutral_pct": 100.0}
+    pos_pct = sum(1 for h in headlines if h.sentiment_label == "positive") / n * 100
+    neg_pct = sum(1 for h in headlines if h.sentiment_label == "negative") / n * 100
+    neu_pct = 100 - pos_pct - neg_pct
+    return {
+        "positive_pct": round(pos_pct, 1),
+        "negative_pct": round(neg_pct, 1),
+        "neutral_pct":  round(neu_pct, 1),
+    }
 
 
 def aggregate_sentiment(headlines: list[NewsHeadline]) -> str:

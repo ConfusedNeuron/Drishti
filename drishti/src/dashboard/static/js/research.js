@@ -15,6 +15,7 @@ async function loadNews() {
       return;
     }
     _renderNews(d);
+    _newsLoaded = true;
   } catch (e) {
     if (statusEl) statusEl.textContent = "News unavailable.";
   }
@@ -112,6 +113,7 @@ async function loadBreach() {
       return;
     }
     _renderBreach(d);
+    _breachLoaded = true;
   } catch (e) {
     if (statusEl) statusEl.textContent = "Breach endpoint error: " + e;
   }

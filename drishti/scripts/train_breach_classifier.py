@@ -78,37 +78,38 @@ def main() -> None:
     X = feat_df[feature_cols].values
     y = feat_df["breach"].values
 
-    # Class distribution before SMOTE
-    n_breach = int(y.sum())
-    n_ok = len(y) - n_breach
-    print(f"\nClass distribution before SMOTE:")
-    print(f"  Normal (0): {n_ok}  ({n_ok/len(y)*100:.1f}%)")
-    print(f"  Breach (1): {n_breach}  ({n_breach/len(y)*100:.1f}%)")
+    # Split FIRST on time order (80/20) — before SMOTE to prevent synthetic
+    # minority samples leaking across the boundary and inflating test metrics.
+    split = int(len(X) * 0.8)
+    X_train_raw, X_test = X[:split], X[split:]
+    y_train_raw, y_test = y[:split], y[split:]
+
+    # Class distribution before SMOTE (checked on training set only)
+    n_breach = int(y_train_raw.sum())
+    n_ok = len(y_train_raw) - n_breach
+    print(f"\nClass distribution before SMOTE (train set):")
+    print(f"  Normal (0): {n_ok}  ({n_ok/len(y_train_raw)*100:.1f}%)")
+    print(f"  Breach (1): {n_breach}  ({n_breach/len(y_train_raw)*100:.1f}%)")
 
     if n_breach < 5:
-        print("ERROR: Fewer than 5 breach days — cannot train. Check data range or VaR threshold.")
+        print("ERROR: Fewer than 5 breach days in training set — cannot train. Check data range or VaR threshold.")
         sys.exit(1)
 
-    # SMOTE oversampling
+    # SMOTE oversampling applied only to the training set
     try:
         from imblearn.over_sampling import SMOTE
         # k_neighbors must be < n_minority; cap at min(5, n_breach-1)
-        k = min(5, n_breach - 1)
+        k = min(5, int(y_train_raw.sum()) - 1)
         sm = SMOTE(random_state=42, k_neighbors=k)
-        X_res, y_res = sm.fit_resample(X, y)
-        n_breach_res = int(y_res.sum())
-        n_ok_res = len(y_res) - n_breach_res
-        print(f"\nClass distribution after SMOTE:")
-        print(f"  Normal (0): {n_ok_res}  ({n_ok_res/len(y_res)*100:.1f}%)")
-        print(f"  Breach (1): {n_breach_res}  ({n_breach_res/len(y_res)*100:.1f}%)")
+        X_train, y_train = sm.fit_resample(X_train_raw, y_train_raw)
+        n_breach_res = int(y_train.sum())
+        n_ok_res = len(y_train) - n_breach_res
+        print(f"\nClass distribution after SMOTE (train set):")
+        print(f"  Normal (0): {n_ok_res}  ({n_ok_res/len(y_train)*100:.1f}%)")
+        print(f"  Breach (1): {n_breach_res}  ({n_breach_res/len(y_train)*100:.1f}%)")
     except ImportError:
         print("WARNING: imbalanced-learn not installed; skipping SMOTE. pip install imbalanced-learn")
-        X_res, y_res = X, y
-
-    # Train/test split (80/20, time-ordered — no shuffle to avoid lookahead)
-    split = int(len(X_res) * 0.8)
-    X_train, X_test = X_res[:split], X_res[split:]
-    y_train, y_test = y_res[:split], y_res[split:]
+        X_train, y_train = X_train_raw, y_train_raw
 
     print(f"\nTraining XGBoost (n_train={len(X_train)}, n_test={len(X_test)})…")
 

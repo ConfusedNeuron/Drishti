@@ -229,7 +229,7 @@ async def news_refresh_endpoint():
     from datetime import datetime, timezone
     from src.research.news import (
         fetch_headlines, score_headlines, aggregate_sentiment,
-        save_sentiment_cache,
+        compute_sentiment_percentages, save_sentiment_cache,
     )
     from src.models import NewsSentimentResult
 
@@ -242,19 +242,15 @@ async def news_refresh_endpoint():
         raise HTTPException(status_code=503, detail="FinBERT scoring returned no results.")
 
     aggregate = aggregate_sentiment(headlines)
-    n = len(headlines)
-    pos_pct = sum(1 for h in headlines if h.sentiment_label == "positive") / n * 100
-    neg_pct = sum(1 for h in headlines if h.sentiment_label == "negative") / n * 100
-    neu_pct = 100 - pos_pct - neg_pct
-
+    pcts = compute_sentiment_percentages(headlines)
     n_sources = len({h.source for h in headlines})
 
     result = NewsSentimentResult(
         headlines=headlines,
         aggregate=aggregate,
-        positive_pct=round(pos_pct, 1),
-        negative_pct=round(neg_pct, 1),
-        neutral_pct=round(neu_pct, 1),
+        positive_pct=pcts["positive_pct"],
+        negative_pct=pcts["negative_pct"],
+        neutral_pct=pcts["neutral_pct"],
         fetched_at=datetime.now(tz=timezone.utc).isoformat(),
         n_sources=n_sources,
     )

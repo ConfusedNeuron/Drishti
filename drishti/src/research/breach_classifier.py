@@ -80,8 +80,23 @@ def build_breach_features(
         else:
             feats[col] = 0.0
 
-    # Target: 1 if daily return falls below the historical VaR (i.e. a breach)
-    feats["breach"] = (r < var_99).astype(int)
+    # Commodity factor lag features — 1-day lagged returns for Brent, Gold, Copper.
+    # shift(1) avoids look-ahead; these are meaningful predictors for Indian equity
+    # tail risk given commodity-sensitive sectors in NIFTY 200.
+    _COMMODITY_COLS = {"brent": "brent_lag1", "gold": "gold_lag1", "copper": "copper_lag1"}
+    for src_col, feat_col in _COMMODITY_COLS.items():
+        if not factor_returns.empty and src_col in factor_returns.columns:
+            feats[feat_col] = factor_returns[src_col].reindex(r.index).ffill().shift(1)
+        else:
+            feats[feat_col] = 0.0
+
+    # Target: 1 if next-day return falls below the historical VaR threshold.
+    # shift(-1) ensures the model predicts tomorrow's breach from today's features,
+    # avoiding same-day self-reference (look-ahead bias).
+    # NaN comparison (NaN < threshold) evaluates False, so we must propagate NaN
+    # explicitly before astype — the dropna() below then drops the last row.
+    next_ret = r.shift(-1)
+    feats["breach"] = (next_ret < var_99).where(next_ret.notna()).astype("Int8")
 
     return feats.dropna()
 

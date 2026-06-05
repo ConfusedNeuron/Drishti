@@ -81,6 +81,8 @@ def test_feature_columns_present(port_returns, regime_history, factor_returns, m
         "ret_lag1", "ret_lag2", "ret_lag5",
         "regime", "prob_high_vol",
         "usdinr_ret", "indiavix_ret", "gind10yr_ret",
+        # commodity lag features added by Fix 3
+        "brent_lag1", "gold_lag1", "copper_lag1",
         "breach",
     ]
     for col in expected:
@@ -125,6 +127,103 @@ def test_missing_macro_cols_filled_zero(port_returns, regime_history, factor_ret
     for col in ["usdinr_ret", "indiavix_ret", "gind10yr_ret"]:
         assert col in feat.columns
         assert (feat[col] == 0).all()
+
+
+def test_missing_factor_returns_commodity_lags_zero(port_returns, regime_history, macro_returns):
+    """When factor_returns is empty, commodity lag columns must exist and be all zero."""
+    feat = build_breach_features(
+        port_returns,
+        regime_history,
+        pd.DataFrame(),    # no factor data
+        macro_returns,
+    )
+    for col in ["brent_lag1", "gold_lag1", "copper_lag1"]:
+        assert col in feat.columns, f"Missing commodity lag column: {col}"
+        assert (feat[col] == 0).all(), f"{col} should be all-zero when factor_returns is empty"
+
+
+def test_commodity_lags_are_shifted(port_returns, regime_history, macro_returns):
+    """
+    Commodity lag features must be 1-day lagged: feat['brent_lag1'][i] ==
+    factor_returns['brent'][i-1]. Checks the shift(1) is applied correctly.
+    """
+    rng = np.random.default_rng(0)
+    # Use a non-constant series so the shift is detectable
+    factor_returns_local = pd.DataFrame({
+        "brent":  rng.normal(0, 0.015, N),
+        "gold":   rng.normal(0, 0.008, N),
+        "copper": rng.normal(0, 0.012, N),
+    }, index=port_returns.index)
+
+    feat = build_breach_features(port_returns, regime_history, factor_returns_local, macro_returns)
+
+    # First valid row of brent_lag1 should equal brent from the preceding date
+    # feat drops NaNs, so first row has rolling windows filled — find the second
+    # row in the output and verify the lag
+    if len(feat) < 2:
+        pytest.skip("Not enough rows to test lag shift")
+
+    second_date = feat.index[1]
+    second_loc = port_returns.index.get_loc(second_date)
+    prev_date = port_returns.index[second_loc - 1]
+    expected = factor_returns_local.loc[prev_date, "brent"]
+    actual = feat.loc[second_date, "brent_lag1"]
+    assert abs(actual - expected) < 1e-10, (
+        f"brent_lag1 not correctly shifted: got {actual}, expected {expected}"
+    )
+
+
+# ── Look-ahead bias / next-day target property ────────────────────────────
+
+def test_breach_target_is_next_day_return(port_returns, regime_history, factor_returns, macro_returns):
+    """
+    Fix 1 regression guard: breach[i] must reflect whether ret[i+1] < VaR,
+    NOT ret[i]. Concretely, for every row i in the output DataFrame, the breach
+    label must equal (portfolio_returns[i+1] < var_99_threshold).
+
+    The historical VaR threshold is recomputed from the full return series
+    (same as build_breach_features) so we can cross-check exactly.
+    """
+    feat = build_breach_features(port_returns, regime_history, factor_returns, macro_returns)
+
+    # Recompute the same threshold used inside build_breach_features
+    var_99 = float(np.percentile(port_returns, 1))
+
+    r = port_returns.sort_index()
+
+    # For each date in the output (dropna removes last row, so feat.index ⊆ r.index[:-1])
+    for date in feat.index:
+        # Find the next calendar/business date in the return series
+        loc = r.index.get_loc(date)
+        next_loc = loc + 1
+        assert next_loc < len(r), f"No next-day return for row {date}"
+        expected_breach = int(r.iloc[next_loc] < var_99)
+        actual_breach = int(feat.loc[date, "breach"])
+        assert actual_breach == expected_breach, (
+            f"Look-ahead check failed at {date}: "
+            f"breach={actual_breach}, expected (ret[i+1] < {var_99:.6f})={expected_breach} "
+            f"(ret[i]={r.iloc[loc]:.6f}, ret[i+1]={r.iloc[next_loc]:.6f})"
+        )
+
+
+def test_breach_target_not_same_day_return(port_returns, regime_history, factor_returns, macro_returns):
+    """
+    Negative test: breach[i] must NOT equal (ret[i] < var_99) for all rows
+    (that would be the look-ahead-biased same-day target). For a random return
+    series of length 600 there must be at least some rows where ret[i] and
+    ret[i+1] differ in their breach status, so the two labelings cannot be identical.
+    """
+    feat = build_breach_features(port_returns, regime_history, factor_returns, macro_returns)
+    var_99 = float(np.percentile(port_returns, 1))
+    r = port_returns.sort_index()
+
+    # same-day labeling (the OLD wrong code)
+    same_day_breach = (r.reindex(feat.index) < var_99).astype(int)
+
+    # The two series must differ on at least one row
+    assert not feat["breach"].equals(same_day_breach), (
+        "breach target appears identical to same-day labeling — look-ahead bias may be present"
+    )
 
 
 # ── load_classifier ────────────────────────────────────────────────────────
