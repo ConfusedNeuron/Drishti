@@ -51,8 +51,8 @@ MACRO_TICKERS = {
 }
 
 SECTOR_TICKERS = {
-    "energy":   "NSEOILGS Index",
-    "metals":   "NSEMETAL Index",
+    "energy":   "NSENRG Index",
+    "metals":   "NSEMET Index",
     "fmcg":     "NSEFMCG Index",
     "it":       "NSEIT Index",
     "banks":    "NSEBANK Index",
