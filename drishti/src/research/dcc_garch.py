@@ -15,17 +15,17 @@ import pandas as pd
 from scipy.optimize import minimize
 
 
-def _fit_garch11(series: pd.Series) -> tuple[np.ndarray, float]:
+def _fit_garch11(series: pd.Series) -> tuple[pd.Series, float]:
     """
     Fit GARCH(1,1) to a return series.
-    Returns (standardized_residuals, annualized_unconditional_vol).
+    Returns (standardized_residuals as a date-indexed Series, annualized_unconditional_vol).
     """
     from arch import arch_model
 
     r_pct = series.dropna() * 100
     model = arch_model(r_pct, vol="GARCH", p=1, q=1, dist="normal", rescale=False)
     res = model.fit(disp="off", show_warning=False)
-    std_resid = res.std_resid.dropna().values
+    std_resid = res.std_resid.dropna()          # date-indexed Series (was .values)
     uncond_vol = float(np.sqrt(res.params["omega"] /
                                (1 - res.params["alpha[1]"] - res.params["beta[1]"]))) / 100
     return std_resid, uncond_vol
@@ -74,25 +74,22 @@ def fit_dcc_garch(
 
     returns_df: aligned daily returns, columns = asset names
     """
-    # Step 1: Fit GARCH(1,1) per series, collect standardized residuals
+    # Step 1: Fit GARCH(1,1) per series, collect date-indexed standardized residuals
     std_resids = {}
     uncond_vols = {}
-    dates = None
 
     for col in returns_df.columns:
-        series = returns_df[col].dropna()
-        z, uv = _fit_garch11(series)
-        # Align lengths — std_resid may be shorter due to initial GARCH period
+        z, uv = _fit_garch11(returns_df[col])
         std_resids[col] = z
         uncond_vols[col] = uv
 
-    # Trim all to same length (min length)
-    min_len = min(len(v) for v in std_resids.values())
-    Z = np.column_stack([v[-min_len:] for v in std_resids.values()])
-    col_names = list(std_resids.keys())
-
-    # Get corresponding dates
-    common_idx = returns_df.dropna().index[-min_len:]
+    # Align residuals on their COMMON DATES (inner join), not by position — series
+    # can drop different leading/interior samples during GARCH fitting, so positional
+    # trimming would silently pair different calendar dates across assets.
+    Z_df = pd.concat(std_resids, axis=1).dropna()
+    Z = Z_df.values
+    col_names = list(Z_df.columns)
+    common_idx = Z_df.index
 
     # Step 2: Estimate DCC parameters
     result = minimize(
