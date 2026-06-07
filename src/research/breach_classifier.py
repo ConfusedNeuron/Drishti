@@ -15,7 +15,6 @@ import logging
 import pickle
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 
 from src.models import BreachPrediction
@@ -45,8 +44,11 @@ def build_breach_features(
     """
     r = portfolio_returns.copy().sort_index()
 
-    # Historical VaR 99% used to define breach threshold
-    var_99 = float(np.percentile(r, 1))  # negative number
+    # Past-only breach threshold: the 1% (99% VaR) quantile of returns strictly
+    # BEFORE day t. shift(1) excludes the current day; expanding(min_periods=252)
+    # means no label until a year of history exists. A full-sample quantile here
+    # would leak the future return distribution into every label.
+    var_thresh = r.shift(1).expanding(min_periods=252).quantile(0.01)
 
     feats = pd.DataFrame(index=r.index)
 
@@ -96,7 +98,8 @@ def build_breach_features(
     # NaN comparison (NaN < threshold) evaluates False, so we must propagate NaN
     # explicitly before astype — the dropna() below then drops the last row.
     next_ret = r.shift(-1)
-    feats["breach"] = (next_ret < var_99).where(next_ret.notna()).astype("Int8")
+    breach = next_ret < var_thresh
+    feats["breach"] = breach.where(next_ret.notna() & var_thresh.notna()).astype("Int8")
 
     return feats.dropna()
 

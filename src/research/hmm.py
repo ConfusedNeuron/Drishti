@@ -21,6 +21,11 @@ def _canonical_labels(model, states: np.ndarray, vol_feature_idx: int = 0) -> np
     return np.array([remap[int(s)] for s in states])
 
 
+def _high_vol_prob_column(model, vol_feature_idx: int = 0) -> int:
+    """Raw posterior-column index of the HIGH-vol state (largest emission mean)."""
+    return int(np.argmax(model.means_[:, vol_feature_idx]))
+
+
 def build_hmm_features(
     portfolio_returns: pd.Series,
     vix_series: pd.Series | None = None,
@@ -117,11 +122,12 @@ def walk_forward_hmm(
         raw_oos = model.predict(oos_feats.values)
         oos_probs = model.predict_proba(oos_feats.values)
         oos_states = _canonical_labels(model, raw_oos, vol_feature_idx=0)
+        high_raw = _high_vol_prob_column(model)   # raw column of the high-vol state
 
         for i, date in enumerate(oos_feats.index):
             results[date] = {
                 "regime": int(oos_states[i]),
-                "prob_high_vol": float(oos_probs[i, 1] if oos_probs.shape[1] > 1 else oos_probs[i, 0]),
+                "prob_high_vol": float(oos_probs[i, high_raw]),
             }
         t = predict_end
 

@@ -56,8 +56,20 @@ def time_series_ic(
     ic_std = float(ic_series.std())
     n = len(ic_series)
     icir = ic_mean / ic_std if ic_std > 0 else 0.0
-    t_stat = icir * np.sqrt(n)
-    p_value = float(2 * (1 - stats.t.cdf(abs(t_stat), df=n - 1)))
+
+    # Significance via a HAC (Newey-West) t-test on the MEAN of the rolling-IC
+    # series. The IC is a `rolling_window`-day overlapping correlation, so adjacent
+    # values share ~window observations (≈ MA(window-1) dependence); a naive
+    # ICIR*sqrt(n) t-stat treats them as i.i.d. and overstates significance ~sqrt(window).
+    if n > rolling_window + 2 and ic_std > 0:
+        import statsmodels.api as sm
+        ols = sm.OLS(ic_series.values, np.ones(n)).fit(
+            cov_type="HAC", cov_kwds={"maxlags": rolling_window}
+        )
+        t_stat = float(ols.tvalues[0])
+        p_value = float(ols.pvalues[0])
+    else:
+        t_stat, p_value = 0.0, 1.0
 
     return ICResult(
         factor=factor_name,
@@ -68,7 +80,7 @@ def time_series_ic(
         icir=icir,
         t_stat=t_stat,
         p_value=p_value,
-        significant=abs(t_stat) > 1.96,
+        significant=p_value < 0.05,
     )
 
 

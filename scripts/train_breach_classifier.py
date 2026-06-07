@@ -4,7 +4,7 @@ Train XGBoost VaR breach classifier and save to data/cache/models/breach_classif
 Usage:
     PYTHONPATH=. python scripts/train_breach_classifier.py
 
-Requires: xgboost, imbalanced-learn
+Requires: xgboost
 """
 from __future__ import annotations
 
@@ -21,7 +21,7 @@ sys.path.insert(0, str(ROOT))
 from src.config import default_dates, DATA_DIR
 from src.bloomberg.cache import get_prices
 from src.risk.returns import load_factor_series, load_sector_returns, portfolio_returns
-from src.portfolio.importer import load_sample_portfolio
+from src.portfolio.importer import load_sample
 from src.risk.returns import build_return_matrix
 from src.research.breach_classifier import build_breach_features
 from src.research.hmm import walk_forward_hmm
@@ -35,7 +35,7 @@ def main() -> None:
     print("=" * 60)
 
     start, end = default_dates()
-    snap = load_sample_portfolio()
+    snap = load_sample()
     print(f"\nPortfolio: {snap.portfolio_id} ({len(snap.modeled_holdings)} holdings)")
     print(f"Date range: {start} → {end}\n")
 
@@ -78,16 +78,15 @@ def main() -> None:
     X = feat_df[feature_cols].values
     y = feat_df["breach"].values
 
-    # Split FIRST on time order (80/20) — before SMOTE to prevent synthetic
-    # minority samples leaking across the boundary and inflating test metrics.
+    # Split on time order (80/20) — chronological, no shuffling.
     split = int(len(X) * 0.8)
     X_train_raw, X_test = X[:split], X[split:]
     y_train_raw, y_test = y[:split], y[split:]
 
-    # Class distribution before SMOTE (checked on training set only)
+    # Class distribution (training set)
     n_breach = int(y_train_raw.sum())
     n_ok = len(y_train_raw) - n_breach
-    print(f"\nClass distribution before SMOTE (train set):")
+    print(f"\nClass distribution (train set):")
     print(f"  Normal (0): {n_ok}  ({n_ok/len(y_train_raw)*100:.1f}%)")
     print(f"  Breach (1): {n_breach}  ({n_breach/len(y_train_raw)*100:.1f}%)")
 
@@ -95,21 +94,12 @@ def main() -> None:
         print("ERROR: Fewer than 5 breach days in training set — cannot train. Check data range or VaR threshold.")
         sys.exit(1)
 
-    # SMOTE oversampling applied only to the training set
-    try:
-        from imblearn.over_sampling import SMOTE
-        # k_neighbors must be < n_minority; cap at min(5, n_breach-1)
-        k = min(5, int(y_train_raw.sum()) - 1)
-        sm = SMOTE(random_state=42, k_neighbors=k)
-        X_train, y_train = sm.fit_resample(X_train_raw, y_train_raw)
-        n_breach_res = int(y_train.sum())
-        n_ok_res = len(y_train) - n_breach_res
-        print(f"\nClass distribution after SMOTE (train set):")
-        print(f"  Normal (0): {n_ok_res}  ({n_ok_res/len(y_train)*100:.1f}%)")
-        print(f"  Breach (1): {n_breach_res}  ({n_breach_res/len(y_train)*100:.1f}%)")
-    except ImportError:
-        print("WARNING: imbalanced-learn not installed; skipping SMOTE. pip install imbalanced-learn")
-        X_train, y_train = X_train_raw, y_train_raw
+    # Class imbalance handled via XGBoost scale_pos_weight (reweights the gradient
+    # without fabricating synthetic minority samples — SMOTE interpolates between
+    # autocorrelated tail days, distorting the very tail being modeled).
+    X_train, y_train = X_train_raw, y_train_raw
+    scale_pos_weight = n_ok / max(n_breach, 1)
+    print(f"\nscale_pos_weight (n_normal / n_breach): {scale_pos_weight:.2f}")
 
     print(f"\nTraining XGBoost (n_train={len(X_train)}, n_test={len(X_test)})…")
 
@@ -124,15 +114,11 @@ def main() -> None:
         max_depth=4,
         learning_rate=0.05,
         eval_metric="aucpr",
-        use_label_encoder=False,
+        scale_pos_weight=scale_pos_weight,
         random_state=42,
         n_jobs=-1,
     )
-    model.fit(
-        X_train, y_train,
-        eval_set=[(X_test, y_test)],
-        verbose=False,
-    )
+    model.fit(X_train, y_train, verbose=False)
 
     # Evaluation: AUC-PR
     from sklearn.metrics import average_precision_score, roc_auc_score

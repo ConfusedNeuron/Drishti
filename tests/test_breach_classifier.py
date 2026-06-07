@@ -179,17 +179,17 @@ def test_breach_target_is_next_day_return(port_returns, regime_history, factor_r
     """
     Fix 1 regression guard: breach[i] must reflect whether ret[i+1] < VaR,
     NOT ret[i]. Concretely, for every row i in the output DataFrame, the breach
-    label must equal (portfolio_returns[i+1] < var_99_threshold).
+    label must equal (portfolio_returns[i+1] < var_thresh[i]).
 
-    The historical VaR threshold is recomputed from the full return series
-    (same as build_breach_features) so we can cross-check exactly.
+    The threshold is recomputed with the SAME past-only expanding quantile used
+    inside build_breach_features (no full-sample look-ahead) so we can cross-check
+    exactly per row.
     """
     feat = build_breach_features(port_returns, regime_history, factor_returns, macro_returns)
 
-    # Recompute the same threshold used inside build_breach_features
-    var_99 = float(np.percentile(port_returns, 1))
-
+    # Recompute the same past-only threshold used inside build_breach_features
     r = port_returns.sort_index()
+    var_thresh = r.shift(1).expanding(min_periods=252).quantile(0.01)
 
     # For each date in the output (dropna removes last row, so feat.index ⊆ r.index[:-1])
     for date in feat.index:
@@ -197,33 +197,44 @@ def test_breach_target_is_next_day_return(port_returns, regime_history, factor_r
         loc = r.index.get_loc(date)
         next_loc = loc + 1
         assert next_loc < len(r), f"No next-day return for row {date}"
-        expected_breach = int(r.iloc[next_loc] < var_99)
+        thresh = var_thresh.loc[date]
+        expected_breach = int(r.iloc[next_loc] < thresh)
         actual_breach = int(feat.loc[date, "breach"])
         assert actual_breach == expected_breach, (
             f"Look-ahead check failed at {date}: "
-            f"breach={actual_breach}, expected (ret[i+1] < {var_99:.6f})={expected_breach} "
+            f"breach={actual_breach}, expected (ret[i+1] < {thresh:.6f})={expected_breach} "
             f"(ret[i]={r.iloc[loc]:.6f}, ret[i+1]={r.iloc[next_loc]:.6f})"
         )
 
 
 def test_breach_target_not_same_day_return(port_returns, regime_history, factor_returns, macro_returns):
     """
-    Negative test: breach[i] must NOT equal (ret[i] < var_99) for all rows
+    Negative test: breach[i] must NOT equal (ret[i] < var_thresh[i]) for all rows
     (that would be the look-ahead-biased same-day target). For a random return
     series of length 600 there must be at least some rows where ret[i] and
     ret[i+1] differ in their breach status, so the two labelings cannot be identical.
     """
     feat = build_breach_features(port_returns, regime_history, factor_returns, macro_returns)
-    var_99 = float(np.percentile(port_returns, 1))
     r = port_returns.sort_index()
+    var_thresh = r.shift(1).expanding(min_periods=252).quantile(0.01)
 
-    # same-day labeling (the OLD wrong code)
-    same_day_breach = (r.reindex(feat.index) < var_99).astype(int)
+    # same-day labeling (the OLD wrong direction) using the per-row past-only threshold
+    same_day_breach = (r < var_thresh).reindex(feat.index).astype(int)
 
     # The two series must differ on at least one row
     assert not feat["breach"].equals(same_day_breach), (
         "breach target appears identical to same-day labeling — look-ahead bias may be present"
     )
+
+
+def test_breach_threshold_is_past_only(port_returns, regime_history, factor_returns, macro_returns):
+    feat = build_breach_features(port_returns, regime_history, factor_returns, macro_returns)
+    r = port_returns.sort_index()
+    # No labels during the 252-day expanding warm-up
+    assert feat.index.min() >= r.index[252]
+    # Threshold is time-varying (past-only), not a single global number
+    vt = r.shift(1).expanding(min_periods=252).quantile(0.01)
+    assert vt.loc[feat.index].nunique() > 1
 
 
 # ── load_classifier ────────────────────────────────────────────────────────

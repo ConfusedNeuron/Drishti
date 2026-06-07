@@ -83,7 +83,7 @@ Walk-forward IC/Granger              →    served via FastAPI
 ## Directory layout
 
 ```
-drishti/
+<repo root>/            # flattened — formerly the drishti/ subfolder
 ├── src/
 │   ├── config.py                  # Paths, Bloomberg ticker registry, stress scenarios
 │   ├── models.py                  # Dataclasses: Holding, VaRResult, BacktestResult, etc.
@@ -122,7 +122,7 @@ drishti/
 ├── scripts/
 │   ├── generate_synthetic_cache.py  # Offline demo: 5yr synthetic correlated prices
 │   ├── pull_drishti_data.py         # FRTL Bloomberg pull (50 equities + indices + factors)
-│   └── train_breach_classifier.py   # One-time XGBoost training: split→SMOTE→fit→saves breach_classifier.pkl
+│   └── train_breach_classifier.py   # One-time XGBoost training: split→scale_pos_weight→fit→saves breach_classifier.pkl
 ├── data/
 │   ├── samples/nifty-demo-2026.json # 12-stock sample portfolio
 │   ├── csv/all nse index.csv        # Bloomberg NSE index ticker reference
@@ -139,11 +139,13 @@ drishti/
 │       │   └── latest.json          # FinBERT-scored headlines cache (created by POST /api/research/news/refresh)
 │       └── models/
 │           └── breach_classifier.pkl  # Trained XGBoost model (created by scripts/train_breach_classifier.py)
-├── tests/                           # pytest — 69 tests passing
+├── tests/                           # pytest — 79 tests passing
+├── design/                          # PRD, specs, high/low-level design (HTML)
+├── docs/                            # design-choices.md, lessons.md, audit-remediation-plan.md, frontend/code.md
 ├── requirements.txt
 ├── .env.example
-├── lessons.md                       # FRTL Bloomberg learnings, methodology fixes, engineering patterns
-└── README.md
+├── README.md
+└── CLAUDE.md
 ```
 
 ---
@@ -152,7 +154,6 @@ drishti/
 
 **Local / real Bloomberg data (primary):**
 ```bash
-cd drishti
 source .venv/bin/activate
 uvicorn src.dashboard.app:app --reload
 # → http://localhost:8000
@@ -174,7 +175,7 @@ python scripts\pull_drishti_data.py --validate          # test fields first
 python scripts\pull_drishti_data.py --skip-equities     # fast first pass (~5 min)
 python scripts\pull_drishti_data.py                     # full pull (~60 min)
 ```
-Copy `data\cache\bloomberg\` to Mac at `drishti/data/cache/bloomberg/` after pull.
+Copy `data\cache\bloomberg\` to Mac at `data/cache/bloomberg/` after pull.
 
 **Risk MCP server (standalone):**
 ```bash
@@ -235,7 +236,7 @@ All others match NSE symbol directly (e.g. RELIANCE, TCS, SBIN, ONGC, ITC, LT, N
 ## Design choices log
 
 All significant architectural and methodology decisions with alternatives and revisit status live in:
-**`design-choices.md`** — read this before making any methodology or architecture call. Update it when a decision changes.
+**`docs/design-choices.md`** — read this before making any methodology or architecture call. Update it when a decision changes.
 
 ---
 

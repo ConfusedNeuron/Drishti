@@ -47,3 +47,25 @@ def test_bh_correction_controls_fdr():
     # Nulls (large p) should not be discovered
     null_disc = sum(discoveries[i] for i in range(20) if i not in signal_indices)
     assert null_disc == 0, f"Unexpected null discoveries: {null_disc}"
+
+
+def test_ic_significance_uses_hac_not_iid():
+    import numpy as np
+    import pandas as pd
+    from src.research.ic import time_series_ic
+
+    rng = np.random.default_rng(0)
+    idx = pd.date_range("2018-01-01", periods=1200, freq="B")
+    f = pd.Series(rng.standard_normal(1200), index=idx, name="brent")
+    t = (0.25 * f.shift(1) + pd.Series(rng.standard_normal(1200), index=idx)).rename("energy")
+    res = time_series_ic(f, t, lag=1, rolling_window=63)
+
+    # Reconstruct the OLD i.i.d. t-stat = ICIR * sqrt(n_windows)
+    df = pd.concat([f.rename("factor"), t.rename("target")], axis=1).dropna()
+    df["fl"] = df["factor"].shift(1)
+    df = df.dropna()
+    ic = df["fl"].rolling(63).corr(df["target"]).dropna()
+    naive_t = (ic.mean() / ic.std()) * np.sqrt(len(ic))
+
+    assert abs(res.t_stat) < 0.6 * abs(naive_t)   # HAC must deflate the inflated t-stat
+    assert 0.0 <= res.p_value <= 1.0

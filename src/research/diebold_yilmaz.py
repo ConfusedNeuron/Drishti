@@ -107,7 +107,7 @@ def compute_spillover(
     to_spillover  = {names[j]: float(np.sum(theta[:, j]) - theta[j, j]) / k * 100
                      for j in range(k)}
     # "From i" = what fraction of i's forecast error is attributable to others
-    from_spillover = {names[i]: float(np.sum(theta[i, :]) - theta[i, i]) * 100
+    from_spillover = {names[i]: float(np.sum(theta[i, :]) - theta[i, i]) / k * 100
                       for i in range(k)}
     net_spillover  = {names[i]: to_spillover[names[i]] - from_spillover[names[i]]
                       for i in range(k)}
