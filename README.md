@@ -8,7 +8,6 @@ IIM Calcutta PGDBA, Financial Risk Management course project.
 ## Quick Start (Offline / Synthetic Data)
 
 ```bash
-cd drishti
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 
@@ -128,7 +127,7 @@ safety filter blocks investment-advice prompts.
 PYTHONPATH=. pytest tests/ -v
 ```
 
-69 tests covering VaR methods, Kupiec/Christoffersen, IC + BH correction,
+79 tests covering VaR methods, Kupiec/Christoffersen, IC + BH correction,
 walk-forward, cache merge, news sentiment, breach classifier, and static data.
 
 ## Disclaimer

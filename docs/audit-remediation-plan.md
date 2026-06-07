@@ -6,7 +6,7 @@
 
 **Architecture:** Test-first. For every bug, first write a test that encodes the *correct* behavior and watch it fail (several existing tests bake in the bug and must be rewritten), then apply the minimal fix and watch it pass. Group into 3 phases by execution order: data integrity (quick, unblocks real-data validation) → methodology correctness (the core) → safety/serving hardening.
 
-**Tech Stack:** Python, pandas/numpy, statsmodels, scipy, xgboost, FastAPI, pytest. `PYTHONPATH=. pytest` from `drishti/`.
+**Tech Stack:** Python, pandas/numpy, statsmodels, scipy, xgboost, FastAPI, pytest. `PYTHONPATH=. pytest` from the repo root.
 
 **Source of findings:** memory `project_drishti_code_audit.md`. Severity tags: 🔴 critical · 🟠 high · 🟡 medium.
 
