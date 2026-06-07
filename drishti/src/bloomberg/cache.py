@@ -23,21 +23,23 @@ def _safe(ticker: str) -> str:
     return re.sub(r"[^A-Za-z0-9_-]", "_", ticker)
 
 
-def _category(ticker: str) -> str:
+def category(ticker: str) -> str:
+    """Route a Bloomberg ticker to its cache subdirectory."""
     t = ticker.upper()
     if "COMDTY" in t:
         return "commodities"
     if "CURNCY" in t:
         return "macro"
-    if "NSE" in t or "NIFTY" in t or "SENSEX" in t:
-        return "indices"
+    # Macro factors that contain "Index" but are NOT equity indices — check FIRST
     if "GIND" in t or "INVIXN" in t:
         return "macro"
+    if "NSE" in t or "NIFTY" in t or "SENSEX" in t or "INDEX" in t:
+        return "indices"
     return "equities"
 
 
 def cache_path(ticker: str) -> Path:
-    cat = _category(ticker)
+    cat = category(ticker)
     path = CACHE_DIR / cat
     path.mkdir(parents=True, exist_ok=True)
     return path / f"{_safe(ticker)}.parquet"
@@ -56,7 +58,7 @@ def read_cache(ticker: str) -> pd.DataFrame | None:
 def read_merged(ticker: str) -> pd.DataFrame | None:
     """Merge Bloomberg cache with public gap-fill. Bloomberg rows win on overlap."""
     bbg = read_cache(ticker)
-    pub_path = PUBLIC_CACHE_DIR / _category(ticker) / f"{_safe(ticker)}.parquet"
+    pub_path = PUBLIC_CACHE_DIR / category(ticker) / f"{_safe(ticker)}.parquet"
     if not pub_path.exists():
         return bbg
     pub = pd.read_parquet(pub_path)

@@ -64,3 +64,15 @@ def test_read_merged_no_cache_returns_none(tmp_path, monkeypatch):
     monkeypatch.setattr(c, "CACHE_DIR",        tmp_path / "bloomberg")
     monkeypatch.setattr(c, "PUBLIC_CACHE_DIR", tmp_path / "public")
     assert c.read_merged("NONEXISTENT IN Equity") is None
+
+
+def test_category_routing():
+    from src.bloomberg.cache import category
+    assert category("CO1 Comdty") == "commodities"
+    assert category("USDINR Curncy") == "macro"
+    assert category("GIND10YR Index") == "macro"     # macro factor, despite "Index"
+    assert category("INVIXN Index") == "macro"        # macro factor, despite "Index"
+    assert category("NSEBANK Index") == "indices"
+    assert category("NSENRG Index") == "indices"
+    assert category("SOMEX Index") == "indices"       # generic index, NOT equity
+    assert category("HDFCB IN Equity") == "equities"
