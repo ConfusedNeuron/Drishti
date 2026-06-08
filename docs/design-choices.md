@@ -64,6 +64,11 @@ All significant architectural and methodology decisions, with alternatives consi
 **Rationale:** Real Bloomberg data with strict FDR often has zero BH-significant pairs; fallback prevents empty output.
 **Status:** `CONFIRMED`
 
+### Walk-forward OOS trading rule — trade the lagged factor
+**Decision:** OOS position = long when `sign(train IC) · sign(realized factor_{t-lag}) > 0`, flat otherwise (long-only); time-varying within each OOS window.
+**Rationale:** The previous rule applied a single static `sign(train IC)` position to raw sector returns, so `lag` never entered the trade and the backtest collapsed to buy-and-hold the sector. The new rule makes the lead-lag the actual signal being traded.
+**Status:** `CONFIRMED` (2026-06-09)
+
 ### MCP safety filter — word-boundary regex
 **Decision:** `re.search(r'\b' + re.escape(kw) + r'\b', lower)` rather than substring matching.
 **Rationale:** Substring matching blocked "shortfall" (contains "short") and "holdings" (contains "hold") — the most natural risk questions.
@@ -96,15 +101,15 @@ All significant architectural and methodology decisions, with alternatives consi
 **Decision:** NSE announcements, SEBI circulars, Economic Times Markets, Mint Markets, MoneyControl. All have public RSS feeds.
 **Status:** `MAY REVISIT` — if any feeds are paywalled or unreliable at demo time, drop them; ET Markets + NSE are the minimum viable set.
 
-### XGBoost breach classifier — training approach
-**Decision (current):** Pre-train via `scripts/train_breach_classifier.py`, save to `data/cache/models/breach_classifier.pkl`. App loads at startup.
-**Alternatives:** Train on startup (adds 10–30s cold start), train on demand via dashboard button.
-**Status:** `REVISIT` — user confirmed "try option B first, optimize later."
+### XGBoost breach classifier — training approach + VaR confidence
+**Decision:** Pre-train via `scripts/train_breach_classifier.py`, save to `data/cache/models/breach_classifier.pkl`. Training runs BOTH 99% and 95% VaR; `build_breach_features(confidence=…)` parameterizes the past-only threshold as `quantile(1−confidence)`. 99% reports the "too sparse to train" finding (~0.4% breaches on the large-cap sample under the leakage-free threshold); 95% trains and is the served model.
+**Finding:** even at 95% the model is weak — AUC-ROC ≈ 0.57, top features are rolling vols — honest evidence that next-day breach prediction has little signal on this portfolio.
+**Status:** `CONFIRMED` (2026-06-09)
 
 ### XGBoost breach classifier — class imbalance
-**Decision (current):** SMOTE oversampling of breach days before training.
-**Alternatives:** `scale_pos_weight` in XGBoost (simpler, no extra dep), threshold tuning only (poor recall on rare events).
-**Status:** `REVISIT` — revisit after seeing real breach counts on Bloomberg data; may switch to `scale_pos_weight` if SMOTE artifacts are visible.
+**Decision:** `scale_pos_weight = n_normal / n_breach` in XGBoost; SMOTE removed.
+**Rationale:** SMOTE interpolates between autocorrelated tail days, fabricating synthetic "breach" rows that distort the very tail being modeled; `scale_pos_weight` reweights the gradient without inventing data and drops the `imbalanced-learn` dependency.
+**Status:** `CONFIRMED` (2026-06-09)
 
 ### XGBoost breach classifier — output
 **Decision:** Both (a) next-day breach probability (forward-looking) and (b) feature importance breakdown (SHAP values or native XGBoost importances).
@@ -112,4 +117,4 @@ All significant architectural and methodology decisions, with alternatives consi
 
 ---
 
-*Last updated: 2026-06-05*
+*Last updated: 2026-06-09*
