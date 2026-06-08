@@ -237,6 +237,12 @@ def test_breach_threshold_is_past_only(port_returns, regime_history, factor_retu
     assert vt.loc[feat.index].nunique() > 1
 
 
+def test_lower_confidence_yields_more_breaches(port_returns, regime_history, factor_returns, macro_returns):
+    f99 = build_breach_features(port_returns, regime_history, factor_returns, macro_returns, confidence=0.99)
+    f95 = build_breach_features(port_returns, regime_history, factor_returns, macro_returns, confidence=0.95)
+    assert int(f95["breach"].sum()) > int(f99["breach"].sum())
+
+
 # ── load_classifier ────────────────────────────────────────────────────────
 
 def test_load_classifier_missing_returns_none():

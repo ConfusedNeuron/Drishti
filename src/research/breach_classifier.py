@@ -34,21 +34,24 @@ def build_breach_features(
     regime_history: pd.DataFrame,
     factor_returns: pd.DataFrame,
     macro_returns: pd.DataFrame,
+    confidence: float = 0.99,
 ) -> pd.DataFrame:
     """
     Construct the feature matrix for breach classification.
 
     Returns a DataFrame with target column 'breach' (1 if return < −VaR percent).
     VaR percent is estimated from historical quantile of the same return series
-    so the target is self-consistent with the app's historical VaR.
+    so the target is self-consistent with the app's historical VaR. ``confidence``
+    sets the VaR level (0.99 → 99% VaR / 1% tail, 0.95 → 95% VaR / 5% tail).
     """
     r = portfolio_returns.copy().sort_index()
 
-    # Past-only breach threshold: the 1% (99% VaR) quantile of returns strictly
-    # BEFORE day t. shift(1) excludes the current day; expanding(min_periods=252)
-    # means no label until a year of history exists. A full-sample quantile here
-    # would leak the future return distribution into every label.
-    var_thresh = r.shift(1).expanding(min_periods=252).quantile(0.01)
+    # Past-only breach threshold: the (1 - confidence) quantile of returns strictly
+    # BEFORE day t (0.01 at 99% VaR, 0.05 at 95% VaR). shift(1) excludes the current
+    # day; expanding(min_periods=252) means no label until a year of history exists.
+    # A full-sample quantile here would leak the future return distribution into
+    # every label.
+    var_thresh = r.shift(1).expanding(min_periods=252).quantile(1.0 - confidence)
 
     feats = pd.DataFrame(index=r.index)
 
