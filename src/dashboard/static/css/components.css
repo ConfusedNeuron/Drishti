@@ -299,3 +299,20 @@ button.btn{
 }
 .tp-accent-dot:hover{transform:scale(1.15);}
 .tp-accent-dot.active{border-color:var(--ink);box-shadow:0 0 0 2px rgba(255,255,255,0.2);}
+
+/* ── HEADER NAV LINK */
+.header-link{
+  font-family:'JetBrains Mono',monospace;
+  font-size:11px;
+  font-weight:600;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  color:var(--muted);
+  text-decoration:none;
+  padding:7px 12px;
+  border-radius:8px;
+  border:1px solid var(--line-2);
+  transition:.15s;
+  white-space:nowrap;
+}
+.header-link:hover{color:var(--primary);border-color:var(--primary)}
