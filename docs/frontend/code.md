@@ -1,6 +1,6 @@
 # Drishti Frontend Code Guide
 
-Claude reads this file before any frontend work. Updated: 2026-06-04.
+Claude reads this file before any frontend work. Updated: 2026-06-09.
 
 ## Directory Tree (canonical)
 
@@ -8,14 +8,16 @@ Claude reads this file before any frontend work. Updated: 2026-06-04.
 src/dashboard/
 ├── app.py                        ← StaticFiles + Jinja2 + /learn route + static_data router
 ├── templates/
-│   ├── base.html                 ← shared header, CSS/JS links, blocks: nav/content/scripts/extra_head/title
+│   ├── base.html                 ← shared header (Learn link + home logo), CSS/JS links, blocks: nav/content/scripts/extra_head/title
 │   ├── index.html                ← extends base; 5 dashboard tab panels + {% block scripts %}
 │   └── learn.html                ← extends base; 7 static sections with KaTeX
 ├── static/
 │   ├── css/
 │   │   ├── theme.css             ← :root CSS variables ONLY
 │   │   ├── layout.css            ← body, header, nav, grid, .page, @media + learn prose
-│   │   ├── components.css        ← cards, tables, buttons, badges, callouts, memo, spinners, theme picker
+│   │   ├── components.css        ← cards, tables, buttons, badges, callouts, memo, spinners, theme picker,
+│   │   │                            .header-link (Learn pill), .section-sub (panel subtitle), .chart-note (↳ reading note),
+│   │   │                            #theme-btn (labeled "⬡ Theme" flex button)
 │   │   └── tooltip.css           ← .tip-icon, .tip-popover styles
 │   ├── js/
 │   │   ├── theme.js              ← PRESETS, ACCENTS, applyTheme(), initTheme() called at bottom
@@ -26,7 +28,8 @@ src/dashboard/
 │   │   ├── research.js           ← loadIC
 │   │   ├── spillover.js          ← loadDY, loadDCC
 │   │   ├── copilot.js            ← loadMemo, askCopilot
-│   │   └── tooltip.js            ← fetches glossary.json on DOMContentLoaded, attaches [data-tip] hover tips
+│   │   └── tooltip.js            ← interactive hover-bridge tooltip (180ms hideTimer); popover stays open
+│   │                                so "Read more →" link is clickable; fetches glossary.json on DOMContentLoaded
 │   └── data/
 │       └── glossary.json         ← tooltip content keyed by string ID; 12 entries
 └── routes/
@@ -59,6 +62,8 @@ src/dashboard/
 | `loadIC` | research.js | called from portfolio.js:showTab |
 | `loadDY`, `loadDCC` | spillover.js | called from portfolio.js:showTab |
 | `loadRegime` | risk.js | called from portfolio.js:showTab |
+
+**Note:** `tooltip.js` is an IIFE with no globals. It uses a module-scoped `hideTimer` to bridge the cursor gap between trigger and popover — do not add `pointer-events:none` to the `#tip-popover` div.
 
 ## How to Add a New Dashboard Tab
 

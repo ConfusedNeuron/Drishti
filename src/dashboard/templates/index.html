@@ -33,20 +33,26 @@
   <div class="grid-2" style="margin-top:16px">
     <div class="section">
       <h2>VaR Comparison — Three Methods</h2>
+      <p class="section-sub">Three independent estimates of the portfolio's 10-day loss tail at 99% confidence.</p>
       <div class="chart-wrap"><div id="var-chart" style="height:240px"></div></div>
+      <p class="chart-note">How to read: taller bar = larger modelled loss. Historical and GARCH-FHS keep fat tails; the parametric (normal) bar usually sits lower.</p>
       <div class="warn-box" style="margin-top:10px">
         Historical: empirical non-overlapping windows · Parametric: normal assumption · GARCH-FHS: fat-tailed bootstrap
       </div>
     </div>
     <div class="section">
       <h2>Top Risk Contributors</h2>
+      <p class="section-sub">Each holding's share of total portfolio VaR (component VaR).</p>
       <div class="chart-wrap"><div id="contrib-chart" style="height:240px"></div></div>
+      <p class="chart-note">How to read: longer bar = that position drives more of the portfolio's risk — not necessarily its largest weight.</p>
     </div>
   </div>
 
   <div class="section" style="margin-top:16px">
     <h2>Drawdown History</h2>
+    <p class="section-sub">Peak-to-trough decline of the portfolio over time.</p>
     <div class="chart-wrap"><div id="dd-chart" style="height:200px"></div></div>
+    <p class="chart-note">How to read: 0% = at an all-time high; deeper troughs = larger losses from the prior peak.</p>
   </div>
 
   <div class="disclaimer">
@@ -59,17 +65,23 @@
 <div id="tab-risk" class="tab-panel">
   <div class="section">
     <h2><span data-tip="backtest">VaR Backtest — Kupiec &amp; Christoffersen <i class="tip-icon">ⓘ</i></span></h2>
+    <p class="section-sub">Did realised breaches match the VaR model's promise? Coverage + independence tests.</p>
     <div id="backtest-table"></div>
+    <p class="chart-note">How to read: PASS = breach rate and clustering are statistically consistent with the model; FAIL = the model under- or over-states risk.</p>
   </div>
   <div class="section" style="margin-top:16px">
     <h2>Stress Scenarios</h2>
+    <p class="section-sub">Hypothetical portfolio P&amp;L under five historical-style shock scenarios.</p>
     <div id="stress-table"></div>
+    <p class="chart-note">How to read: each row re-prices today's holdings under that shock; more negative = more exposed.</p>
   </div>
   <div class="section" style="margin-top:16px">
     <h2><span data-tip="hmm">Volatility Regime (HMM 2-State) <i class="tip-icon">ⓘ</i></span></h2>
+    <p class="section-sub">A 2-state hidden Markov model labels each day low- or high-volatility.</p>
     <div class="spinner" id="regime-spinner">Loading regime data</div>
     <div id="regime-info"></div>
     <div class="chart-wrap" style="margin-top:12px"><div id="regime-chart" style="height:200px"></div></div>
+    <p class="chart-note">How to read: the high-vol band clusters in stress periods — regimes persist rather than flip day to day.</p>
   </div>
 </div>
 
@@ -79,9 +91,7 @@
   <!-- Market Sentiment -->
   <div class="section" id="news-panel">
     <h2>Market Sentiment (FinBERT — RSS Headlines)</h2>
-    <p style="font-size:12px;color:var(--muted);margin-bottom:10px;font-family:'JetBrains Mono',monospace;letter-spacing:.04em">
-      ET Markets · NSE · Mint · MoneyControl · SEBI — FinBERT (ProsusAI) finance-domain sentiment.
-    </p>
+    <p class="section-sub">ET Markets · NSE · Mint · MoneyControl · SEBI — FinBERT (ProsusAI) finance-domain sentiment.</p>
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
       <div id="news-badges" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"></div>
       <button class="btn btn-outline" id="news-refresh-btn" onclick="refreshNews()" style="margin-left:auto">Refresh</button>
@@ -93,38 +103,36 @@
   <!-- Breach Risk -->
   <div class="section" id="breach-panel" style="margin-top:16px">
     <h2>VaR Breach Risk (XGBoost Classifier)</h2>
-    <p style="font-size:12px;color:var(--muted);margin-bottom:10px;font-family:'JetBrains Mono',monospace;letter-spacing:.04em">
-      P(next-day return &lt; −VaR) from trained XGBoost on vol/regime/macro features.
-      Train via: <code style="font-size:11px">PYTHONPATH=. python scripts/train_breach_classifier.py</code>
-    </p>
+    <p class="section-sub">P(next-day return &lt; −VaR) from trained XGBoost on vol/regime/macro features.
+      Train via: <code style="font-size:11px">PYTHONPATH=. python scripts/train_breach_classifier.py</code></p>
     <p id="breach-status" style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-bottom:6px"></p>
     <div id="breach-prob" style="margin-bottom:12px"></div>
+    <p class="chart-note">How to read: higher probability = the model sees next-day breach conditions building (volatility, regime, commodity lags).</p>
     <div class="chart-wrap"><div id="breach-chart" style="height:220px"></div></div>
+    <p class="chart-note">How to read: longer bar = that feature contributes more to the breach prediction.</p>
   </div>
 
   <!-- IC / Granger -->
   <div class="section" style="margin-top:16px">
     <h2><span data-tip="ic">Commodity Factor Signals (Time-Series IC + Granger) <i class="tip-icon">ⓘ</i></span></h2>
-    <p style="font-size:12px;color:var(--muted);margin-bottom:14px;font-family:'JetBrains Mono',monospace;letter-spacing:.04em">
-      IC = rolling Pearson correlation between lagged factor return and sector return.
-      BH = significant after <span data-tip="bh-fdr">Benjamini-Hochberg FDR correction <i class="tip-icon">ⓘ</i></span> (α=0.05).
-    </p>
+    <p class="section-sub">IC = rolling Pearson correlation between lagged factor return and sector return.
+      BH = significant after <span data-tip="bh-fdr">Benjamini-Hochberg FDR correction <i class="tip-icon">ⓘ</i></span> (α=0.05).</p>
     <div class="spinner" id="ic-spinner">Computing IC / Granger</div>
     <div id="ic-table"></div>
+    <p class="chart-note">How to read: positive IC = the lagged commodity move tends to precede same-direction sector returns; trust it only when the BH-significant flag is set.</p>
   </div>
 
   <!-- Walk-forward -->
   <div class="section" style="margin-top:16px">
     <h2>Walk-Forward OOS Sharpe — Factor × Sector Heatmap</h2>
-    <p style="font-size:12px;color:var(--muted);margin-bottom:14px;font-family:'JetBrains Mono',monospace;letter-spacing:.04em">
-      Rolling 252-day expanding training window, 21-day OOS steps.
+    <p class="section-sub">Rolling 252-day expanding training window, 21-day OOS steps.
       Long sector when IC estimate &gt; 0, flat otherwise. No transaction costs.
-      OOS Sharpe &gt; 0.5 is considered promising for a prototype.
-    </p>
+      OOS Sharpe &gt; 0.5 is considered promising for a prototype.</p>
     <button class="btn btn-outline" onclick="loadWalkForward()" style="margin-bottom:12px">Run Walk-Forward Backtest</button>
     <div class="spinner" id="wf-spinner" style="display:none">Running walk-forward backtest…</div>
     <div id="wf-container" style="display:none">
       <div class="chart-wrap"><div id="wf-heatmap" style="height:280px"></div></div>
+      <p class="chart-note">How to read: greener cell = stronger out-of-sample Sharpe for that factor→sector pair; near-zero/red = no edge.</p>
       <div style="margin-top:14px" id="wf-table"></div>
     </div>
   </div>
@@ -134,26 +142,29 @@
 <div id="tab-spillover" class="tab-panel">
   <div class="section">
     <h2><span data-tip="diebold-yilmaz">Diebold-Yilmaz Connectedness Index <i class="tip-icon">ⓘ</i></span></h2>
+    <p class="section-sub">How much of each market's forecast-error variance comes from shocks to other markets.</p>
     <div class="spinner" id="dy-spinner">Computing spillover</div>
     <div id="dy-total" style="font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700;color:var(--primary);margin:12px 0"></div>
     <div class="chart-wrap"><div id="dy-chart" style="height:280px"></div></div>
+    <p class="chart-note">How to read: gold bar = shock this market sends to others; teal = shock it absorbs. Net transmitters have gold > teal.</p>
   </div>
 
   <div class="section" style="margin-top:16px">
     <h2>Rolling Connectedness — Diebold-Yilmaz (200-day window)</h2>
-    <p style="font-size:12px;color:var(--muted);margin-bottom:14px;font-family:'JetBrains Mono',monospace;letter-spacing:.04em">
-      Total connectedness index over time. Spikes indicate stress or contagion periods.
-      VAR + Pesaran-Shin GFEVD (order-invariant).
-    </p>
+    <p class="section-sub">Total connectedness index over time. Spikes indicate stress or contagion periods.
+      VAR + Pesaran-Shin GFEVD (order-invariant).</p>
     <div class="spinner" id="rolling-dy-spinner">Computing rolling spillover</div>
     <div class="chart-wrap"><div id="rolling-dy-chart" style="height:240px"></div></div>
+    <p class="chart-note">How to read: rising line = markets moving more in lockstep (stress/contagion); falling = more idiosyncratic.</p>
     <p id="rolling-dy-note" style="font-size:11px;color:var(--muted);margin-top:6px;font-family:'JetBrains Mono',monospace"></p>
   </div>
 
   <div class="section" style="margin-top:16px">
     <h2><span data-tip="dcc-garch">DCC-GARCH: Time-Varying Correlations <i class="tip-icon">ⓘ</i></span></h2>
+    <p class="section-sub">Pairwise correlations that move through time, from a 2-step DCC-GARCH model.</p>
     <div class="spinner" id="dcc-spinner">Computing DCC-GARCH</div>
     <div class="chart-wrap"><div id="dcc-chart" style="height:300px"></div></div>
+    <p class="chart-note">How to read: lines climbing toward 1 = pairs diversify less when it matters; dips = more diversification.</p>
   </div>
 </div>
 
@@ -161,14 +172,13 @@
 <div id="tab-copilot" class="tab-panel">
   <div class="section">
     <h2>Risk Memo (Deterministic)</h2>
+    <p class="section-sub">A plain-language summary of the portfolio's risk metrics — generated from the numbers, no LLM.</p>
     <button class="btn btn-primary" onclick="loadMemo()">Generate Memo</button>
     <div style="margin-top:14px" id="memo-output">Click Generate Memo after loading a portfolio.</div>
   </div>
   <div class="section" style="margin-top:16px">
     <h2>Ask the Copilot</h2>
-    <p style="font-size:12px;color:var(--muted);margin-bottom:12px;font-family:'JetBrains Mono',monospace;letter-spacing:.04em">
-      Copilot answers using only structured risk outputs — will not give investment advice.
-    </p>
+    <p class="section-sub">Copilot answers using only structured risk outputs — will not give investment advice.</p>
     <div class="chat-box">
       <input id="q-input" type="text" placeholder="e.g. What is my biggest risk? Is the VaR model reliable?">
       <button class="btn btn-primary" onclick="askCopilot()">Ask</button>
