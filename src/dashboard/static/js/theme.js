@@ -60,7 +60,12 @@ function rethemeCharts() {
 function toggleThemePicker(e) {
   e.stopPropagation();
   const pop = document.getElementById('theme-popover');
-  pop.style.display = pop.style.display === 'none' ? 'block' : 'none';
+  if (pop.style.display === 'none') {
+    renderThemePicker();
+    pop.style.display = 'block';
+  } else {
+    pop.style.display = 'none';
+  }
 }
 
 function renderThemePicker() {
