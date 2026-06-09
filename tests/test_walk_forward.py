@@ -128,3 +128,23 @@ def test_select_pairs_fallback_no_bh_significant(factor_returns, sector_returns)
     # run_walk_forward must complete without error
     result = run_walk_forward(factor_returns, sector_returns, ic_results=ic_results)
     assert isinstance(result, WalkForwardResult)
+
+
+def test_oos_position_trades_the_lagged_factor():
+    import numpy as np
+    import pandas as pd
+    from src.research.walk_forward import _walk_forward_single
+
+    rng = np.random.default_rng(0)
+    n = 600
+    idx = pd.date_range("2020-01-01", periods=n, freq="B")
+    factor = pd.Series(rng.standard_normal(n) * 0.01, index=idx, name="brent")
+    # target today == factor yesterday: a clean lag-1 lead-lag the strategy can time
+    target = factor.shift(1).fillna(0.0).rename("energy")
+
+    res = _walk_forward_single(factor, target, lag=1, min_train_days=252, refit_freq=21)
+    assert res is not None
+    # New behaviour times the lagged factor -> captures the up-days -> clearly positive
+    # OOS Sharpe. The old static-position rule was long-always on a ~zero-mean target
+    # and scored ~0, so this assertion fails on the pre-fix code.
+    assert res.oos_sharpe > 0.5

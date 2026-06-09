@@ -8,7 +8,8 @@ as fallback):
   - Rolling 252-day EXPANDING training window.
   - Step forward 21 trading days (one month) at a time.
   - At the end of each training window, estimate IC direction on the training data.
-  - OOS trading rule: long sector if IC estimate > 0, flat otherwise (no shorting).
+  - OOS trading rule: long when sign(train IC) × sign(lagged factor) > 0, flat
+    otherwise (long-only); the lag enters the OOS position.
   - Accumulate OOS P&L; report Sharpe, max-drawdown, win-rate, cumulative return.
 
 Returns a WalkForwardResult dataclass (defined in src/models.py) containing:
@@ -60,7 +61,8 @@ def _walk_forward_single(
 
     Expanding training window: all data up to t used to estimate IC direction.
     OOS window: next refit_freq trading days.
-    Position: 1 (long) if IC > 0, 0 (flat) otherwise.  No shorting.
+    Position: long when sign(train IC) × sign(lagged factor) > 0, flat otherwise
+    (long-only); the lag enters the OOS position.
     """
     factor_name = factor_series.name or "factor"
     target_name = target_series.name or "target"
@@ -69,6 +71,7 @@ def _walk_forward_single(
         factor_series.rename("factor"),
         target_series.rename("target"),
     ], axis=1).dropna()
+    df["f_lag"] = df["factor"].shift(lag)   # realized lagged factor for OOS positioning
 
     n = len(df)
     # Need enough data for at least 3 OOS periods
@@ -86,7 +89,12 @@ def _walk_forward_single(
         oos_end = min(t + refit_freq, n)
         oos_slice = df.iloc[t:oos_end]
 
-        position = 1.0 if ic_est > 0 else 0.0
+        # Trade the lead-lag: long the sector when sign(trained IC) * sign(the realized
+        # lagged factor) > 0, flat otherwise (long-only). The position now varies within
+        # the OOS window and is driven by factor_{t-lag}, so `lag` genuinely enters the
+        # out-of-sample P&L (previously it did not — the rule was long-always).
+        signal = np.sign(ic_est) * np.sign(oos_slice["f_lag"].values)
+        position = (signal > 0).astype(float)
         oos_returns.extend((oos_slice["target"].values * position).tolist())
         oos_dates.extend(list(oos_slice.index))
 
