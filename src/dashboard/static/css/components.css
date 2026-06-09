@@ -231,14 +231,18 @@ button.btn{
 
 /* ── THEME PICKER */
 #theme-btn{
-  width:32px;height:32px;
+  height:32px;
+  padding:0 12px;
   border-radius:8px;
   background:var(--primary-dim);
   border:1px solid var(--line-2);
   color:var(--primary);
-  font-size:15px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:11px;
+  font-weight:600;
+  letter-spacing:.05em;
   cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
+  display:inline-flex;align-items:center;gap:6px;
   transition:.15s;
   flex-shrink:0;
 }
