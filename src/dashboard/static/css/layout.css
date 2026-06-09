@@ -31,13 +31,13 @@ header::after{
   position:absolute;
   top:0;left:0;right:0;
   height:2px;
-  background:linear-gradient(90deg,var(--primary) 0%,rgba(201,162,39,0.3) 55%,var(--accent) 100%);
+  background:linear-gradient(90deg,var(--primary) 0%,var(--primary-dim) 55%,var(--accent) 100%);
 }
 header h1{
   font-family:'Playfair Display',serif;
   font-size:28px;
   font-weight:700;
-  color:#F5EDD8;
+  color:var(--ink);
   letter-spacing:-0.01em;
 }
 header p{
@@ -50,7 +50,7 @@ header p{
 }
 
 nav{
-  background:rgba(12,17,24,0.97);
+  background:var(--surface);
   border-bottom:1px solid var(--line);
   padding:0 24px;
   display:flex;
