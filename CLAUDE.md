@@ -8,15 +8,16 @@ Drishti is a local-first quant risk research platform for Indian equity portfoli
 
 ---
 
-## Current status (as of 2026-06-05)
+## Current status (as of 2026-06-11)
 
-**Track A — Frontend overhaul: COMPLETE ✅** Branch `feature/frontend-data-overhaul`.
+**Track A — Frontend overhaul: COMPLETE ✅**
 **Track B — Data layer: COMPLETE ✅**
-**Track C — Walk-forward + MCP + Rolling DY: COMPLETE ✅** Branch `feature/walkforward-mcp-rolling-spillover`.
-**Track D — News+FinBERT + XGBoost breach classifier: COMPLETE ✅** Branch `feature/news-finbert-xgboost`.
+**Track C — Walk-forward + MCP + Rolling DY: COMPLETE ✅**
+**Track D — News+FinBERT + XGBoost breach classifier: COMPLETE ✅**
+**Track E — Frontend UX fixes: COMPLETE ✅**
 
 ### Active branch
-`feature/news-finbert-xgboost` — ready to PR into `main`.
+`main` — all branches merged and deleted. Repo is clean.
 
 ### Frontend code guide (read before any frontend work — saves token context)
 `docs/frontend/code.md` — **exists — read before any frontend work**
@@ -29,7 +30,7 @@ Drishti is a local-first quant risk research platform for Indian equity portfoli
 
 ---
 
-**Session 4 complete.** News RSS + FinBERT sentiment and XGBoost VaR breach classifier built, reviewed, and bug-fixed. All planned features are now shipped.
+**Session 5 complete.** Frontend UX fixes: tooltip hover-bridge, theme picker (overflow:hidden bug + render-on-open), `/learn` page linked from header, section subtitles + chart reading notes across all tabs, hardcoded colors replaced with CSS variables.
 
 ### What's working end-to-end
 - ✅ Bloomberg data pipeline (FRTL → parquet cache → dashboard)
@@ -42,25 +43,27 @@ Drishti is a local-first quant risk research platform for Indian equity portfoli
 - ✅ Time-series IC + Granger causality + BH FDR correction
 - ✅ Deterministic risk memo (no LLM required)
 - ✅ FastAPI backend + Plotly.js single-page dashboard (5 tabs)
-- ✅ 69 unit tests passing
+- ✅ 81 unit tests passing
 - ✅ `pull_drishti_data.py` — production Bloomberg pull script (tqdm, resumable, --validate)
 - ✅ 7 BQuant research notebook specs (`notebooks/01-07.md`)
 - ✅ `lessons.md` — all FRTL/methodology/engineering learnings documented
 - ✅ **Dashboard dark theme redesign** — Playfair Display + DM Sans + JetBrains Mono; deep navy-black bg (#07090E), gold accent (#C9A227); all Plotly charts updated to dark palette
-- ✅ **Multi-theme system** — 6 presets × 8 accent swatches; ⬡ icon button in header opens popover picker; CSS variable injection (zero reload); localStorage persistence
+- ✅ **Multi-theme system** — 6 presets × 8 accent swatches; "⬡ Theme" labeled button in header opens popover picker; CSS variable injection (zero reload); localStorage persistence
+- ✅ **Theme picker fixed** — `overflow:hidden` on header was clipping the popover; `renderThemePicker()` now called on open not just at page load; all hardcoded colors (`header h1`, `nav` background, gradient mid-stop) replaced with CSS variables
 - ✅ **JS showTab bug fixed** — regime and IC data now load lazily via `_regimeLoaded` / `_icLoaded` flags, not on every tab switch
 - ✅ **Jinja2 template migration** — base.html + index.html + learn.html; CSS/JS split into 16 files; tooltip system; /api/static-data endpoint
-- ✅ **`/learn` knowledge page** — methodology (KaTeX), glossary, broker guides, findings placeholder
+- ✅ **`/learn` knowledge page** — methodology (KaTeX), glossary, broker guides, findings placeholder; linked from shared header "Learn" pill; "Drishti" logo links home
+- ✅ **Tooltip "Read more" fixed** — removed `pointer-events:none`; 180ms hover-bridge so cursor can reach the link without the popover closing
+- ✅ **Panel explainers** — `.section-sub` subtitle + `.chart-note` "↳ How to read" note on every section and chart across all 5 tabs
 - ✅ **Walk-forward OOS Sharpe** — `src/research/walk_forward.py`; rolling 252-day train / monthly OOS step; IC-guided pair selection with BH-fallback; Plotly heatmap (factor × sector) in Research tab
 - ✅ **Risk MCP server** — `risk_mcp/server.py` + `risk_mcp/tools.py`; 6 tools wrapping existing analytics; word-boundary safety filter blocks investment-advice prompts; boots via `python risk_mcp/server.py`
 - ✅ **Rolling Diebold-Yilmaz** — `/api/research/spillover/rolling` route; wires pre-existing `rolling_spillover()`; filled-area connectedness chart auto-loads in Spillover tab
 - ✅ **News RSS + FinBERT** — `src/research/news.py`; 5 Indian finance RSS sources; `ProsusAI/finbert` sentiment scoring; file-cached (`data/cache/news/latest.json`); Refresh button in Research tab; sentiment injected into risk memo; module-level pipeline cache avoids reload cost
 - ✅ **XGBoost VaR breach classifier** — `src/research/breach_classifier.py` + `scripts/train_breach_classifier.py`; next-day breach probability (no look-ahead — target uses `r.shift(-1)`); SMOTE applied after train/test split; commodity lags (`brent_lag1`, `gold_lag1`, `copper_lag1`) + regime + rolling vol features; breach probability gauge + feature importance chart in Research tab
-- ✅ **69 unit tests passing**
 
 ### What's left to build
 
-Nothing — all planned features are shipped. See `design-choices.md` for items marked `REVISIT` that may be revisited before the final demo.
+Nothing — all planned features are shipped. Three optional `REVISIT` items in `docs/design-choices.md` (FinBERT download speed, news refresh latency, RSS reliability) — only relevant if the demo machine is slow.
 
 ---
 
@@ -264,9 +267,9 @@ LLM receives only the structured risk memo — never raw holdings or prices. buy
 
 ---
 
-## Dashboard theme system (added 2026-06-03)
+## Dashboard theme system (added 2026-06-03, fixed 2026-06-11)
 
-All theme logic lives entirely inside `src/dashboard/static/index.html` — no separate files.
+Theme logic is split across `theme.js`, `components.css`, and `layout.css`.
 
 ### Presets (6)
 | ID | Name | Background | Default accent |
@@ -282,6 +285,11 @@ All theme logic lives entirely inside `src/dashboard/static/index.html` — no s
 `gold` (#C9A227) · `ocean` (#3891F0) · `emerald` (#34C76C) · `crimson` (#DC4040) · `violet` (#8B5CF6) · `teal` (#2EC4B6) · `amber` (#F59E0B) · `rose` (#EC4899)
 
 `light-ivory` uses darkened accent variants (`ivoryHex`) for contrast on the warm-white background.
+
+### Known bugs fixed (do not reintroduce)
+- **Do NOT add `overflow:hidden` to `header` in `layout.css`** — it clips the absolutely-positioned `#theme-popover` (only the first section label was visible). The decorative pseudo-elements use `inset:0` and don't need clipping.
+- **Do NOT add `pointer-events:none` to `#tip-popover`** in `tooltip.js` — it makes the "Read more →" link unclickable.
+- **Do NOT use hardcoded colours in `layout.css`** for `header h1`, `nav` background, or gradients — use CSS variables so all 6 themes work correctly.
 
 ### How it works
 - `applyTheme(presetId, accentId)` injects CSS variables onto `:root` via `style.setProperty()` — zero page reload.
@@ -323,6 +331,7 @@ All theme logic lives entirely inside `src/dashboard/static/index.html` — no s
 - **Session 2:** Dashboard dark theme redesign, multi-theme system, Jinja2 migration, `/learn` page, Track B data layer (yfinance gap-fill, CI/CD, Render deploy)
 - **Session 3:** Walk-forward OOS Sharpe, Risk MCP server (6 tools), rolling DY chart, 28 tests
 - **Session 4:** News RSS + FinBERT sentiment panel, XGBoost VaR breach classifier (next-day, no look-ahead, SMOTE after split), design-choices.md log, 69 tests
+- **Session 5:** Frontend UX fixes — tooltip hover-bridge, theme picker (`overflow:hidden` + render-on-open + hardcoded colour bugs), `/learn` header link, section subtitles + chart reading notes, 81 tests
 
 ---
 
