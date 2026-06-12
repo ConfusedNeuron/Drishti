@@ -97,16 +97,12 @@ async def ask_endpoint(req: AskRequest):
         }
 
     # Refuse investment advice
-    advice_keywords = ["buy", "sell", "hold", "invest", "rebalance", "allocate", "recommend"]
-    if any(kw in req.question.lower() for kw in advice_keywords):
+    from src.copilot.safety import is_advice_request, REFUSAL
+    if is_advice_request(req.question):
         return {
-            "answer": (
-                "I'm a risk analytics tool and cannot provide investment advice. "
-                "I can explain your VaR, backtest results, regime status, or factor signals. "
-                "What risk metric would you like to understand?"
-            ),
+            "answer": REFUSAL,
             "advice_refused": True,
-            "source": "policy",
+            "source": "safety_filter",
         }
 
     # Build prompt from structured memo (not raw holdings)
