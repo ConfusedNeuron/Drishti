@@ -1,11 +1,13 @@
 """Research routes — DCC-GARCH, Diebold-Yilmaz, HMM regime, IC/Granger, news sentiment, breach classifier."""
 from __future__ import annotations
+import asyncio
 import dataclasses
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
 
 from src.config import default_dates as _default_dates, DATA_DIR
+from src.dashboard.json_safe import clean_json
 from src.dashboard.routes.portfolio import get_snapshot
 from src.risk.returns import (
     build_return_matrix, portfolio_returns,
@@ -34,7 +36,7 @@ async def regime_endpoint():
 
     from src.research.hmm import build_hmm_features, walk_forward_hmm, regime_conditioned_var
     try:
-        regime_hist = walk_forward_hmm(port_ret, vix_series)
+        regime_hist = await asyncio.to_thread(walk_forward_hmm, port_ret, vix_series)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"HMM fitting failed: {e}")
 
@@ -46,7 +48,7 @@ async def regime_endpoint():
         "regime": regime_hist["regime"].tolist(),
         "prob_high_vol": regime_hist["prob_high_vol"].tolist(),
     }
-    return rcv
+    return clean_json(rcv)
 
 
 @router.get("/ic")
@@ -65,14 +67,14 @@ async def ic_endpoint(lags: str = "1,2,3,5,10"):
 
     from src.research.ic import run_full_ic_study
     lag_list = [int(x) for x in lags.split(",")]
-    result = run_full_ic_study(factors, sectors, lags=lag_list)
+    result = await asyncio.to_thread(run_full_ic_study, factors, sectors, lags=lag_list)
 
-    return {
+    return clean_json({
         "ic_results": [dataclasses.asdict(r) for r in result["ic_results"]],
         "granger_results": [dataclasses.asdict(r) for r in result["granger_results"]],
         "n_tests": result["n_tests"],
         "note": "IC is time-series rolling correlation (lag factor vs. target). BH FDR correction applied.",
-    }
+    })
 
 
 @router.get("/spillover")
@@ -93,7 +95,7 @@ async def spillover_endpoint(fevd_horizon: int = 10):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Spillover computation failed: {e}")
 
-    return {
+    return clean_json({
         "total_connectedness": tbl.total_spillover,
         "to_spillover": tbl.to_spillover,
         "from_spillover": tbl.from_spillover,
@@ -101,7 +103,7 @@ async def spillover_endpoint(fevd_horizon: int = 10):
         "pairwise": tbl.pairwise.to_dict(),
         "var_lag": tbl.var_lag,
         "fevd_horizon": tbl.fevd_horizon,
-    }
+    })
 
 
 @router.get("/walkforward")
@@ -237,7 +239,8 @@ async def news_refresh_endpoint():
     if not raw:
         raise HTTPException(status_code=503, detail="All RSS feeds failed — no headlines fetched.")
 
-    headlines = score_headlines(raw)
+    # FinBERT scoring is CPU-heavy (transformer inference); offload to thread
+    headlines = await asyncio.to_thread(score_headlines, raw)
     if not headlines:
         raise HTTPException(status_code=503, detail="FinBERT scoring returned no results.")
 

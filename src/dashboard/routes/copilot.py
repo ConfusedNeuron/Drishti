@@ -6,6 +6,7 @@ from datetime import date, timedelta
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
+from src.dashboard.json_safe import clean_json
 from src.dashboard.routes.portfolio import get_snapshot
 from src.risk.returns import build_return_matrix, portfolio_returns, covariance_matrix
 from src.risk.var import all_var_methods
@@ -71,7 +72,7 @@ async def memo_endpoint():
         news_sentiment=news_sentiment_dict,
     )
 
-    return {"memo": memo_md, "missing_symbols": missing}
+    return clean_json({"memo": memo_md, "missing_symbols": missing})
 
 
 @router.post("/ask")

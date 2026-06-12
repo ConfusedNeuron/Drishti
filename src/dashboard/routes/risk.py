@@ -1,5 +1,6 @@
 """Risk routes — VaR, ES, backtest, contribution, drawdown, stress."""
 from __future__ import annotations
+import asyncio
 import dataclasses
 
 import numpy as np
@@ -7,6 +8,7 @@ from fastapi import APIRouter, HTTPException
 
 from src.config import default_dates as _default_dates
 from src.dashboard.routes.portfolio import get_snapshot
+from src.dashboard.json_safe import clean_json
 from src.risk.returns import build_return_matrix, portfolio_returns, covariance_matrix
 from src.risk.var import all_var_methods
 from src.risk.es import expected_shortfall
@@ -41,8 +43,10 @@ async def risk_summary(confidence: float = 0.99, horizon_days: int = 10):
     w_arr = np.array([w_norm[s] for s in common])
     cov = covariance_matrix(returns_df[common])
 
-    # VaR — all three methods
-    var_res = all_var_methods(port_ret, w_arr, cov, snap.total_value, confidence, horizon_days)
+    # VaR — all three methods (GARCH-FHS is CPU-heavy; offload to thread)
+    var_res = await asyncio.to_thread(
+        all_var_methods, port_ret, w_arr, cov, snap.total_value, confidence, horizon_days
+    )
 
     # ES
     es = expected_shortfall(port_ret, snap.total_value, confidence, horizon_days)
@@ -64,7 +68,7 @@ async def risk_summary(confidence: float = 0.99, horizon_days: int = 10):
     # Stress
     stress = run_all_scenarios(snap)
 
-    return {
+    return clean_json({
         "portfolio_value": snap.total_value,
         "modeled_symbols": common,
         "missing_symbols": missing,
@@ -76,7 +80,7 @@ async def risk_summary(confidence: float = 0.99, horizon_days: int = 10):
         "drawdown": dd_out,
         "stress_scenarios": [dataclasses.asdict(s) for s in stress],
         "annualized_volatility": float(port_ret.std() * np.sqrt(252)),
-    }
+    })
 
 
 @router.get("/drawdown-series")
