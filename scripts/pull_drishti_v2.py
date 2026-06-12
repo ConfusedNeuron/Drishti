@@ -62,12 +62,16 @@ COMMODITY_TICKERS = [
 
 MACRO_TICKERS = ["USDINR Curncy", "GIND10YR Index", "INVIXN Index", "DXY Curncy"]
 
-
-if __name__ == "__main__":
-    # Reuse v1 plumbing — same directory, same machine (FRTL only; tqdm not available on Mac).
-    sys.path.insert(0, str(Path(__file__).parent))
-    from pull_drishti_data import (  # noqa: E402
+# Reuse v1 plumbing — available on FRTL (tqdm installed); gracefully absent on Mac for dry import.
+sys.path.insert(0, str(Path(__file__).parent))
+try:
+    from pull_drishti_data import (
         open_session, bdh, bdp, chunks, element_to_python,
         read_cached, write_to_cache, ticker_to_filename,
     )
+except ImportError:
+    open_session = bdh = bdp = chunks = element_to_python = read_cached = write_to_cache = ticker_to_filename = None  # type: ignore
+
+
+if __name__ == "__main__":
     pass
