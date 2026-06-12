@@ -311,6 +311,19 @@ async def events_endpoint():
     return json.loads(p.read_text())
 
 
+@router.get("/regimes-study")
+async def regimes_study_endpoint():
+    """Return pre-built regime study artifact, or 503 if not yet generated."""
+    import json
+    p = DATA_DIR / "cache" / "research_artifacts_v2" / "regime_study.json"
+    if not p.exists():
+        raise HTTPException(
+            status_code=503,
+            detail="Regime study artifact not built. Run scripts/build_regime_study.py with DRISHTI_DATA_VERSION=v2.",
+        )
+    return json.loads(p.read_text())
+
+
 @router.get("/breach")
 async def breach_endpoint():
     """

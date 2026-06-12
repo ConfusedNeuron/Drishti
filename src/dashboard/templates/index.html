@@ -8,6 +8,7 @@
   <button onclick="showTab('research',this)">Factor Research</button>
   <button onclick="showTab('spillover',this)">Spillover</button>
   <button onclick="showTab('events',this)">Events</button>
+  <button onclick="showTab('regimes',this)">Regimes</button>
   <button onclick="showTab('copilot',this)">Copilot</button>
 </nav>
 {% endblock %}
@@ -204,6 +205,32 @@
   </div>
 </div>
 
+<!-- ── REGIMES ─────────────────────────────────────────────────────────────── -->
+<div id="tab-regimes" class="tab-panel">
+  <h2>Market Regimes Study</h2>
+  <p class="section-sub">Bull/Bear classification using the 20% rule + HMM statistical overlay. Requires v2 data artifact (NIFTY 100, 2020-present).</p>
+  <p id="regimes-placeholder" class="muted">Click to load regime study.</p>
+
+  <h3>Current Regime State</h3>
+  <p class="section-sub">Live snapshot: current market position relative to the last peak and the bear-market threshold.</p>
+  <div id="regimes-current-state"></div>
+
+  <h3>Peak-to-Trough Timeline</h3>
+  <p class="section-sub">Distance from all-time peak, shaded by bull (green) / bear (red) regime classification.</p>
+  <div id="regimes-timeline-chart" style="height:380px"></div>
+  <p class="chart-note">↳ How to read: below −20% defines a bear market (20% rule). Shaded bands show each regime period.</p>
+
+  <h3>Regime Statistics</h3>
+  <p class="section-sub">Return and risk characteristics disaggregated by regime — bull vs bear days.</p>
+  <div id="regimes-stats"></div>
+  <p class="chart-note">↳ How to read: compare mean daily return and vol across regimes. Skew &lt; 0 means fat left tails (more crashes than rallies).</p>
+
+  <h3>HMM High-Volatility Probability</h3>
+  <p class="section-sub">Statistical (Hidden Markov Model) probability of being in the high-volatility state. Complements the 20% rule with a probabilistic view.</p>
+  <div id="regimes-hmm-chart" style="height:340px"></div>
+  <p class="chart-note">↳ How to read: spikes near 100% = HMM classifies high market stress. Compare with the timeline above to see how statistical and rule-based regimes align.</p>
+</div>
+
 <!-- ── COPILOT ────────────────────────────────────────────────────────────── -->
 <div id="tab-copilot" class="tab-panel">
   <div class="section">
@@ -231,5 +258,6 @@
 <script src="/static/js/research.js"></script>
 <script src="/static/js/spillover.js"></script>
 <script src="/static/js/events.js"></script>
+<script src="/static/js/regimes.js"></script>
 <script src="/static/js/copilot.js"></script>
 {% endblock %}
