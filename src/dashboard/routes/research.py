@@ -262,6 +262,37 @@ async def news_refresh_endpoint():
     return dataclasses.asdict(result)
 
 
+# ── Econometric diagnostics ladder ────────────────────────────────────────
+
+def _load_returns_for_diagnostics():
+    """Load portfolio returns + sector returns using the same pattern as /ic."""
+    snap = get_snapshot()
+    start, end = _default_dates()
+    returns_df, _ = build_return_matrix(snap, start, end)
+    if returns_df.empty:
+        raise ValueError("No cached price data.")
+    port_ret = portfolio_returns(returns_df, snap.weights)
+    sectors = load_sector_returns(["energy", "metals", "fmcg", "it"], start, end)
+    if sectors.empty:
+        raise ValueError("No sector data cached.")
+    return port_ret, sectors
+
+
+@router.get("/diagnostics")
+async def diagnostics_endpoint():
+    from src.research.diagnostics import run_full_diagnostics, engle_sheppard_test
+    try:
+        port_ret, sector_rets = await asyncio.to_thread(_load_returns_for_diagnostics)
+        univariate = await asyncio.to_thread(run_full_diagnostics, port_ret)
+        multivariate = await asyncio.to_thread(engle_sheppard_test, sector_rets)
+        return clean_json({
+            "univariate": univariate,
+            "multivariate": multivariate.__dict__,
+        })
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"Diagnostics unavailable: {e}")
+
+
 # ── XGBoost breach classifier ──────────────────────────────────────────────
 
 @router.get("/breach")
