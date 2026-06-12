@@ -114,5 +114,53 @@ def bds(session, ticker: str, field: str, overrides: dict[str, str] | None = Non
     return rows
 
 
+def _snapshot_dates(start_year: int = 2000) -> list[str]:
+    """Jun-30 and Dec-31 of each year, YYYYMMDD."""
+    out = []
+    for y in range(start_year, date.today().year + 1):
+        out += [f"{y}0630", f"{y}1231"]
+    return [d for d in out if d <= PULL_END]
+
+
+def discover_universe(session, with_fallbacks: bool = False) -> dict:
+    """INDX_MWEIGHT_HIST snapshots -> {bbg_equity_ticker: metadata}. Writes manifest + raw snapshots."""
+    META_DIR.mkdir(parents=True, exist_ok=True)
+    (META_DIR / "membership").mkdir(exist_ok=True)
+
+    indices = list(MEMBERSHIP_INDICES)
+    if with_fallbacks:
+        indices.extend(MEMBERSHIP_FALLBACKS)
+
+    universe: dict[str, dict] = {}
+    for idx in indices:
+        for dt in _snapshot_dates():
+            # INDX_MWEIGHT_HIST may return 0 rows on FRTL due to entitlement limits.
+            # If all snapshots return empty, rerun --discover with INDX_MWEIGHT (no date override, current members only).
+            try:
+                rows = bds(session, idx, "INDX_MWEIGHT_HIST", {"END_DATE_OVERRIDE": dt})
+            except Exception as e:
+                print(f"  [WARN] {idx} @ {dt}: {e}")
+                continue
+            if not rows:
+                continue
+            snap_path = META_DIR / "membership" / f"{ticker_to_filename(idx)}_{dt}.json"
+            snap_path.write_text(json.dumps(rows, indent=1, default=str))
+            for r in rows:
+                raw = (r.get("Index Member") or r.get("Member Ticker and Exchange Code") or "").strip()
+                if not raw:
+                    continue
+                tkr = raw if raw.endswith("Equity") else f"{raw} Equity"
+                rec = universe.setdefault(tkr, {"first_seen": dt, "last_seen": dt, "indices": []})
+                rec["first_seen"] = min(rec["first_seen"], dt)
+                rec["last_seen"] = max(rec["last_seen"], dt)
+                if idx not in rec["indices"]:
+                    rec["indices"].append(idx)
+            print(f"  {idx} @ {dt}: {len(rows)} members (universe now {len(universe)})")
+
+    UNIVERSE_MANIFEST.write_text(json.dumps(universe, indent=1, sort_keys=True))
+    print(f"Universe manifest: {len(universe)} tickers -> {UNIVERSE_MANIFEST}")
+    return universe
+
+
 if __name__ == "__main__":
     pass
