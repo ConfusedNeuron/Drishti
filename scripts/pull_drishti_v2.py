@@ -162,5 +162,141 @@ def discover_universe(session, with_fallbacks: bool = False) -> dict:
     return universe
 
 
+def _log_failure(ticker: str, group: str, err: str) -> None:
+    META_DIR.mkdir(parents=True, exist_ok=True)
+    log = json.loads(FAILED_LOG.read_text()) if FAILED_LOG.exists() else {}
+    log[ticker] = {"group": group, "error": str(err)[:300], "at": date.today().isoformat()}
+    FAILED_LOG.write_text(json.dumps(log, indent=1))
+
+
+def pull_group_v2(session, tickers: list[str], fields: list[str], subdir: str,
+                  batch: int = 25, equity_adjust: bool = False) -> None:
+    out_dir = V2_DIR / subdir
+    out_dir.mkdir(parents=True, exist_ok=True)
+    todo = [t for t in tickers if not (out_dir / f"{ticker_to_filename(t)}.parquet").exists()]
+    print(f"[{subdir}] {len(todo)}/{len(tickers)} to pull")
+    for grp in chunks(todo, batch):
+        try:
+            if equity_adjust:
+                df, errors_list = bdh(session, grp, fields, PULL_START, PULL_END,
+                                      adj_split=True, adj_normal=True)
+            else:
+                df, errors_list = bdh(session, grp, fields, PULL_START, PULL_END)
+        except Exception as e:
+            for t in grp:
+                _log_failure(t, subdir, str(e))
+            continue
+        error_set = set(errors_list)
+        if not df.empty and "ticker" in df.columns:
+            for t in grp:
+                if t in error_set:
+                    _log_failure(t, subdir, "Bloomberg security error")
+                    continue
+                t_df = df[df["ticker"] == t].drop(columns=["ticker"])
+                if t_df.empty:
+                    _log_failure(t, subdir, "empty response")
+                else:
+                    write_to_cache(out_dir / f"{ticker_to_filename(t)}.parquet", t_df)
+        else:
+            for t in errors_list:
+                _log_failure(t, subdir, "Bloomberg security error")
+            for t in grp:
+                if t not in error_set:
+                    _log_failure(t, subdir, "empty response")
+
+
+def pull_sectors(session, tickers: list[str]) -> None:
+    """GICS sector for every universe member -> meta/sectors_v2.json. BDP in batches of 20."""
+    out: dict[str, dict] = {}
+    for grp in chunks(tickers, 20):
+        try:
+            res = bdp(session, grp, ["GICS_SECTOR_NAME", "INDUSTRY_SECTOR", "NAME"])
+            out.update(res)
+        except Exception as e:
+            for t in grp:
+                _log_failure(t, "sectors", str(e))
+    (META_DIR / "sectors_v2.json").write_text(json.dumps(out, indent=1, default=str))
+    print(f"sectors_v2.json: {len(out)} entries")
+
+
+def validate(session) -> None:
+    """5-day BDH on one known-good name per group + every NEW/UNVERIFIED ticker."""
+    probes = {
+        "equity fields":    (["RELIANCE IN Equity"], EQUITY_DAILY_FIELDS),
+        "v1 failures":      (["LTIM IN Equity", "TTMT IN Equity"], ["PX_LAST"]),
+        "new indices":      ([t for t in INDEX_TICKERS if any(x in t for x in
+                               ("150", "SMCP", "S250", "NSELM", "NSEMDSM",
+                                "NSE100", "NSEMCAP", "NSE500"))], INDEX_FIELDS),
+        "new commodities":  (COMMODITY_TICKERS[7:], SIMPLE_FIELDS),
+        "macro":            (MACRO_TICKERS, SIMPLE_FIELDS),
+    }
+    start = date.today().replace(day=1).strftime("%Y%m%d")
+    for label, (tickers, fields) in probes.items():
+        try:
+            df, errors = bdh(session, tickers, fields, start, PULL_END)
+            error_set = set(errors)
+            for t in tickers:
+                if t in error_set:
+                    print(f"  [{label}] {t}: FAIL (security error)")
+                elif df.empty or (not df.empty and "ticker" in df.columns and df[df["ticker"] == t].empty):
+                    print(f"  [{label}] {t}: FAIL (no data)")
+                else:
+                    print(f"  [{label}] {t}: OK")
+        except Exception as e:
+            print(f"  [{label}] batch error: {e}")
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser(
+        description="Drishti v2 Bloomberg pull — survivorship-free Nifty100+Midcap150 since 2000.")
+    for flag in ["validate", "discover", "with_fallbacks", "indices", "commodities",
+                 "macro", "equities", "sectors", "annual", "retry_failed"]:
+        ap.add_argument(f"--{flag.replace('_', '-')}", action="store_true")
+    args = ap.parse_args()
+
+    session = open_session()
+
+    if args.validate:
+        validate(session)
+        return
+
+    if args.discover:
+        discover_universe(session, with_fallbacks=args.with_fallbacks)
+
+    universe = json.loads(UNIVERSE_MANIFEST.read_text()) if UNIVERSE_MANIFEST.exists() else {}
+
+    if args.indices:
+        # De-duplicate INDEX_TICKERS (NSE100/NSEMD150 appear in both v1 and v2 additions)
+        pull_group_v2(session, sorted(set(INDEX_TICKERS)), INDEX_FIELDS, "indices")
+    if args.commodities:
+        pull_group_v2(session, COMMODITY_TICKERS, SIMPLE_FIELDS, "commodities")
+    if args.macro:
+        pull_group_v2(session, MACRO_TICKERS, SIMPLE_FIELDS, "macro")
+    if args.equities:
+        pull_group_v2(session, sorted(universe), EQUITY_DAILY_FIELDS, "equities",
+                      equity_adjust=True)
+    if args.sectors:
+        pull_sectors(session, sorted(universe))
+    if args.annual:
+        annual_fields = ["RETURN_COM_EQY", "BS_TOT_ASSET", "NET_INCOME",
+                         "SHORT_AND_LONG_TERM_DEBT", "BOOK_VAL_PER_SH",
+                         "EQY_DPS", "CF_CASH_FROM_OPER", "EQY_SH_OUT"]
+        pull_group_v2(session, sorted(universe), annual_fields, "equities_annual",
+                      batch=10)
+    if args.retry_failed and FAILED_LOG.exists():
+        log = json.loads(FAILED_LOG.read_text())
+        by_group: dict[str, list[str]] = {}
+        for t, rec in log.items():
+            by_group.setdefault(rec["group"], []).append(t)
+        FAILED_LOG.unlink()
+        for grp_name, ts in by_group.items():
+            if grp_name == "equities":
+                pull_group_v2(session, ts, EQUITY_DAILY_FIELDS, grp_name, equity_adjust=True)
+            elif grp_name == "indices":
+                pull_group_v2(session, ts, INDEX_FIELDS, grp_name)
+            else:
+                pull_group_v2(session, ts, SIMPLE_FIELDS, grp_name)
+
+
 if __name__ == "__main__":
-    pass
+    main()
