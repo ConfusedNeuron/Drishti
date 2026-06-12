@@ -25,6 +25,7 @@ def test_zero_ic_random():
     target = pd.Series(rng.standard_normal(400), index=dates, name="target")
     result = time_series_ic(factor, target, lag=1)
     assert abs(result.ic_mean) < 0.15, f"Expected near-zero IC, got {result.ic_mean:.3f}"
+    assert not result.significant
 
 
 def test_bh_correction_controls_fdr():
