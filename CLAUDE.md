@@ -8,16 +8,17 @@ Drishti is a local-first quant risk research platform for Indian equity portfoli
 
 ---
 
-## Current status (as of 2026-06-11)
+## Current status (as of 2026-06-12)
 
 **Track A — Frontend overhaul: COMPLETE ✅**
 **Track B — Data layer: COMPLETE ✅**
 **Track C — Walk-forward + MCP + Rolling DY: COMPLETE ✅**
 **Track D — News+FinBERT + XGBoost breach classifier: COMPLETE ✅**
 **Track E — Frontend UX fixes: COMPLETE ✅**
+**Track F — v2 Expansion: COMPLETE ✅**
 
 ### Active branch
-`main` — all branches merged and deleted. Repo is clean.
+`feature/v2-expansion` — all v2 tasks shipped; ready to merge to main
 
 ### Frontend code guide (read before any frontend work — saves token context)
 `docs/frontend/code.md` — **exists — read before any frontend work**
@@ -43,7 +44,7 @@ Drishti is a local-first quant risk research platform for Indian equity portfoli
 - ✅ Time-series IC + Granger causality + BH FDR correction
 - ✅ Deterministic risk memo (no LLM required)
 - ✅ FastAPI backend + Plotly.js single-page dashboard (5 tabs)
-- ✅ 81 unit tests passing
+- ✅ 122 unit tests passing
 - ✅ `pull_drishti_data.py` — production Bloomberg pull script (tqdm, resumable, --validate)
 - ✅ 7 BQuant research notebook specs (`notebooks/01-07.md`)
 - ✅ `lessons.md` — all FRTL/methodology/engineering learnings documented
@@ -60,10 +61,23 @@ Drishti is a local-first quant risk research platform for Indian equity portfoli
 - ✅ **Rolling Diebold-Yilmaz** — `/api/research/spillover/rolling` route; wires pre-existing `rolling_spillover()`; filled-area connectedness chart auto-loads in Spillover tab
 - ✅ **News RSS + FinBERT** — `src/research/news.py`; 5 Indian finance RSS sources; `ProsusAI/finbert` sentiment scoring; file-cached (`data/cache/news/latest.json`); Refresh button in Research tab; sentiment injected into risk memo; module-level pipeline cache avoids reload cost
 - ✅ **XGBoost VaR breach classifier** — `src/research/breach_classifier.py` + `scripts/train_breach_classifier.py`; next-day breach probability (no look-ahead — target uses `r.shift(-1)`); SMOTE applied after train/test split; commodity lags (`brent_lag1`, `gold_lag1`, `copper_lag1`) + regime + rolling vol features; breach probability gauge + feature importance chart in Research tab
+- ✅ **v2 data switch** — DRISHTI_DATA_VERSION=v2 env var routes to bloomberg_v2/ and research_artifacts_v2/; v1 is still the default
+- ✅ **Diagnostics ladder** — ADF → Ljung-Box → ARCH-LM → GARCH order scan (BIC table) → Engle-Sheppard CCC test; GET /api/research/diagnostics
+- ✅ **ADCC** — asymmetric DCC (Cappiello-Engle-Sheppard 2006); fit_dcc_garch(..., asymmetric=True) returns gamma; grid-search fallback for optimizer failures
+- ✅ **Weekly Granger** — granger_test(..., freq="weekly") compounds daily→weekly; BH-corrected over Granger table; summarize_granger_aic() picks min-AIC lag per pair
+- ✅ **Universe module** — src/research/universe.py; load_universe/load_sectors/build_size_buckets/sector_composites; large=NSE100, mid=NSEMD150
+- ✅ **Expanded spillover study** — scripts/build_spillover_study.py; large/mid/combined panels; IS/OOS date-split seam; writes spillover_study.json to research_artifacts_v2/
+- ✅ **Market Shock Events** — src/research/events.py; detect_drawdown_episodes (≥10%); match_labels against 14-event curated map; episode_stats; statistical_levels; practitioner_appendix (heuristics, clearly separated); Events tab
+- ✅ **Bull/Bear Regime study** — src/research/market_regimes.py; classify_bull_bear (20% rule); regime_signs stats table; current_state; HMM overlay; Regimes tab
+- ✅ **IPO truncation fix** — filter_min_history() in returns.py; MIN_HISTORY_DAYS=756 (3yr default); prevents young IPOs from truncating the return matrix via dropna
+- ✅ **Unified safety filter** — src/copilot/safety.py; word-boundary regex; shared by MCP tools and copilot route
+- ✅ **News dry-run script** — scripts/news_dry_run.py; validates FinBERT download + all feeds; second run < 60s
+- ✅ **pull_drishti_v2.py** — scripts/pull_drishti_v2.py; survivorship-free Nifty100+Midcap150 since 2000; INDX_MWEIGHT_HIST snapshots; resumes safely; writes to bloomberg_v2/ only
+- ✅ **verify_v2_cache.py** — scripts/verify_v2_cache.py; post-pull sanity report
 
 ### What's left to build
 
-Nothing — all planned features are shipped. Three optional `REVISIT` items in `docs/design-choices.md` (FinBERT download speed, news refresh latency, RSS reliability) — only relevant if the demo machine is slow.
+Nothing planned for v2. Three optional REVISIT items in docs/design-choices.md (FinBERT download speed, news refresh latency, RSS reliability) — only relevant if the demo machine is slow.
 
 ---
 
@@ -142,7 +156,7 @@ Walk-forward IC/Granger              →    served via FastAPI
 │       │   └── latest.json          # FinBERT-scored headlines cache (created by POST /api/research/news/refresh)
 │       └── models/
 │           └── breach_classifier.pkl  # Trained XGBoost model (created by scripts/train_breach_classifier.py)
-├── tests/                           # pytest — 79 tests passing
+├── tests/                           # pytest — 122 tests passing
 ├── design/                          # PRD, specs, high/low-level design (HTML)
 ├── docs/                            # design-choices.md, lessons.md, audit-remediation-plan.md, frontend/code.md
 ├── requirements.txt
@@ -332,6 +346,7 @@ Theme logic is split across `theme.js`, `components.css`, and `layout.css`.
 - **Session 3:** Walk-forward OOS Sharpe, Risk MCP server (6 tools), rolling DY chart, 28 tests
 - **Session 4:** News RSS + FinBERT sentiment panel, XGBoost VaR breach classifier (next-day, no look-ahead, SMOTE after split), design-choices.md log, 69 tests
 - **Session 5:** Frontend UX fixes — tooltip hover-bridge, theme picker (`overflow:hidden` + render-on-open + hardcoded colour bugs), `/learn` header link, section subtitles + chart reading notes, 81 tests
+- **Session 6:** v2 expansion — ADCC, diagnostics ladder, weekly Granger, universe module, expanded spillover study, market shock events, bull/bear regimes, IPO truncation fix, unified safety filter, news dry-run, pull_drishti_v2.py + verify_v2_cache.py, v2 data version switch, 122 tests
 
 ---
 
@@ -367,7 +382,7 @@ Theme logic is split across `theme.js`, `components.css`, and `layout.css`.
 
 ### Current Bloomberg data
 - Date range: 2018-01-01 → 2026-05-29 (essentially current, ~5 days stale)
-- 49 NSE equities (daily + annual fundamentals), 15 indices, 7 commodities, 3 macro series
+- 50 NSE equities (daily + annual fundamentals), 15 indices, 7 commodities, 3 macro series
 - Parquets are gitignored — never commit them
 - Annual fundamentals: 8 fields — RETURN_COM_EQY, BS_TOT_ASSET, NET_INCOME, SHORT_AND_LONG_TERM_DEBT, BOOK_VAL_PER_SH, EQY_DPS, CF_CASH_FROM_OPER, EQY_SH_OUT
 
