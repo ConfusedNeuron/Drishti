@@ -64,15 +64,78 @@ def _dcc_log_likelihood(params: np.ndarray,
     return -ll
 
 
+def _adcc_log_likelihood(params: np.ndarray, Z: np.ndarray, N_bar: np.ndarray, Q_bar: np.ndarray) -> float:
+    """
+    Negative log-likelihood for ADCC parameters (a, b, g).
+
+    ADCC Q recursion (Cappiello-Engle-Sheppard 2006):
+        n_t = z_t ⊙ 1[z_t < 0]
+        Q_t = (1-a-b)*Q̄ - g*N̄ + a*z_{t-1}z_{t-1}' + b*Q_{t-1} + g*n_{t-1}n_{t-1}'
+
+    The -g*N̄ intercept correction ensures E[Q_t] = Q̄ under stationarity.
+    Sufficient stationarity condition: a + b + g < 1.
+    """
+    a, b, g = params
+    if a <= 0 or b <= 0 or g < 0 or a + b + g >= 1:
+        return 1e10
+    T, k = Z.shape
+    Q = Q_bar.copy()
+    ll = 0.0
+    for t in range(1, T):
+        z_prev = Z[t - 1, :]
+        n_prev = np.where(z_prev < 0, z_prev, 0.0)
+        Q = (1 - a - b) * Q_bar - g * N_bar + a * np.outer(z_prev, z_prev) + b * Q + g * np.outer(n_prev, n_prev)
+        Q_diag_inv = np.diag(1.0 / np.sqrt(np.maximum(np.diag(Q), 1e-12)))
+        R = Q_diag_inv @ Q @ Q_diag_inv
+        R = (R + R.T) / 2
+        try:
+            sign, logdet = np.linalg.slogdet(R)
+            if sign <= 0:
+                return 1e10
+            z_t = Z[t, :]
+            R_inv = np.linalg.inv(R)
+            ll += -0.5 * (logdet + z_t @ R_inv @ z_t - z_t @ z_t)
+        except np.linalg.LinAlgError:
+            return 1e10
+    return -ll
+
+
+def _adcc_grid_fallback(Z: np.ndarray, N_bar: np.ndarray, Q_bar: np.ndarray) -> tuple[float, float, float]:
+    """
+    Fallback: grid-search g over [0, 0.05, 0.10, 0.15]; re-optimise (a,b) at each g.
+    Picks the g with lowest NLL.  Used when the joint 3-parameter optimizer fails.
+    """
+    best_nll = np.inf
+    best_params = (0.01, 0.95, 0.0)
+    for g_try in [0.0, 0.05, 0.10, 0.15]:
+        def _nll_fixed_g(ab: np.ndarray) -> float:
+            return _adcc_log_likelihood(np.array([ab[0], ab[1], g_try]), Z, N_bar, Q_bar)
+        res = minimize(
+            _nll_fixed_g,
+            x0=[0.01, 0.95],
+            method="L-BFGS-B",
+            bounds=[(1e-6, 0.3), (1e-6, 0.99 - g_try - 1e-6)],
+        )
+        if res.fun < best_nll:
+            best_nll = res.fun
+            best_params = (float(res.x[0]), float(res.x[1]), float(g_try))
+    return best_params
+
+
 def fit_dcc_garch(
     returns_df: pd.DataFrame,
     n_dcc_iter: int = 50,
+    asymmetric: bool = False,
 ) -> dict:
     """
-    Fit DCC-GARCH to a DataFrame of return series (columns = assets).
+    Fit DCC-GARCH (or ADCC) to a DataFrame of return series (columns = assets).
     Returns time-varying correlation matrix at each date.
 
-    returns_df: aligned daily returns, columns = asset names
+    returns_df:  aligned daily returns, columns = asset names
+    asymmetric:  if True, fit ADCC (Cappiello-Engle-Sheppard 2006) which adds a
+                 negative-return asymmetry term g.  Return dict includes a "params"
+                 key with {"a", "b", "g"}.  If False (default), fits standard DCC
+                 and the return dict keeps "dcc_alpha" / "dcc_beta" keys.
     """
     # Step 1: Fit GARCH(1,1) per series, collect date-indexed standardized residuals
     std_resids = {}
@@ -91,48 +154,101 @@ def fit_dcc_garch(
     col_names = list(Z_df.columns)
     common_idx = Z_df.index
 
-    # Step 2: Estimate DCC parameters
-    result = minimize(
-        _dcc_log_likelihood,
-        x0=[0.01, 0.95],
-        args=(Z,),
-        method="L-BFGS-B",
-        bounds=[(1e-6, 0.3), (1e-6, 0.99)],
-        options={"maxiter": n_dcc_iter},
-    )
-    alpha, beta = result.x
-
-    # Step 3: Compute full time-varying correlation sequence
+    # Step 2: Estimate DCC / ADCC parameters
     T, k = Z.shape
     Q_bar = np.cov(Z.T)
-    Q = Q_bar.copy()
 
-    correlation_series = {f"{col_names[i]}_{col_names[j]}": []
-                          for i in range(k) for j in range(i + 1, k)}
-    date_list = []
+    if asymmetric:
+        # ADCC: negative shocks drive larger correlation increases than positive ones.
+        # N̄ = sample mean of outer products of negative-clipped residuals.
+        N_bar = np.mean(
+            [np.outer(np.where(z < 0, z, 0.0), np.where(z < 0, z, 0.0)) for z in Z],
+            axis=0,
+        )
+        adcc_result = minimize(
+            _adcc_log_likelihood,
+            x0=[0.01, 0.95, 0.05],
+            args=(Z, N_bar, Q_bar),
+            method="L-BFGS-B",
+            bounds=[(1e-6, 0.3), (1e-6, 0.99), (0.0, 0.3)],
+            options={"maxiter": n_dcc_iter},
+        )
+        if not adcc_result.success:
+            # Grid-search fallback: sweep g ∈ {0, 0.05, 0.10, 0.15}, re-optimise (a,b)
+            # at each value and pick the g with lowest negative log-likelihood.
+            a, b, g = _adcc_grid_fallback(Z, N_bar, Q_bar)
+        else:
+            a, b, g = float(adcc_result.x[0]), float(adcc_result.x[1]), float(adcc_result.x[2])
 
-    for t in range(1, T):
-        z = Z[t - 1, :]
-        Q = (1 - alpha - beta) * Q_bar + alpha * np.outer(z, z) + beta * Q
-        Q_diag_inv = np.diag(1.0 / np.sqrt(np.diag(Q)))
-        R = Q_diag_inv @ Q @ Q_diag_inv
+        # Step 3: ADCC correlation sequence
+        Q = Q_bar.copy()
+        correlation_series = {f"{col_names[i]}_{col_names[j]}": []
+                              for i in range(k) for j in range(i + 1, k)}
+        date_list = []
 
-        date_list.append(common_idx[t])
-        for i in range(k):
-            for j in range(i + 1, k):
-                pair = f"{col_names[i]}_{col_names[j]}"
-                correlation_series[pair].append(float(R[i, j]))
+        for t in range(1, T):
+            z_prev = Z[t - 1, :]
+            n_prev = np.where(z_prev < 0, z_prev, 0.0)
+            Q = (1 - a - b) * Q_bar - g * N_bar + a * np.outer(z_prev, z_prev) + b * Q + g * np.outer(n_prev, n_prev)
+            Q_diag_inv = np.diag(1.0 / np.sqrt(np.maximum(np.diag(Q), 1e-12)))
+            R = Q_diag_inv @ Q @ Q_diag_inv
 
-    corr_df = pd.DataFrame(correlation_series, index=date_list)
+            date_list.append(common_idx[t])
+            for i in range(k):
+                for j in range(i + 1, k):
+                    pair = f"{col_names[i]}_{col_names[j]}"
+                    correlation_series[pair].append(float(R[i, j]))
 
-    return {
-        "correlations": corr_df,          # time-varying pairwise correlations
-        "dcc_alpha": float(alpha),
-        "dcc_beta": float(beta),
-        "unconditional_vols": uncond_vols,
-        "column_names": col_names,
-        "Q_bar": Q_bar,
-    }
+        corr_df = pd.DataFrame(correlation_series, index=date_list)
+
+        return {
+            "correlations": corr_df,
+            "params": {"a": a, "b": b, "g": g},
+            "unconditional_vols": uncond_vols,
+            "column_names": col_names,
+            "Q_bar": Q_bar,
+        }
+
+    else:
+        # Standard DCC (Engle 2002) — backward-compatible path
+        result = minimize(
+            _dcc_log_likelihood,
+            x0=[0.01, 0.95],
+            args=(Z,),
+            method="L-BFGS-B",
+            bounds=[(1e-6, 0.3), (1e-6, 0.99)],
+            options={"maxiter": n_dcc_iter},
+        )
+        alpha, beta = result.x
+
+        # Step 3: Standard DCC correlation sequence
+        Q = Q_bar.copy()
+        correlation_series = {f"{col_names[i]}_{col_names[j]}": []
+                              for i in range(k) for j in range(i + 1, k)}
+        date_list = []
+
+        for t in range(1, T):
+            z = Z[t - 1, :]
+            Q = (1 - alpha - beta) * Q_bar + alpha * np.outer(z, z) + beta * Q
+            Q_diag_inv = np.diag(1.0 / np.sqrt(np.diag(Q)))
+            R = Q_diag_inv @ Q @ Q_diag_inv
+
+            date_list.append(common_idx[t])
+            for i in range(k):
+                for j in range(i + 1, k):
+                    pair = f"{col_names[i]}_{col_names[j]}"
+                    correlation_series[pair].append(float(R[i, j]))
+
+        corr_df = pd.DataFrame(correlation_series, index=date_list)
+
+        return {
+            "correlations": corr_df,          # time-varying pairwise correlations
+            "dcc_alpha": float(alpha),
+            "dcc_beta": float(beta),
+            "unconditional_vols": uncond_vols,
+            "column_names": col_names,
+            "Q_bar": Q_bar,
+        }
 
 
 def crisis_correlation_summary(corr_df: pd.DataFrame) -> pd.DataFrame:
