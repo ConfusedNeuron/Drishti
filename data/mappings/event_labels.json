@@ -12,5 +12,7 @@
   {"id": "covid",         "label": "COVID-19 crash",                "cause": "pandemic",                              "window": ["2020-02-20", "2020-04-30"]},
   {"id": "ukraine",       "label": "Russia-Ukraine war",            "cause": "geopolitical + commodity price shock",  "window": ["2022-02-24", "2022-06-30"]},
   {"id": "adani",         "label": "Adani short-seller episode",    "cause": "single-group credibility shock",        "window": ["2023-01-24", "2023-03-31"]},
-  {"id": "election_2024", "label": "2024 election result day",      "cause": "domestic political surprise",           "window": ["2024-06-03", "2024-06-30"]}
+  {"id": "election_2024", "label": "2024 election result day",      "cause": "domestic political surprise",           "window": ["2024-06-03", "2024-06-30"]},
+  {"id": "fii_outflow_2024", "label": "2024-25 FII outflow + dollar rally", "cause": "Trump election → strong dollar + record FII selling on India overvaluation", "window": ["2024-09-01", "2025-03-31"]},
+  {"id": "tariff_shock_2026", "label": "2026 US tariff shock",             "cause": "US tariff escalation + global trade war fears",  "window": ["2025-12-15", "2026-04-30"]}
 ]
