@@ -48,6 +48,11 @@ def cache_path(ticker: str) -> Path:
 def read_cache(ticker: str) -> pd.DataFrame | None:
     p = cache_path(ticker)
     if not p.exists():
+        # v2 pull uses "IS Equity" (NSE exchange code); v1 tickers.py maps to "IN Equity"
+        alt = ticker.replace(" IN Equity", " IS Equity")
+        if alt != ticker:
+            p = cache_path(alt)
+    if not p.exists():
         return None
     df = pd.read_parquet(p)
     if not isinstance(df.index, pd.DatetimeIndex):
