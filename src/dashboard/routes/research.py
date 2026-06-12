@@ -298,6 +298,19 @@ async def diagnostics_endpoint():
 
 # ── XGBoost breach classifier ──────────────────────────────────────────────
 
+@router.get("/events")
+async def events_endpoint():
+    """Return pre-built events study artifact, or 503 if not yet generated."""
+    import json
+    p = DATA_DIR / "cache" / "research_artifacts_v2" / "events_study.json"
+    if not p.exists():
+        raise HTTPException(
+            status_code=503,
+            detail="Events artifact not built. Run scripts/build_events_study.py with DRISHTI_DATA_VERSION=v2.",
+        )
+    return json.loads(p.read_text())
+
+
 @router.get("/breach")
 async def breach_endpoint():
     """
