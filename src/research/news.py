@@ -51,7 +51,13 @@ DEFAULT_FEEDS: list[str] = [
     "https://www.livemint.com/rss/markets",
     "https://www.moneycontrol.com/rss/marketreports.xml",
     "https://www.sebi.gov.in/sebi_data/rss/rss_sebi.xml",
+    # Candidate feeds — added for coverage testing; gracefully skipped if unavailable
+    "https://www.business-standard.com/rss/markets-106.rss",
+    "https://www.thehindubusinessline.com/markets/feeder/default.rss",
 ]
+
+# RSS_FEEDS is an alias kept for backwards-compat and dry-run script imports
+RSS_FEEDS = DEFAULT_FEEDS
 
 _SOURCE_NAMES: dict[str, str] = {
     "economictimes.indiatimes.com": "ET Markets",
@@ -59,6 +65,8 @@ _SOURCE_NAMES: dict[str, str] = {
     "livemint.com": "Mint",
     "moneycontrol.com": "MoneyControl",
     "sebi.gov.in": "SEBI",
+    "business-standard.com": "Business Standard",
+    "thehindubusinessline.com": "Hindu BusinessLine",
 }
 
 
