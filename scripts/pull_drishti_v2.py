@@ -73,5 +73,46 @@ except ImportError:
     open_session = bdh = bdp = chunks = element_to_python = read_cached = write_to_cache = ticker_to_filename = None  # type: ignore
 
 
+def bds(session, ticker: str, field: str, overrides: dict[str, str] | None = None) -> list[dict]:
+    """Bulk reference data request (BDS). Returns list of row-dicts."""
+    import blpapi  # only available on FRTL
+    svc = session.getService("//blp/refdata")
+    req = svc.createRequest("ReferenceDataRequest")
+    req.getElement("securities").appendValue(ticker)
+    req.getElement("fields").appendValue(field)
+    if overrides:
+        ov_el = req.getElement("overrides")
+        for k, v in overrides.items():
+            ov = ov_el.appendElement()
+            ov.setElement("fieldId", k)
+            ov.setElement("value", v)
+    session.sendRequest(req)
+
+    rows: list[dict] = []
+    while True:
+        ev = session.nextEvent(30_000)
+        for msg in ev:
+            if not msg.hasElement("securityData"):
+                continue
+            sd_array = msg.getElement("securityData")
+            for i in range(sd_array.numValues()):
+                sd = sd_array.getValueAsElement(i)
+                if sd.hasElement("securityError"):
+                    raise RuntimeError(f"BDS error for {ticker}: {sd.getElement('securityError')}")
+                fd = sd.getElement("fieldData")
+                if not fd.hasElement(field):
+                    continue
+                bulk = fd.getElement(field)
+                for j in range(bulk.numValues()):
+                    row_el = bulk.getValueAsElement(j)
+                    rows.append({
+                        row_el.getElement(k).name().__str__(): element_to_python(row_el.getElement(k))
+                        for k in range(row_el.numElements())
+                    })
+        if ev.eventType() == blpapi.Event.RESPONSE:
+            break
+    return rows
+
+
 if __name__ == "__main__":
     pass
