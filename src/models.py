@@ -152,6 +152,8 @@ class GrangerResult:
     f_stat: float
     p_value: float
     significant: bool
+    bh_significant: bool = False  # after Benjamini-Hochberg correction
+    aic: float = 0.0              # AIC of unrestricted VAR at this lag
 
 
 @dataclass

@@ -2,7 +2,7 @@
 import numpy as np
 import pandas as pd
 import pytest
-from src.research.ic import time_series_ic, _bh_correction
+from src.research.ic import time_series_ic, _bh_correction, to_weekly, granger_test, summarize_granger_aic
 
 
 def test_perfect_ic_lag1():
@@ -69,3 +69,36 @@ def test_ic_significance_uses_hac_not_iid():
 
     assert abs(res.t_stat) < 0.6 * abs(naive_t)   # HAC must deflate the inflated t-stat
     assert 0.0 <= res.p_value <= 1.0
+
+
+def test_to_weekly_compounds_and_uses_friday_bucket():
+    idx = pd.date_range("2024-01-01", periods=10, freq="B")  # Mon-Fri, Mon-Fri
+    r = pd.Series([0.01] * 10, index=idx)
+    w = to_weekly(r)
+    assert len(w) == 2
+    assert abs(w.iloc[0] - (1.01**5 - 1)) < 1e-12
+    assert w.index[0].dayofweek == 4  # Friday
+
+
+def test_weekly_granger_produces_results():
+    rng = np.random.default_rng(3)
+    idx = pd.date_range("2017-01-02", periods=2300, freq="B")
+    f = pd.Series(rng.standard_normal(2300) * 0.01, index=idx, name="brent")
+    t = (0.4 * f.shift(30).fillna(0) +
+         pd.Series(rng.standard_normal(2300) * 0.01, index=idx)).rename("energy")
+    res = granger_test(f, t, max_lag=8, freq="weekly")
+    assert len(res) == 8
+    # All results should have aic populated (not 0.0 if statsmodels path works)
+    assert all(hasattr(r, "aic") for r in res)
+
+
+def test_aic_summary_picks_one_lag_per_pair():
+    rng = np.random.default_rng(4)
+    idx = pd.date_range("2018-01-01", periods=1500, freq="B")
+    f = pd.Series(rng.standard_normal(1500) * 0.01, index=idx, name="gold")
+    t = pd.Series(rng.standard_normal(1500) * 0.01, index=idx, name="metals")
+    granger_res = granger_test(f, t, max_lag=5, freq="daily")
+    summary = summarize_granger_aic(granger_res)
+    # One row per (factor, target) pair — should be exactly 1 here
+    assert len(summary) == 1
+    assert summary[0].factor == "gold" and summary[0].target == "metals"

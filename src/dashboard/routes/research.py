@@ -67,13 +67,16 @@ async def ic_endpoint(lags: str = "1,2,3,5,10"):
 
     from src.research.ic import run_full_ic_study
     lag_list = [int(x) for x in lags.split(",")]
-    result = await asyncio.to_thread(run_full_ic_study, factors, sectors, lags=lag_list)
+    result = await asyncio.to_thread(
+        run_full_ic_study, factors, sectors, lags=lag_list, granger_freq="daily"
+    )
 
     return clean_json({
         "ic_results": [dataclasses.asdict(r) for r in result["ic_results"]],
         "granger_results": [dataclasses.asdict(r) for r in result["granger_results"]],
+        "granger_aic_summary": [dataclasses.asdict(r) for r in result["granger_aic_summary"]],
         "n_tests": result["n_tests"],
-        "note": "IC is time-series rolling correlation (lag factor vs. target). BH FDR correction applied.",
+        "note": "IC is time-series rolling correlation (lag factor vs. target). BH FDR correction applied to IC and Granger p-values.",
     })
 
 
