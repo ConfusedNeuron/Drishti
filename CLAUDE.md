@@ -8,7 +8,7 @@ Drishti is a local-first quant risk research platform for Indian equity portfoli
 
 ---
 
-## Current status (as of 2026-06-12)
+## Current status (as of 2026-06-13)
 
 **Track A — Frontend overhaul: COMPLETE ✅**
 **Track B — Data layer: COMPLETE ✅**
@@ -18,7 +18,13 @@ Drishti is a local-first quant risk research platform for Indian equity portfoli
 **Track F — v2 Expansion: COMPLETE ✅**
 
 ### Active branch
-`feature/v2-expansion` — all v2 tasks shipped; ready to merge to main
+`feature/v2-expansion` — all tasks shipped; pending final commit + merge to main
+
+### Pre-demo checklist (presentation: 2026-06-16 Mon)
+- [ ] `pip install transformers torch` — required for FinBERT sentiment panel (~2 GB, one-time)
+- [ ] `pip install imbalanced-learn` — only needed if retraining breach classifier
+- [ ] Commit `docs/methodology.html` + `data/cache/research_artifacts_v2/` + `scripts/pull_drishti_v2_fallback.py`
+- [ ] Merge `feature/v2-expansion` → `main`
 
 ### Frontend code guide (read before any frontend work — saves token context)
 `docs/frontend/code.md` — **exists — read before any frontend work**
@@ -74,10 +80,18 @@ Drishti is a local-first quant risk research platform for Indian equity portfoli
 - ✅ **News dry-run script** — scripts/news_dry_run.py; validates FinBERT download + all feeds; second run < 60s
 - ✅ **pull_drishti_v2.py** — scripts/pull_drishti_v2.py; survivorship-free Nifty100+Midcap150 since 2000; INDX_MWEIGHT_HIST snapshots; resumes safely; writes to bloomberg_v2/ only
 - ✅ **verify_v2_cache.py** — scripts/verify_v2_cache.py; post-pull sanity report
+- ✅ **Events tab** — src/research/events.py; detect_drawdown_episodes (≥10% threshold); 16 curated labels (dot-com → 2026 tariff shock); statistical levels; practitioner appendix; GET /api/research/events; events.js + Events nav tab
+- ✅ **Regimes tab** — src/research/market_regimes.py; 20% bull/bear rule; regime_signs stats table; current_state; HMM overlay; GET /api/research/regimes-study; regimes.js + Regimes nav tab
+- ✅ **IS/IN Equity fallback** — cache.py read_cache() falls back from `TICKER IN Equity` → `TICKER IS Equity` filename; v2 Bloomberg pull uses IS exchange code, v1 tickers.py maps to IN; both work transparently
+- ✅ **v2 Bloomberg data imported** — 433 equities (229 NSE100 + 204 NSEMD150), 29 indices, 15 commodities, 4 macro; date range ~2006–2026-06-12; loaded via DRISHTI_DATA_VERSION=v2
+- ✅ **v2 research artifacts built** — data/cache/research_artifacts_v2/: spillover_study.json, events_study.json, regime_study.json (built via build_*.py scripts)
+- ✅ **docs/methodology.html** — comprehensive 30-section mathematical reference; all VaR methods, ES, backtests, GARCH, HMM, DCC/ADCC, Diebold-Yilmaz, IC, Granger, BH, walk-forward, XGBoost, FinBERT; MathJax equations; dark-themed HTML matching dashboard
 
 ### What's left to build
 
 Nothing planned for v2. Three optional REVISIT items in docs/design-choices.md (FinBERT download speed, news refresh latency, RSS reliability) — only relevant if the demo machine is slow.
+
+**Pending before merge:** install `transformers` + `torch` for FinBERT; commit methodology.html + artifacts; merge to main.
 
 ---
 
@@ -121,11 +135,14 @@ Walk-forward IC/Granger              →    served via FastAPI
 │   ├── research/
 │   │   ├── hmm.py                 # 2-state Gaussian HMM; walk-forward; canonical labeling
 │   │   ├── ic.py                  # Time-series IC + Granger causality + BH FDR correction
-│   │   ├── dcc_garch.py           # DCC-GARCH dynamic correlations (2-step Engle 2002)
-│   │   ├── diebold_yilmaz.py      # Connectedness index (VAR + Pesaran-Shin GFEVD)
+│   │   ├── dcc_garch.py           # DCC-GARCH dynamic correlations (2-step Engle 2002); ADCC (Cappiello-Engle-Sheppard)
+│   │   ├── diebold_yilmaz.py      # Connectedness index (VAR + Pesaran-Shin GFEVD); rolling_spillover()
 │   │   ├── walk_forward.py        # Rolling 252-day OOS Sharpe per (factor × sector) pair
 │   │   ├── news.py                # RSS fetch + FinBERT scoring + file cache + sentiment helpers
-│   │   └── breach_classifier.py   # XGBoost breach feature engineering + load/predict
+│   │   ├── breach_classifier.py   # XGBoost breach feature engineering + load/predict
+│   │   ├── universe.py            # load_universe/load_sectors/build_size_buckets/sector_composites
+│   │   ├── events.py              # detect_drawdown_episodes; match_labels; episode_stats; statistical_levels
+│   │   └── market_regimes.py      # classify_bull_bear (20% rule); regime_signs; current_state; HMM overlay
 │   ├── copilot/
 │   │   └── memo.py                # Deterministic risk memo (no LLM required)
 │   └── dashboard/
@@ -138,7 +155,14 @@ Walk-forward IC/Granger              →    served via FastAPI
 ├── notebooks/                     # BQuant research notebook specs (01-07.md)
 ├── scripts/
 │   ├── generate_synthetic_cache.py  # Offline demo: 5yr synthetic correlated prices
-│   ├── pull_drishti_data.py         # FRTL Bloomberg pull (50 equities + indices + factors)
+│   ├── pull_drishti_data.py         # FRTL Bloomberg pull v1 (50 equities + indices + factors)
+│   ├── pull_drishti_v2.py           # FRTL Bloomberg pull v2 (survivorship-free Nifty100+Midcap150 since 2000)
+│   ├── pull_drishti_v2_fallback.py  # Variant with INDX_MWEIGHT fallback for entitlement-limited FRTL
+│   ├── verify_v2_cache.py           # Post-pull sanity report for bloomberg_v2/
+│   ├── build_spillover_study.py     # Builds research_artifacts_v2/spillover_study.json
+│   ├── build_events_study.py        # Builds research_artifacts_v2/events_study.json
+│   ├── build_regime_study.py        # Builds research_artifacts_v2/regime_study.json
+│   ├── news_dry_run.py              # Validates FinBERT download + all RSS feeds; second run < 60s
 │   └── train_breach_classifier.py   # One-time XGBoost training: split→scale_pos_weight→fit→saves breach_classifier.pkl
 ├── data/
 │   ├── samples/nifty-demo-2026.json # 12-stock sample portfolio
@@ -151,14 +175,24 @@ Walk-forward IC/Granger              →    served via FastAPI
 │       │   ├── indices/             # NSENRG, NSEMET, NSEFMCG, NSEIT, NSEBANK, etc.
 │       │   ├── commodities/         # CO1, CL1, GC1, HG1, NG1, S 1, W 1
 │       │   └── macro/               # USDINR, GIND10YR, INVIXN
+│       ├── bloomberg_v2/            # v2 parquet files (gitignored — Bloomberg licensing)
+│       │   ├── equities/            # 433 tickers (NSE100 + NSEMD150); PX_LAST + PX_VOLUME + PE_RATIO + P/B + mktcap
+│       │   ├── indices/             # 29 indices (v1 set + NSE100/500/NSEMD150/sector additions)
+│       │   ├── commodities/         # 15 commodities (v1 7 + silver/aluminium/zinc/sugar/cotton/CPO/coal/iron ore)
+│       │   ├── macro/               # USDINR, GIND10YR, INVIXN, DXY
+│       │   └── meta/                # universe_v2.json, sectors_v2.json, failed_v2.json, membership snapshots
 │       ├── research_artifacts/      # Exported from BQuant (gitignored, not yet populated)
+│       ├── research_artifacts_v2/   # Built by build_*.py scripts (NOT gitignored — JSON, commit for demo)
+│       │   ├── spillover_study.json # Diebold-Yilmaz: large/mid/combined panels; IS/OOS split
+│       │   ├── events_study.json    # 16 labeled drawdown episodes; statistical levels; practitioner appendix
+│       │   └── regime_study.json    # Bull/bear classifications; regime stats; HMM overlay; current state
 │       ├── news/
 │       │   └── latest.json          # FinBERT-scored headlines cache (created by POST /api/research/news/refresh)
 │       └── models/
 │           └── breach_classifier.pkl  # Trained XGBoost model (created by scripts/train_breach_classifier.py)
 ├── tests/                           # pytest — 122 tests passing
 ├── design/                          # PRD, specs, high/low-level design (HTML)
-├── docs/                            # design-choices.md, lessons.md, audit-remediation-plan.md, frontend/code.md
+├── docs/                            # design-choices.md, lessons.md, audit-remediation-plan.md, frontend/code.md, methodology.html
 ├── requirements.txt
 ├── .env.example
 ├── README.md
@@ -347,6 +381,7 @@ Theme logic is split across `theme.js`, `components.css`, and `layout.css`.
 - **Session 4:** News RSS + FinBERT sentiment panel, XGBoost VaR breach classifier (next-day, no look-ahead, SMOTE after split), design-choices.md log, 69 tests
 - **Session 5:** Frontend UX fixes — tooltip hover-bridge, theme picker (`overflow:hidden` + render-on-open + hardcoded colour bugs), `/learn` header link, section subtitles + chart reading notes, 81 tests
 - **Session 6:** v2 expansion — ADCC, diagnostics ladder, weekly Granger, universe module, expanded spillover study, market shock events, bull/bear regimes, IPO truncation fix, unified safety filter, news dry-run, pull_drishti_v2.py + verify_v2_cache.py, v2 data version switch, 122 tests
+- **Session 7:** v2 data import (433 equities, 29 indices, 15 commodities), v2 artifact builds (spillover/events/regime), IS/IN Equity cache fallback fix, 2 new event labels (FII outflow 2024 + tariff shock 2026), Events + Regimes frontend tabs, docs/methodology.html (30-section math reference)
 
 ---
 
@@ -387,14 +422,14 @@ Theme logic is split across `theme.js`, `components.css`, and `layout.css`.
 - Annual fundamentals: 8 fields — RETURN_COM_EQY, BS_TOT_ASSET, NET_INCOME, SHORT_AND_LONG_TERM_DEBT, BOOK_VAL_PER_SH, EQY_DPS, CF_CASH_FROM_OPER, EQY_SH_OUT
 
 ### JS load order (strict — do not reorder)
-Plotly CDN → theme.js → api.js → charts.js → portfolio.js → risk.js → research.js → spillover.js → copilot.js → tooltip.js
+Plotly CDN → theme.js → api.js → charts.js → portfolio.js → risk.js → research.js → spillover.js → events.js → regimes.js → copilot.js → tooltip.js
 
 ### CSS load order (strict)
 theme.css → layout.css → components.css → tooltip.css
 
 ### JS global scope contracts
 - `window.API = ""` declared in `api.js` — all other files use `window.API`
-- `riskData`, `_regimeLoaded`, `_icLoaded`, `_newsLoaded`, `_breachLoaded` declared in `portfolio.js` — global state; all flags set inside the async success path of their respective load functions (never synchronously)
+- `riskData`, `_regimeLoaded`, `_icLoaded`, `_newsLoaded`, `_breachLoaded`, `_eventsLoaded`, `_regimesStudyLoaded` declared in `portfolio.js` — global state; all flags set inside the async success path of their respective load functions (never synchronously)
 - `CL`, `CONF`, `COLORS` declared in `charts.js` — Plotly config shared by all tab files
 - `PRESETS`, `ACCENTS`, `_theme` declared in `theme.js`
 - `initTheme()` called immediately at bottom of `theme.js` — only immediate execution in any JS file

@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Drishti — Full Methodology & Mathematics</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['$', '$'], ['\\(', '\\)']],
+    displayMath: [['$$', '$$'], ['\\[', '\\]']],
+    packages: {'[+]': ['ams']},
+    tags: 'ams'
+  },
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre'] }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+<style>
+  :root {
+    --bg: #07090E;
+    --surface: #0C1118;
+    --surface-2: #111927;
+    --ink: #E6EDF3;
+    --ink-2: #CDD9E5;
+    --muted: #7D8590;
+    --line: #21262D;
+    --line-2: #2D3748;
+    --primary: #C9A227;
+    --primary-light: #F0C842;
+    --primary-dim: rgba(201,162,39,0.12);
+    --ok: #3FB950;
+    --warn: #D29922;
+    --danger: #F85149;
+    --blue: #3891F0;
+    --violet: #8B5CF6;
+    --teal: #2EC4B6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'DM Sans', system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.75;
+  }
+  a { color: var(--primary); text-decoration: none; }
+  a:hover { color: var(--primary-light); }
+
+  /* ── LAYOUT ── */
+  .page { display: flex; }
+  aside {
+    position: fixed; top: 0; left: 0;
+    width: 280px; height: 100vh;
+    background: var(--surface);
+    border-right: 1px solid var(--line);
+    overflow-y: auto;
+    padding: 24px 16px;
+    font-size: 13px;
+  }
+  main { margin-left: 280px; padding: 48px 64px; max-width: 940px; }
+  @media (max-width: 900px) { aside { display: none; } main { margin-left: 0; padding: 24px 20px; } }
+
+  /* ── SIDEBAR ── */
+  aside .logo { font-size: 18px; font-weight: 700; color: var(--primary); margin-bottom: 24px; }
+  aside .logo span { color: var(--muted); font-weight: 400; font-size: 12px; display: block; margin-top: 2px; }
+  aside h3 { color: var(--muted); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; margin: 20px 0 6px; }
+  aside ul { list-style: none; }
+  aside li a {
+    display: block; padding: 4px 8px; border-radius: 4px;
+    color: var(--ink-2); line-height: 1.4;
+    transition: background .15s, color .15s;
+  }
+  aside li a:hover { background: var(--primary-dim); color: var(--primary); }
+  aside li a.active { background: var(--primary-dim); color: var(--primary); }
+
+  /* ── HEADINGS ── */
+  h1 { font-size: 2.2rem; font-weight: 700; color: var(--ink); margin-bottom: 8px; line-height: 1.2; }
+  h2 { font-size: 1.55rem; font-weight: 700; color: var(--ink); margin: 56px 0 12px;
+       border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+  h3 { font-size: 1.15rem; font-weight: 600; color: var(--primary); margin: 32px 0 8px; }
+  h4 { font-size: .95rem; font-weight: 600; color: var(--ink-2); margin: 20px 0 6px; }
+  .subtitle { color: var(--muted); font-size: 1rem; margin-bottom: 32px; }
+  .section-badge {
+    display: inline-block; background: var(--primary-dim); color: var(--primary);
+    font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+    padding: 2px 8px; border-radius: 3px; margin-bottom: 12px;
+  }
+
+  /* ── BODY TEXT ── */
+  p { margin-bottom: 14px; color: var(--ink-2); }
+  p strong { color: var(--ink); }
+  ul, ol { margin: 0 0 14px 20px; color: var(--ink-2); }
+  li { margin-bottom: 4px; }
+
+  /* ── MATH BLOCKS ── */
+  .math-block {
+    background: var(--surface);
+    border-left: 3px solid var(--primary);
+    border-radius: 6px;
+    padding: 18px 24px;
+    margin: 20px 0;
+    overflow-x: auto;
+  }
+  .math-block .label { font-size: 11px; color: var(--muted); margin-bottom: 6px; letter-spacing: .05em; text-transform: uppercase; }
+
+  /* ── CALLOUTS ── */
+  .callout {
+    border-radius: 6px;
+    padding: 14px 18px;
+    margin: 20px 0;
+    font-size: 14px;
+  }
+  .callout.info { background: rgba(56,145,240,.1); border-left: 3px solid var(--blue); }
+  .callout.warn { background: rgba(210,153,34,.1); border-left: 3px solid var(--warn); }
+  .callout.ok   { background: rgba(63,185,80,.1); border-left: 3px solid var(--ok); }
+  .callout.key  { background: var(--primary-dim); border-left: 3px solid var(--primary); }
+  .callout p { margin: 0; }
+  .callout p + p { margin-top: 6px; }
+
+  /* ── TABLES ── */
+  table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 13.5px; }
+  th { background: var(--surface-2); color: var(--muted); font-weight: 600; text-align: left;
+       padding: 8px 12px; border-bottom: 1px solid var(--line-2); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; }
+  td { padding: 8px 12px; border-bottom: 1px solid var(--line); color: var(--ink-2); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  .mono { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--teal); }
+
+  /* ── CODE ── */
+  code { font-family: 'JetBrains Mono', monospace; font-size: 13px;
+         background: var(--surface-2); color: var(--teal); padding: 1px 5px; border-radius: 3px; }
+  pre { background: var(--surface); border: 1px solid var(--line); border-radius: 6px;
+        padding: 16px; overflow-x: auto; font-size: 13px; margin: 16px 0; color: var(--teal); }
+
+  /* ── STEPS ── */
+  .steps { counter-reset: step; margin: 16px 0; }
+  .step { display: flex; gap: 14px; margin-bottom: 14px; }
+  .step-num {
+    counter-increment: step;
+    min-width: 28px; height: 28px;
+    background: var(--primary-dim); color: var(--primary);
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; flex-shrink: 0;
+  }
+  .step-num::before { content: counter(step); }
+  .step-body { padding-top: 4px; }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
+    padding: 40px 64px 36px;
+    margin-left: 280px;
+  }
+  @media (max-width: 900px) { header { margin-left: 0; padding: 24px 20px; } }
+  header .tag { color: var(--muted); font-size: 12px; margin-bottom: 10px; }
+  header p { color: var(--ink-2); max-width: 640px; font-size: 15px; }
+
+  /* ── DIVIDER ── */
+  hr { border: none; border-top: 1px solid var(--line); margin: 40px 0; }
+
+  /* ── EQUATION NUMBER ── */
+  .eq-label { float: right; color: var(--muted); font-size: 13px; margin-top: 4px; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="page">
+<aside>
+  <div class="logo">Drishti <span>Full Methodology Document</span></div>
+  <h3>Foundations</h3>
+  <ul>
+    <li><a href="#portfolio">Portfolio & Returns</a></li>
+    <li><a href="#ipo">IPO Truncation Fix</a></li>
+  </ul>
+  <h3>Market Risk</h3>
+  <ul>
+    <li><a href="#var-hist">Historical VaR</a></li>
+    <li><a href="#var-param">Parametric VaR</a></li>
+    <li><a href="#var-garch">GARCH-FHS VaR</a></li>
+    <li><a href="#es">Expected Shortfall</a></li>
+    <li><a href="#component">Component VaR</a></li>
+    <li><a href="#drawdown">Drawdown</a></li>
+    <li><a href="#stress">Stress Testing</a></li>
+  </ul>
+  <h3>Backtesting</h3>
+  <ul>
+    <li><a href="#kupiec">Kupiec POF Test</a></li>
+    <li><a href="#christoffersen">Christoffersen Test</a></li>
+  </ul>
+  <h3>Econometric Diagnostics</h3>
+  <ul>
+    <li><a href="#adf">ADF Unit Root</a></li>
+    <li><a href="#ljungbox">Ljung-Box</a></li>
+    <li><a href="#archlm">ARCH-LM</a></li>
+    <li><a href="#garch-scan">GARCH Order Scan</a></li>
+    <li><a href="#engle-sheppard">Engle-Sheppard</a></li>
+  </ul>
+  <h3>Volatility Models</h3>
+  <ul>
+    <li><a href="#garch11">GARCH(1,1)</a></li>
+    <li><a href="#hmm">HMM Regimes</a></li>
+    <li><a href="#dcc">DCC-GARCH</a></li>
+    <li><a href="#adcc">ADCC</a></li>
+  </ul>
+  <h3>Spillover & Factors</h3>
+  <ul>
+    <li><a href="#dy">Diebold-Yilmaz</a></li>
+    <li><a href="#ic">Time-Series IC</a></li>
+    <li><a href="#granger">Granger Causality</a></li>
+    <li><a href="#bh">BH FDR Correction</a></li>
+    <li><a href="#walkfwd">Walk-Forward</a></li>
+  </ul>
+  <h3>Research Studies</h3>
+  <ul>
+    <li><a href="#bull-bear">Bull/Bear Regimes</a></li>
+    <li><a href="#events">Events Study</a></li>
+  </ul>
+  <h3>ML & AI</h3>
+  <ul>
+    <li><a href="#xgboost">XGBoost Classifier</a></li>
+    <li><a href="#finbert">FinBERT Sentiment</a></li>
+    <li><a href="#safety">Safety Filter</a></li>
+  </ul>
+</aside>
+
+<!-- HEADER -->
+<div style="flex:1; min-width:0;">
+<header>
+  <div class="tag">IIM Calcutta · PGDBA Sem 3 · Financial Risk Management · 2026</div>
+  <h1>Drishti — Complete Methodology</h1>
+  <p>Every mathematical technique, equation, derivation, design decision, and implementation detail behind the Drishti quantitative risk platform. Written for academic and examination purposes.</p>
+</header>
+
+<!-- MAIN CONTENT -->
+<main>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<h2 id="portfolio">1. Portfolio Construction & Return Computation</h2>
+<!-- ══════════════════════════════════════════════════════════════ -->
+
+<div class="section-badge">Foundation</div>
+
+<h3>1.1 What is a portfolio return?</h3>
+<p>A portfolio is a collection of $n$ assets held in weights $\mathbf{w} = (w_1, \ldots, w_n)^\top$ where $\sum_i w_i = 1$. At each time $t$, the portfolio's simple (arithmetic) return is the weighted average of individual asset returns:</p>
+
+<div class="math-block">
+<div class="label">Portfolio return</div>
+$$R_{p,t} = \sum_{i=1}^{n} w_i R_{i,t} = \mathbf{w}^\top \mathbf{R}_t$$
+</div>
+
+<p>Individual asset returns are computed from adjusted close prices (Bloomberg <code>PX_LAST</code> with <code>adj_split=True, adj_normal=True</code>):</p>
+<div class="math-block">
+$$R_{i,t} = \frac{P_{i,t} - P_{i,t-1}}{P_{i,t-1}} = \frac{P_{i,t}}{P_{i,t-1}} - 1$$
+</div>
+
+<p>We use <strong>simple returns</strong> (not log returns) because portfolio aggregation $R_p = \mathbf{w}^\top \mathbf{R}$ is exact for simple returns but only approximate for log returns. Log returns are used only where compounding is required (weekly aggregation for Granger tests).</p>
+
+<h3>1.2 Covariance matrix estimation</h3>
+<p>The sample covariance matrix is estimated on the aligned return matrix $\mathbf{R} \in \mathbb{R}^{T \times n}$:</p>
+<div class="math-block">
+$$\hat{\boldsymbol{\Sigma}} = \frac{1}{T-1} \sum_{t=1}^{T} (\mathbf{R}_t - \bar{\mathbf{R}})(\mathbf{R}_t - \bar{\mathbf{R}})^\top$$
+</div>
+<p>The portfolio variance follows as the scalar quadratic form $\sigma_p^2 = \mathbf{w}^\top \hat{\boldsymbol{\Sigma}} \mathbf{w}$.</p>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<h2 id="ipo">2. IPO Truncation Problem & Min-History Filter</h2>
+<!-- ══════════════════════════════════════════════════════════════ -->
+
+<div class="section-badge">Data Engineering</div>
+
+<h3>2.1 The problem</h3>
+<p>When building a return matrix from multiple assets, a naive <code>dropna()</code> after alignment truncates the entire matrix to the shortest series. If one stock listed in 2023, the full 2018–2026 history of all other stocks is discarded. This is a classic survivorship/truncation bug that artificially reduces effective sample size.</p>
+
+<div class="callout warn">
+<p><strong>Example:</strong> 49 stocks with history since 2018 + 1 IPO from 2024 → <code>dropna()</code> produces a 2-year matrix. Historical VaR, GARCH, and backtests all break.</p>
+</div>
+
+<h3>2.2 The fix: per-column minimum history filter</h3>
+<p>Before alignment, drop any column whose non-NaN observation count is below a configurable threshold:</p>
+
+<div class="math-block">
+<div class="label">Filter criterion</div>
+$$\text{Keep ticker } i \iff |\{t : P_{i,t} \neq \text{NaN}\}| \geq D_{\min}$$
+</div>
+
+<p>Drishti uses $D_{\min} = 756$ trading days (≈ 3 years, configurable via <code>DRISHTI_MIN_HISTORY_DAYS</code>). This preserves the full long-run history of established names while excluding very recent IPOs.</p>
+
+<p>After filtering, <code>ffill()</code> fills at most a few missing days (holidays, halts), then the remaining NaN rows at the front of each series are handled series-by-series rather than by a global <code>dropna()</code>.</p>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<h2 id="var-hist">3. Historical Simulation VaR</h2>
+<!-- ══════════════════════════════════════════════════════════════ -->
+
+<div class="section-badge">Market Risk</div>
+
+<h3>3.1 Definition and motivation</h3>
+<p>Value at Risk at confidence level $\alpha$ and horizon $h$ is the loss threshold not exceeded with probability $\alpha$. Formally, if $L = -R_p$ is the loss:</p>
+
+<div class="math-block">
+<div class="label">VaR definition</div>
+$$\text{VaR}_\alpha^h = \inf\{l \in \mathbb{R} : \Pr(L_h > l) \leq 1-\alpha\} = -F_{R}^{-1}(1-\alpha)$$
+</div>
+
+<p>Historical simulation makes <strong>no distributional assumption</strong> — it directly uses the empirical distribution of past returns as a proxy for the future. The 1-day $99\%$ VaR is simply the 1st percentile of the empirical return distribution:</p>
+
+<div class="math-block">
+$$\widehat{\text{VaR}}_{0.99}^{1} = -\hat{F}^{-1}(0.01) = -\text{Quantile}(\{R_{p,t}\}_{t=1}^{T},\; 0.01)$$
+</div>
+
+<h3>3.2 Multi-day horizon: non-overlapping windows</h3>
+<p>For a $h$-day VaR, the correct approach aggregates returns over non-overlapping windows of length $h$:</p>
+
+<div class="math-block">
+<div class="label">h-day non-overlapping return</div>
+$$R_p^{(h,k)} = \sum_{j=0}^{h-1} R_{p, kh+j}, \qquad k = 0, 1, \ldots, \left\lfloor T/h \right\rfloor - 1$$
+</div>
+
+<p>The empirical quantile is then taken over $\{R_p^{(h,k)}\}$. This preserves any serial dependence (volatility clustering) in the actual return process.</p>
+
+<div class="callout warn">
+<p><strong>Why not $\sqrt{h}$ scaling?</strong> The $\sqrt{h}$ rule assumes i.i.d. returns (a random walk). Financial returns exhibit volatility clustering — large moves cluster together. Using $\sqrt{h}$ scaling when returns are <em>not</em> i.i.d. understates multi-day VaR during turbulent periods. The non-overlapping approach is an empirical estimate that automatically captures clustering effects.</p>
+</div>
+
+<p>Fallback: if $\lfloor T/h \rfloor < 30$ windows are available, Drishti falls back to $\sqrt{h}$ scaling with an explicit warning in the output.</p>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<h2 id="var-param">4. Parametric (Delta-Normal) VaR</h2>
+<!-- ══════════════════════════════════════════════════════════════ -->
+
+<div class="section-badge">Market Risk</div>
+
+<h3>4.1 The multivariate-normal assumption</h3>
+<p>Under the assumption $\mathbf{R}_t \sim \mathcal{N}(\boldsymbol{\mu}, \boldsymbol{\Sigma})$, the portfolio return is univariate normal:</p>
+<div class="math-block">
+$$R_{p,t} = \mathbf{w}^\top \mathbf{R}_t \sim \mathcal{N}\!\left(\mathbf{w}^\top\boldsymbol{\mu},\; \mathbf{w}^\top\boldsymbol{\Sigma}\mathbf{w}\right)$$
+</div>
+
+<p>For risk purposes the mean term is small relative to the standard deviation at short horizons (the "zero-mean" approximation), so:</p>
+
+<div class="math-block">
+<div class="label">Parametric 1-day VaR (closed form)</div>
+$$\text{VaR}_\alpha^1 = -z_{1-\alpha} \cdot \sigma_p = |z_{1-\alpha}| \cdot \sqrt{\mathbf{w}^\top\boldsymbol{\Sigma}\mathbf{w}}$$
+</div>
+
+<p>where $z_{1-\alpha} = \Phi^{-1}(1-\alpha)$ is the standard-normal quantile. At 99% confidence, $z_{0.01} = \Phi^{-1}(0.01) \approx -2.326$.</p>
+
+<h3>4.2 Horizon scaling</h3>
+<p>Under i.i.d. normality, $h$-day returns are normally distributed with variance $h\sigma_p^2$, giving:</p>
+<div class="math-block">
+<div class="label">Parametric h-day VaR</div>
+$$\text{VaR}_\alpha^h = |z_{1-\alpha}| \cdot \sigma_p \cdot \sqrt{h}$$
+</div>
+<p>The $\sqrt{h}$ rule is stated as an explicit <strong>assumption</strong> in Drishti's output, not claimed as empirically valid. It is provided for comparison with the non-overlapping historical estimate.</p>
+
+<h3>4.3 Verification: closed-form test</h3>
+<p>For a single asset with $\sigma = 2\%$/day and portfolio value $V = 1{,}000{,}000$:</p>
+<div class="math-block">
+$$\text{VaR}_{0.99}^1 = 2.326 \times 0.02 \times 1{,}000{,}000 = 46{,}520$$
+</div>
+<p>This exact value is verified in <code>tests/test_es_contribution.py::test_parametric_var_closed_form</code>.</p>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<h2 id="var-garch">5. GARCH-FHS VaR</h2>
+<!-- ══════════════════════════════════════════════════════════════ -->
+
+<div class="section-badge">Market Risk</div>
+
+<h3>5.1 Why GARCH-FHS is genuinely different</h3>
+<p>Parametric VaR assumes a constant volatility. In reality, equity volatilities cluster — large moves tend to follow large moves (Mandelbrot 1963, Engle 1982). GARCH-FHS (Filtered Historical Simulation) combines GARCH's time-varying volatility forecast with the empirical tail shape of standardized residuals. It is <em>not</em> the same as parametric VaR with a GARCH-estimated $\sigma$.</p>
+
+<h3>5.2 GARCH(1,1) — the volatility model</h3>
+<p>Let $r_t$ be the portfolio return at time $t$. The GARCH(1,1) model decomposes returns into a conditional mean (assumed zero) and a volatility-scaled shock:</p>
+
+<div class="math-block">
+<div class="label">GARCH(1,1) specification</div>
+$$r_t = \sigma_t \varepsilon_t, \qquad \varepsilon_t \stackrel{\text{i.i.d.}}{\sim} \mathcal{N}(0,1)$$
+$$\sigma_t^2 = \omega + \alpha r_{t-1}^2 + \beta \sigma_{t-1}^2$$
+</div>
+
+<p>with parameters $\omega > 0$, $\alpha \geq 0$, $\beta \geq 0$, $\alpha + \beta < 1$ (stationarity). The unconditional (long-run) variance is:</p>
+<div class="math-block">
+$$\bar{\sigma}^2 = \frac{\omega}{1 - \alpha - \beta}$$
+</div>
+
+<p>Interpretation: $\alpha$ measures how quickly variance responds to new shocks (ARCH effect); $\beta$ measures persistence (how long elevated volatility lasts). High $\beta$ (e.g. 0.88 in typical equity data) means volatility is very persistent.</p>
+
+<h3>5.3 GARCH-FHS procedure</h3>
+
+<div class="steps">
+  <div class="step"><div class="step-num"></div><div class="step-body">
+    <strong>Fit GARCH(1,1)</strong> to the full history of portfolio returns, obtaining parameters $\hat\omega, \hat\alpha, \hat\beta$ and the conditional volatility path $\hat\sigma_1, \ldots, \hat\sigma_T$.
+  </div></div>
+  <div class="step"><div class="step-num"></div><div class="step-body">
+    <strong>Extract standardized residuals:</strong>
+    $$\hat{z}_t = \frac{r_t}{\hat\sigma_t}, \quad t=1,\ldots,T$$
+    These are approximately i.i.d. with zero mean and unit variance, but preserving the empirical tail shape (fat tails, skewness).
+  </div></div>
+  <div class="step"><div class="step-num"></div><div class="step-body">
+    <strong>Forecast next-period volatility:</strong>
+    $$\hat\sigma_{T+1}^2 = \hat\omega + \hat\alpha r_T^2 + \hat\beta \hat\sigma_T^2$$
+  </div></div>
+  <div class="step"><div class="step-num"></div><div class="step-body">
+    <strong>Bootstrap simulated returns</strong> by sampling $B=10{,}000$ values from $\{\hat z_t\}$ with replacement, then scaling:
+    $$\tilde r^{(b)} = \hat z^{(b)} \cdot \hat\sigma_{T+1}, \quad b=1,\ldots,B$$
+  </div></div>
+  <div class="step"><div class="step-num"></div><div class="step-body">
+    <strong>Read off VaR</strong> as the empirical quantile of the bootstrap distribution:
+    $$\widehat{\text{VaR}}_{0.99}^{\text{FHS}} = -\text{Quantile}\!\left(\{\tilde r^{(b)}\}, 0.01\right)$$
+  </div></div>
+</div>
+
+<h3>5.4 Multi-day FHS</h3>
+<p>For $h > 1$ day, Drishti simulates full GARCH paths rather than scaling by $\sqrt{h}$. Each simulated path recursively propagates GARCH dynamics:</p>
+<div class="math-block">
+$$\tilde r_{T+j}^{(b)} = \hat z_j^{(b)} \cdot \tilde\sigma_{T+j}, \quad \tilde\sigma_{T+j}^2 = \hat\omega + \hat\alpha (\tilde r_{T+j-1}^{(b)})^2 + \hat\beta \tilde\sigma_{T+j-1}^2$$
+$$R_h^{(b)} = \sum_{j=1}^{h} \tilde r_{T+j}^{(b)}$$
+</div>
+<p>The 10-day GARCH-FHS VaR is always strictly greater than the 1-day VaR, as verified in tests.</p>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<h2 id="es">6. Expected Shortfall (CVaR)</h2>
+<!-- ══════════════════════════════════════════════════════════════ -->
+
+<div class="section-badge">Market Risk</div>
+
+<h3>6.1 Definition</h3>
+<p>Expected Shortfall (ES), also called Conditional VaR (CVaR) or Expected Tail Loss, is the expected loss <em>given that the loss exceeds VaR</em>:</p>
+
+<div class="math-block">
+<div class="label">ES definition</div>
+$$\text{ES}_\alpha = \mathbb{E}\!\left[-R_p \mid -R_p > \text{VaR}_\alpha\right] = \frac{1}{1-\alpha} \int_\alpha^1 \text{VaR}_u \, du$$
+</div>
+
+<p>ES is a coherent risk measure (Artzner et al. 1999) — it satisfies subadditivity ($\text{ES}(A+B) \leq \text{ES}(A) + \text{ES}(B)$), while VaR does not. Basel III/IV (FRTB) requires ES at 97.5% for internal models rather than VaR at 99%, precisely because ES captures the tail distribution rather than just the cutoff point.</p>
+
+<h3>6.2 Historical ES computation</h3>
+<p>The empirical estimate uses the same non-overlapping windows as historical VaR, then averages over the tail:</p>
+<div class="math-block">
+$$\widehat{\text{ES}}_\alpha = -\frac{1}{|\mathcal{T}|} \sum_{t \in \mathcal{T}} R_p^{(t)}, \quad \mathcal{T} = \{t : R_p^{(t)} \leq \hat q_{1-\alpha}\}$$
+</div>
+
+<div class="callout key">
+<p><strong>Key property verified in tests:</strong> $\text{ES}_\alpha \geq \text{VaR}_\alpha$ always. ES is at least as large as VaR — ES is the average of the worst outcomes, VaR is just the boundary. If this inequality fails, there is a bug in implementation.</p>
+</div>
+
+<p>Drishti flags the ES estimate as <em>unstable</em> if fewer than 30 tail observations contribute to the average.</p>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<h2 id="component">7. Component VaR & Marginal Contributions</h2>
+<!-- ══════════════════════════════════════════════════════════════ -->
+
+<div class="section-badge">Market Risk</div>
+
+<h3>7.1 Marginal VaR</h3>
+<p>Under the parametric (delta-normal) framework, the portfolio VaR is:</p>
+<div class="math-block">
+$$\text{VaR}_p = z_\alpha \cdot \sigma_p = z_\alpha \sqrt{\mathbf{w}^\top \boldsymbol{\Sigma} \mathbf{w}}$$
+</div>
+
+<p>The marginal VaR of asset $i$ is the sensitivity of portfolio VaR to a small change in weight $w_i$:</p>
+<div class="math-block">
+<div class="label">Marginal VaR</div>
+$$\text{MVaR}_i = \frac{\partial \text{VaR}_p}{\partial w_i} = z_\alpha \cdot \frac{(\boldsymbol{\Sigma}\mathbf{w})_i}{\sigma_p}$$
+</div>
+
+<p>where $(\boldsymbol{\Sigma}\mathbf{w})_i$ is the $i$-th element of the covariance vector between asset $i$ and the portfolio.</p>
+
+<h3>7.2 Component VaR</h3>
+<p>Component VaR is the dollar contribution of asset $i$ to total portfolio VaR:</p>
+<div class="math-block">
+<div class="label">Component VaR (Euler decomposition)</div>
+$$\text{CVaR}_i = w_i \cdot \text{MVaR}_i = w_i \cdot z_\alpha \cdot \frac{(\boldsymbol{\Sigma}\mathbf{w})_i}{\sigma_p}$$
+</div>
+
+<p>This is Euler's theorem for homogeneous functions of degree 1: since $\text{VaR}_p(\lambda \mathbf{w}) = \lambda \cdot \text{VaR}_p(\mathbf{w})$, the component VaRs sum exactly to the total:</p>
+<div class="math-block">
+$$\sum_{i=1}^n \text{CVaR}_i = \mathbf{w}^\top (\boldsymbol{\Sigma}\mathbf{w}) \cdot \frac{z_\alpha}{\sigma_p} = \sigma_p \cdot z_\alpha = \text{VaR}_p$$
+</div>
+
+<div class="callout ok">
+<p><strong>Additivity property:</strong> Component VaRs always sum exactly to total parametric VaR. This is verified in <code>test_component_var_sums_to_parametric_total</code>.</p>
+</div>
+
+<p>The <strong>VaR share</strong> of asset $i$ is $\text{CVaR}_i / \text{VaR}_p$ — the fraction of total risk driven by that position. An asset with a large weight but low correlation to the rest of the portfolio may have a small VaR share; a small position that is highly correlated with the rest can have an outsized share.</p>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<h2 id="drawdown">8. Maximum Drawdown</h2>
+<!-- ══════════════════════════════════════════════════════════════ -->
+
+<div class="section-badge">Market Risk</div>
+
+<p>Drawdown measures the decline from a historical peak in the cumulative value (or NAV) of the portfolio. Let $V_t = V_0 \prod_{s=1}^t (1+R_{p,s})$ be the portfolio value path. The <strong>running maximum</strong> is:</p>
+<div class="math-block">
+$$M_t = \max_{s \leq t} V_s$$
+</div>
+
+<p>The drawdown at time $t$ is:</p>
+<div class="math-block">
+$$DD_t = \frac{V_t - M_t}{M_t} \leq 0$$
+</div>
+
+<p>The <strong>maximum drawdown</strong> over the sample is $\text{MDD} = \min_t DD_t$ — the deepest trough relative to any prior peak. A drawdown <strong>episode</strong> is a period where $DD_t \leq -\delta$ for some threshold $\delta$ (Drishti uses $\delta = 10\%$ for the events study).</p>
+
+<p>Recovery date is the first $t^* > t_{\text{trough}}$ at which $V_{t^*} \geq M_{t_{\text{peak}}}$, i.e. the portfolio returns to its prior peak.</p>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<h2 id="stress">9. Stress Testing</h2>
+<!-- ══════════════════════════════════════════════════════════════ -->
+
+<div class="section-badge">Market Risk</div>
+
+<p>Historical stress scenarios replay actual market shocks and apply the observed factor moves to the current portfolio. For each scenario $s$ (COVID, rate shock, crude crash, INR crisis, election), the scenario return is:</p>
+<div class="math-block">
+$$R_p^{(s)} = \sum_{i=1}^n w_i \cdot \Delta R_i^{(s)}$$
+</div>
+
+<p>where $\Delta R_i^{(s)}$ is the total return of asset $i$ over the scenario window (e.g. NIFTY fell 38.4% during COVID). The five scenarios in Drishti are calibrated to Indian market events and represent tail-risk scenarios that VaR models may not capture (since they are single point-in-time events, not samples from a stationary distribution).</p>
+
+<div class="callout info">
+<p><strong>Why stress test alongside VaR?</strong> VaR is backward-looking over a training window. Stress tests ask "what if the future repeats a specific historical disaster?" They are complementary: VaR captures typical tail risk; stress scenarios capture named tail events that may not appear in the training sample.</p>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<h2 id="kupiec">10. Kupiec Proportion-of-Failures (POF) Test</h2>
+<!-- ══════════════════════════════════════════════════════════════ -->
+
+<div class="section-badge">Backtesting</div>
+
+<h3>10.1 Motivation</h3>
+<p>A VaR model at confidence $\alpha$ should produce violations (actual loss exceeding VaR) with probability $p = 1 - \alpha$ on any given day. The <strong>Kupiec (1995) POF test</strong> tests whether the observed violation rate $\hat p = V/T$ is statistically consistent with the expected rate $p$, where $V$ is the number of violations in $T$ observations.</p>
+
+<h3>10.2 The likelihood ratio test</h3>
+<p>Under the null hypothesis $H_0: p_{\text{true}} = p$, violations are i.i.d. Bernoulli$(p)$. The log-likelihood under the null is:</p>
+<div class="math-block">
+$$\ell_0 = (T-V)\log(1-p) + V\log(p)$$
+</div>
+<p>Under the alternative (violations occur at the true rate $\hat p = V/T$):</p>
+<div class="math-block">
+$$\ell_1 = (T-V)\log\!\left(1-\frac{V}{T}\right) + V\log\!\left(\frac{V}{T}\right)$$
+</div>
+<p>The likelihood ratio statistic:</p>
+<div class="math-block">
+<div class="label">Kupiec LR statistic</div>
+$$LR_{\text{POF}} = -2(\ell_0 - \ell_1) = -2\!\left[(T-V)\log\frac{1-p}{1-\hat p} + V\log\frac{p}{\hat p}\right] \xrightarrow{d} \chi^2_1$$
+</div>
+
+<p>Under $H_0$, the statistic is asymptotically $\chi^2$ with 1 degree of freedom. We <strong>reject the VaR model</strong> (at 5% level) when $LR_{\text{POF}} > \chi^2_{1,0.95} = 3.84$, equivalently when the $p$-value $< 0.05$.</p>
+
+<div class="callout key">
+<p><strong>Intuition:</strong> At 99% confidence over 252 trading days, we expect $252 \times 0.01 \approx 2.52$ violations. Observing 0 or ≥8 violations would be statistically unusual. The test formalizes this intuition.</p>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<h2 id="christoffersen">11. Christoffersen Independence Test</h2>
+<!-- ══════════════════════════════════════════════════════════════ -->
+
+<div class="section-badge">Backtesting</div>
+
+<h3>11.1 Motivation</h3>
+<p>Kupiec only tests the <em>number</em> of violations, not their timing. A model could pass Kupiec while producing violations that cluster together — occurring on consecutive days of market stress. Christoffersen (1998) tests whether violations are serially independent.</p>
+
+<h3>11.2 The transition-probability approach</h3>
+<p>Let $I_t \in \{0,1\}$ be the violation indicator on day $t$. Define transition counts from the violation series:</p>
+<div class="math-block">
+$$n_{ij} = |\{t : I_{t-1}=i,\; I_t=j\}|, \quad i,j \in \{0,1\}$$
+</div>
+
+<p>The key quantities are the conditional probabilities of a violation given the previous day's state:</p>
+<div class="math-block">
+$$\hat\pi_{01} = \frac{n_{01}}{n_{00}+n_{01}}, \quad \hat\pi_{11} = \frac{n_{11}}{n_{10}+n_{11}}$$
+$$\hat\pi = \frac{n_{01}+n_{11}}{n_{00}+n_{01}+n_{10}+n_{11}}$$
+</div>
+
+<p>Under $H_0$ (independence): $\pi_{01} = \pi_{11} = \pi$. Under $H_1$ (dependence / clustering): $\pi_{11} > \pi_{01}$.</p>
+
+<h3>11.3 The LR statistic</h3>
+<div class="math-block">
+<div class="label">Christoffersen independence LR</div>
+$$LR_{\text{ind}} = -2\left[(n_{00}+n_{10})\log(1-\hat\pi) + (n_{01}+n_{11})\log\hat\pi \right.$$
+$$\left. - n_{00}\log(1-\hat\pi_{01}) - n_{01}\log\hat\pi_{01} - n_{10}\log(1-\hat\pi_{11}) - n_{11}\log\hat\pi_{11}\right]$$
+$$\xrightarrow{d} \chi^2_1 \text{ under } H_0$$
+</div>
+
+<div class="callout warn">
+<p><strong>Bug fixed (Drishti v2):</strong> The denominator of $\hat\pi$ must be the total number of <em>transitions</em> (pairs), not the total number of observations. Using $T$ instead of $n_{00}+n_{01}+n_{10}+n_{11}$ inflates $\hat\pi$ and biases the test. The clustering narrative is also gated: it appears only when the test <em>rejects</em> independence (<em>and</em> $\hat\pi_{11} > \hat\pi_{01}$), not otherwise.</p>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<h2 id="adf">12. ADF Unit Root Test</h2>
+<!-- ══════════════════════════════════════════════════════════════ -->
+
+<div class="section-badge">Econometric Diagnostics</div>
+
+<p>Before fitting GARCH or running Granger causality, we verify that the return series is <strong>stationary</strong> (no unit root). The Augmented Dickey-Fuller (ADF) test regression is:</p>
+<div class="math-block">
+$$\Delta r_t = \mu + \rho r_{t-1} + \sum_{j=1}^{p} c_j \Delta r_{t-j} + \varepsilon_t$$
+</div>
+<p>$H_0: \rho = 0$ (unit root; non-stationary). The ADF $t$-statistic for $\hat\rho$ is compared against the Dickey-Fuller critical values (not standard $t$-critical values). The lag order $p$ is chosen by AIC.</p>
+
+<p>For financial return series (as opposed to price levels), the ADF test <em>strongly rejects</em> the unit root ($p < 0.001$ typically) — returns are mean-reverting and stationary. This is a first-step sanity check before the rest of the diagnostics ladder.</p>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<h2 id="ljungbox">13. Ljung-Box Test for Autocorrelation</h2>
+<!-- ══════════════════════════════════════════════════════════════ -->
+
+<div class="section-badge">Econometric Diagnostics</div>
+
+<p>The Ljung-Box test checks whether the first $m$ autocorrelations of a series are jointly zero:</p>
+<div class="math-block">
+$$Q(m) = T(T+2)\sum_{k=1}^m \frac{\hat\rho_k^2}{T-k} \xrightarrow{d} \chi^2_m \text{ under } H_0$$
+</div>
+
+<p>where $\hat\rho_k$ is the sample autocorrelation at lag $k$. $H_0$: all autocorrelations up to lag $m$ are zero (no serial correlation).</p>
+
+<p>Drishti applies Ljung-Box to both raw returns (to detect autocorrelation / momentum) and to GARCH-standardized residuals $\hat z_t = r_t/\hat\sigma_t$ (to check whether GARCH has removed the ARCH structure). Ideally: $Q(\text{raw}) > Q(\hat z)$ — GARCH should eliminate dependence.</p>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<h2 id="archlm">14. ARCH-LM Test for Heteroskedasticity</h2>
+<!-- ══════════════════════════════════════════════════════════════ -->
+
+<div class="section-badge">Econometric Diagnostics</div>
+
+<p>Before fitting GARCH, we test whether volatility clustering (ARCH effects) is actually present. The Engle (1982) ARCH-LM test regresses squared returns on their own lags:</p>
+<div class="math-block">
+$$r_t^2 = a_0 + a_1 r_{t-1}^2 + \cdots + a_q r_{t-q}^2 + \nu_t$$
+</div>
+
+<p>The test statistic is $LM = TR^2$ (from the auxiliary regression), asymptotically $\chi^2_q$ under $H_0: a_1=\cdots=a_q=0$ (no ARCH effects).</p>
+
+<p><strong>Interpretation in Drishti:</strong></p>
+<ul>
+<li>If ARCH-LM rejects $H_0$ → GARCH/ARCH model is justified; proceed to order scan.</li>
+<li>If ARCH-LM fails to reject → returns are (conditionally) homoskedastic; parametric VaR may be adequate.</li>
+</ul>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<h2 id="garch-scan">15. GARCH Order Scan (BIC Comparison)</h2>
+<!-- ══════════════════════════════════════════════════════════════ -->
+
+<div class="section-badge">Econometric Diagnostics</div>
+
+<p>Once ARCH effects are confirmed, we fit four competing volatility models and compare by BIC to justify our GARCH(1,1) choice:</p>
+
+<table>
+<tr><th>Model</th><th>Specification</th><th>Extra parameter</th></tr>
+<tr><td class="mono">garch_11</td><td>GARCH(1,1): $\sigma_t^2 = \omega + \alpha r_{t-1}^2 + \beta\sigma_{t-1}^2$</td><td>—</td></tr>
+<tr><td class="mono">garch_12</td><td>GARCH(1,2): adds second ARCH lag $\alpha_2 r_{t-2}^2$</td><td>$\alpha_2$</td></tr>
+<tr><td class="mono">garch_21</td><td>GARCH(2,1): adds second GARCH lag $\beta_2\sigma_{t-2}^2$</td><td>$\beta_2$</td></tr>
+<tr><td class="mono">gjr_11</td><td>GJR-GARCH(1,1): asymmetric; $\sigma_t^2 = \omega + (\alpha+\gamma\mathbf{1}_{r_{t-1}<0})r_{t-1}^2 + \beta\sigma_{t-1}^2$</td><td>$\gamma$ (leverage)</td></tr>
+</table>
+
+<p>The GJR model captures the <strong>leverage effect</strong>: negative shocks ($r_{t-1} < 0$) increase volatility more than positive shocks of the same magnitude ($\gamma > 0$ for equities). The BIC is:</p>
+<div class="math-block">
+$$\text{BIC} = -2\hat\ell + k\log T$$
+</div>
+<p>Lower BIC is better. If GARCH(1,1) has the lowest BIC among the four candidates, it is the parsimonious choice. If GJR-GARCH wins, the asymmetry is economically meaningful (leverage effect).</p>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<h2 id="engle-sheppard">16. Engle-Sheppard CCC Test</h2>
+<!-- ══════════════════════════════════════════════════════════════ -->
+
+<div class="section-badge">Econometric Diagnostics</div>
+
+<h3>16.1 Motivation</h3>
+<p>Before fitting DCC-GARCH (which assumes time-varying correlations), we test whether correlations are actually constant. The <strong>Engle and Sheppard (2001) test</strong> has $H_0$: Constant Conditional Correlation (CCC). Rejection justifies fitting DCC.</p>
+
+<h3>16.2 Procedure</h3>
+<div class="steps">
+  <div class="step"><div class="step-num"></div><div class="step-body">
+    <strong>GARCH-standardize each series:</strong> fit GARCH(1,1) to each return series $r_{i,t}$ and compute $z_{i,t} = r_{i,t}/\hat\sigma_{i,t}$.
+  </div></div>
+  <div class="step"><div class="step-num"></div><div class="step-body">
+    <strong>CCC-whiten:</strong> compute the unconditional correlation matrix $\hat R = \text{corr}(\mathbf{Z})$, then $\mathbf{U}_t = \hat R^{-1/2} \mathbf{z}_t$. Under CCC, $\mathbf{U}_t$ should be spherical.
+  </div></div>
+  <div class="step"><div class="step-num"></div><div class="step-body">
+    <strong>Test regression:</strong> for the mean off-diagonal product deviation $y_t$ at each time step, regress on its own lags:
+    $$y_t = c + \sum_{j=1}^m \delta_j y_{t-j} + \varepsilon_t$$
+  </div></div>
+  <div class="step"><div class="step-num"></div><div class="step-body">
+    <strong>Wald test:</strong> $H_0: \delta_1 = \cdots = \delta_m = 0$ (no dynamics in joint second moments). The Wald statistic $\sim \chi^2_m$ under $H_0$. Rejection ⟹ correlations are time-varying ⟹ DCC is appropriate.
+  </div></div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<h2 id="garch11">17. GARCH(1,1) Estimation</h2>
+<!-- ══════════════════════════════════════════════════════════════ -->
+
+<div class="section-badge">Volatility Models</div>
+
+<h3>17.1 Quasi-maximum likelihood</h3>
+<p>GARCH parameters $\boldsymbol\theta = (\omega, \alpha, \beta)$ are estimated by maximizing the Gaussian quasi-log-likelihood:</p>
+<div class="math-block">
+<div class="label">GARCH log-likelihood</div>
+$$\mathcal{L}(\boldsymbol\theta) = -\frac{1}{2}\sum_{t=1}^{T}\left[\log(2\pi) + \log\sigma_t^2 + \frac{r_t^2}{\sigma_t^2}\right]$$
+</div>
+
+<p>where $\sigma_t^2$ is recursively computed as a function of $\boldsymbol\theta$ and the data. Even if returns are not truly Gaussian, the QMLE estimator is consistent and asymptotically normal under mild regularity conditions (Bollerslev & Wooldridge 1992).</p>
+
+<p>In Drishti, estimation is performed by the <code>arch</code> Python library which uses SLSQP optimization with analytical gradients. Returns are scaled to percentage units (×100) before fitting to improve numerical conditioning, then rescaled back.</p>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<h2 id="hmm">18. Hidden Markov Model for Regime Detection</h2>
+<!-- ══════════════════════════════════════════════════════════════ -->
+
+<div class="section-badge">Volatility Models</div>
+
+<h3>18.1 The two-state model</h3>
+<p>A Gaussian HMM assumes the observed feature vector $\mathbf{x}_t$ (rolling volatility, absolute returns, India VIX level and change) is generated by a hidden state $s_t \in \{0, 1\}$ that follows a first-order Markov chain:</p>
+
+<div class="math-block">
+<div class="label">HMM generative model</div>
+$$\Pr(s_t = j \mid s_{t-1} = i) = A_{ij} \quad \text{(transition matrix)}$$
+$$\mathbf{x}_t \mid s_t = k \sim \mathcal{N}(\boldsymbol\mu_k, \boldsymbol\Sigma_k) \quad \text{(emission)}$$
+</div>
+
+<p>The two states are canonically labeled: <strong>State 0 = low-vol (bull)</strong>, <strong>State 1 = high-vol (bear)</strong>, determined after fitting by the emission mean on the rolling-volatility feature. This prevents the label-switching problem where monthly refits arbitrarily swap state 0 and state 1.</p>
+
+<h3>18.2 The Baum-Welch EM algorithm</h3>
+<p>Parameters $\boldsymbol\theta = \{A, \{\boldsymbol\mu_k\}, \{\boldsymbol\Sigma_k\}\}$ are estimated by Expectation-Maximization:</p>
+<ul>
+<li><strong>E-step (Forward-Backward):</strong> compute posterior state probabilities $\gamma_t(k) = \Pr(s_t = k \mid \mathbf{X}, \boldsymbol\theta^{(\text{old})})$ using the forward $\alpha_t$ and backward $\beta_t$ recursions.</li>
+<li><strong>M-step:</strong> update parameters to maximize the expected complete-data log-likelihood:
+$$\hat{\boldsymbol\mu}_k = \frac{\sum_t \gamma_t(k)\mathbf{x}_t}{\sum_t \gamma_t(k)}, \quad \hat{\boldsymbol\Sigma}_k = \frac{\sum_t \gamma_t(k)(\mathbf{x}_t-\hat{\boldsymbol\mu}_k)(\mathbf{x}_t-\hat{\boldsymbol\mu}_k)^\top}{\sum_t \gamma_t(k)}$$</li>
+</ul>
+
+<h3>18.3 Walk-forward fitting</h3>
+<p>To avoid look-ahead bias, Drishti uses a <strong>walk-forward</strong> approach: the HMM is fit on all data up to time $T_{\text{train}}$, then used to predict regimes for the next 21 trading days (1 month), then the window expands by 21 days and refitting occurs. Only OOS predictions are kept. Minimum training window: 252 trading days.</p>
+
+<h3>18.4 Regime-conditioned VaR</h3>
+<p>VaR is computed separately for each regime using the historical returns assigned to that regime. In the high-vol state, VaR is significantly higher — capturing the fact that the tail distribution is regime-dependent, not constant.</p>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<h2 id="dcc">19. DCC-GARCH (Dynamic Conditional Correlations)</h2>
+<!-- ══════════════════════════════════════════════════════════════ -->
+
+<div class="section-badge">Volatility Models</div>
+
+<p>DCC-GARCH (Engle 2002) is a two-step estimator that models <em>time-varying correlations</em> between multiple series without estimating a full multivariate GARCH model (which would be computationally infeasible for $k > 5$ series).</p>
+
+<h3>19.1 Step 1 — Univariate GARCH</h3>
+<p>Fit GARCH(1,1) independently to each return series $r_{i,t}$, $i = 1, \ldots, k$. Extract standardized residuals:</p>
+<div class="math-block">
+$$\hat z_{i,t} = \frac{r_{i,t}}{\hat\sigma_{i,t}}$$
+</div>
+<p>Gather into matrix $\mathbf{Z} = [\hat z_1, \ldots, \hat z_k] \in \mathbb{R}^{T \times k}$.</p>
+
+<h3>19.2 Step 2 — DCC correlation dynamics</h3>
+<p>The unconditional covariance of standardized residuals is $\bar{Q} = T^{-1}\mathbf{Z}^\top\mathbf{Z}$. The DCC recursion:</p>
+<div class="math-block">
+<div class="label">DCC Q-process</div>
+$$Q_t = (1-\alpha-\beta)\bar{Q} + \alpha \mathbf{z}_{t-1}\mathbf{z}_{t-1}^\top + \beta Q_{t-1}$$
+</div>
+
+<p>$Q_t$ is a pseudo-correlation matrix. The actual conditional correlation matrix $R_t$ is obtained by normalizing:</p>
+<div class="math-block">
+$$R_t = \text{diag}(Q_t)^{-1/2} Q_t\, \text{diag}(Q_t)^{-1/2}$$
+</div>
+
+<p>so $R_{t,ii} = 1$ (diagonal ones). The conditional covariance matrix of returns is $H_t = D_t R_t D_t$ where $D_t = \text{diag}(\hat\sigma_{1,t}, \ldots, \hat\sigma_{k,t})$.</p>
+
+<h3>19.3 DCC log-likelihood</h3>
+<p>Parameters $(\alpha, \beta)$ are estimated by maximizing the DCC contribution to the log-likelihood (after profiling out Step 1 parameters):</p>
+<div class="math-block">
+$$\ell_{\text{DCC}} = -\frac{1}{2}\sum_{t=1}^T \left[\log|R_t| + \mathbf{z}_t^\top R_t^{-1} \mathbf{z}_t - \mathbf{z}_t^\top \mathbf{z}_t\right]$$
+</div>
+
+<p>Stationarity constraint: $\alpha + \beta < 1$. Optimization via SLSQP with analytical gradient.</p>
+
+<h3>19.4 Interpretation</h3>
+<p>The time-varying correlation $R_{t,ij}$ between sector $i$ and commodity $j$ is Drishti's primary evidence for spillover. During COVID-2020, correlations between all sectors and commodities (particularly crude oil) spiked simultaneously — a visible signature of systemic risk that constant-correlation models miss.</p>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<h2 id="adcc">20. ADCC — Asymmetric DCC</h2>
+<!-- ══════════════════════════════════════════════════════════════ -->
+
+<div class="section-badge">Volatility Models</div>
+
+<p>Cappiello, Engle & Sheppard (2006) extend DCC to capture the <strong>leverage effect in correlations</strong>: negative joint shocks tend to increase correlations more than positive shocks of equal magnitude. This is observed in equity markets — co-crashes are more common than co-rallies.</p>
+
+<h3>20.1 The ADCC Q-recursion</h3>
+<p>Define the "negative part" of the shock: $\mathbf{n}_t = \mathbf{z}_t \odot \mathbf{1}[\mathbf{z}_t < 0]$ (elementwise, zero for positive shocks). Let $\bar{N} = T^{-1}\sum_t \mathbf{n}_t \mathbf{n}_t^\top$. The ADCC recursion is:</p>
+
+<div class="math-block">
+<div class="label">ADCC Q-process (Cappiello-Engle-Sheppard 2006)</div>
+$$Q_t = (1-a-b)\bar{Q} - g\bar{N} + a\mathbf{z}_{t-1}\mathbf{z}_{t-1}^\top + b Q_{t-1} + g\mathbf{n}_{t-1}\mathbf{n}_{t-1}^\top$$
+</div>
+
+<p>The $-g\bar{N}$ intercept correction ensures $\mathbb{E}[Q_t] = \bar{Q}$ in steady state (mean-reversion to the unconditional correlation). Stationarity sufficient condition: $a + b + g < 1$.</p>
+
+<p>If $g > 0$: negative joint shocks ($\mathbf{z}_{t-1} < 0$) increase $Q_t$ by more than positive shocks → <strong>correlation increases more during crashes than rallies</strong>. This is the asymmetric correlation leverage effect.</p>
+
+<h3>20.2 Estimation</h3>
+<p>Three parameters $(a, b, g)$ are jointly estimated by maximizing the same DCC log-likelihood as above with the ADCC $Q_t$ recursion. If the joint optimizer fails (common on real data due to a flat likelihood surface), Drishti falls back to profiling $g$ over a coarse grid $\{0, 0.05, 0.10, 0.15\}$ and re-optimizing $(a, b)$ at each point — a more robust but slower procedure.</p>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<h2 id="dy">21. Diebold-Yilmaz Connectedness Index</h2>
+<!-- ══════════════════════════════════════════════════════════════ -->
+
+<div class="section-badge">Spillover Research</div>
+
+<h3>21.1 The VAR model</h3>
+<p>For a $k$-dimensional system of returns $\mathbf{r}_t = (r_{1,t}, \ldots, r_{k,t})^\top$, fit a Vector Autoregression of order $p$ (chosen by AIC, capped at $p=5$):</p>
+<div class="math-block">
+$$\mathbf{r}_t = \sum_{j=1}^p A_j \mathbf{r}_{t-j} + \boldsymbol\varepsilon_t, \quad \boldsymbol\varepsilon_t \sim \mathcal{N}(\mathbf{0}, \Sigma)$$
+</div>
+
+<p>The moving-average representation $\mathbf{r}_t = \sum_{h=0}^\infty \Psi_h \boldsymbol\varepsilon_{t-h}$ with $\Psi_0 = I_k$ and $\Psi_h = \sum_{j=1}^{\min(h,p)} A_j \Psi_{h-j}$ decomposes variance through impulse-response functions.</p>
+
+<h3>21.2 Generalized FEVD (Pesaran-Shin)</h3>
+<p>Classical FEVD uses Cholesky decomposition and is <strong>order-dependent</strong> — the result changes if you reorder variables. Pesaran-Shin (1998) generalized FEVD is order-invariant:</p>
+
+<div class="math-block">
+<div class="label">GFEVD (H-step)</div>
+$$\tilde\theta_{ij}(H) = \frac{\sigma_{jj}^{-1} \sum_{h=0}^{H-1} (\mathbf{e}_i^\top \Psi_h \Sigma \mathbf{e}_j)^2}{\sum_{h=0}^{H-1} \mathbf{e}_i^\top \Psi_h \Sigma \Psi_h^\top \mathbf{e}_i}$$
+</div>
+
+<p>where $\sigma_{jj}$ is the $j$-th diagonal element of $\Sigma$, and $\mathbf{e}_i$ is the $i$-th standard basis vector. Row-normalize to ensure each row sums to 1:</p>
+<div class="math-block">
+$$\theta_{ij}(H) = \frac{\tilde\theta_{ij}(H)}{\sum_{j=1}^k \tilde\theta_{ij}(H)}$$
+</div>
+
+<h3>21.3 The spillover table</h3>
+<p>From $\Theta = [\theta_{ij}]$, Diebold-Yilmaz (2012) define:</p>
+
+<table>
+<tr><th>Measure</th><th>Formula</th><th>Interpretation</th></tr>
+<tr>
+  <td><strong>Total connectedness</strong></td>
+  <td>$C = \frac{\sum_{i\neq j}\theta_{ij}}{k} \times 100\%$</td>
+  <td>% of forecast error variance from cross-variable shocks (industry-wide integration)</td>
+</tr>
+<tr>
+  <td><strong>Directional: to $i$</strong></td>
+  <td>$S_{\to i} = \frac{\sum_{j\neq i}\theta_{ji}}{k}\times 100\%$</td>
+  <td>How much variance $i$ contributes to others</td>
+</tr>
+<tr>
+  <td><strong>Directional: from $i$</strong></td>
+  <td>$S_{i\to} = \frac{\sum_{j\neq i}\theta_{ij}}{k}\times 100\%$</td>
+  <td>How much of $i$'s variance comes from others</td>
+</tr>
+<tr>
+  <td><strong>Net spillover</strong></td>
+  <td>$S_i^{\text{net}} = S_{\to i} - S_{i\to}$</td>
+  <td>Positive = net transmitter; Negative = net receiver</td>
+</tr>
+</table>
+
+<div class="callout key">
+<p><strong>Drishti finding (v2 real data):</strong> Large-cap total connectedness ≈ 67% — highly integrated. Mid-cap ≈ 43% — more idiosyncratic. Commodities (Brent, Metals) are net transmitters to Indian equity sectors.</p>
+</div>
+
+<h3>21.4 Rolling connectedness</h3>
+<p>A 200-day rolling window (step = 21 days) produces the time-series of total connectedness $C_t$. Spikes in $C_t$ identify systemic risk events — the 2020 COVID crash and the 2022 Ukraine/commodity shock are clearly visible as sharp increases in cross-market variance transmission.</p>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<h2 id="ic">22. Time-Series Information Coefficient (IC)</h2>
+<!-- ══════════════════════════════════════════════════════════════ -->
+
+<div class="section-badge">Factor Research</div>
+
+<h3>22.1 Why time-series IC, not cross-sectional</h3>
+<p>A commodity return (e.g. Brent crude) at time $t$ is a <em>scalar</em> — it is the same for all $N$ stocks at that moment. Cross-sectional rank correlation between a scalar and a cross-section is undefined or trivially degenerate. The correct specification is <strong>time-series IC</strong>: does the commodity factor lagged by $\ell$ days predict sector returns at time $t$?</p>
+
+<h3>22.2 Rolling Pearson IC</h3>
+<p>For factor $f$ and target sector return $y$, the IC at lag $\ell$ over a rolling window of $W = 63$ trading days is:</p>
+<div class="math-block">
+<div class="label">Time-series IC</div>
+$$\text{IC}_{t,\ell} = \text{Corr}\!\left(\{f_{s-\ell}\}_{s=t-W+1}^{t},\; \{y_s\}_{s=t-W+1}^{t}\right)$$
+</div>
+
+<p>The mean IC over all time periods and the ICIR (IC information ratio) are:</p>
+<div class="math-block">
+$$\overline{\text{IC}} = \frac{1}{T-W}\sum_t \text{IC}_{t,\ell}, \qquad \text{ICIR} = \frac{\overline{\text{IC}}}{\text{std}(\text{IC}_{t,\ell})}$$
+</div>
+
+<h3>22.3 HAC standard errors for significance</h3>
+<p>Naively treating the rolling IC series as i.i.d. inflates significance: adjacent windows share $W-1$ observations (roughly an MA($W-1$) dependence). Drishti uses Newey-West heteroskedasticity-and-autocorrelation-consistent (HAC) standard errors with truncation lag $= W$:</p>
+<div class="math-block">
+$$\hat V_{\text{HAC}} = \hat\sigma_0^2 + 2\sum_{j=1}^W \left(1 - \frac{j}{W+1}\right)\hat\sigma_j^2$$
+</div>
+<p>where $\hat\sigma_j^2 = T^{-1}\sum_t \hat u_t \hat u_{t-j}$ are sample autocovariances of the regression residuals. The HAC $t$-statistic $= \overline{\text{IC}} / \sqrt{\hat V_{\text{HAC}}/T}$ is then compared to $\mathcal{N}(0,1)$.</p>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<h2 id="granger">23. Granger Causality</h2>
+<!-- ══════════════════════════════════════════════════════════════ -->
+
+<div class="section-badge">Factor Research</div>
+
+<h3>23.1 The concept</h3>
+<p>Variable $X$ Granger-causes $Y$ if past values of $X$ improve the forecast of $Y$ beyond what is achievable from $Y$'s own lags alone. This is a predictive concept — not physical causality, but useful for factor signal research.</p>
+
+<h3>23.2 The F-test formulation</h3>
+<p>At lag $\ell$, the test compares two regressions:</p>
+<div class="math-block">
+<div class="label">Restricted (no Granger causality)</div>
+$$y_t = c + \sum_{j=1}^\ell a_j y_{t-j} + u_t^R$$
+</div>
+<div class="math-block">
+<div class="label">Unrestricted (with factor lags)</div>
+$$y_t = c + \sum_{j=1}^\ell a_j y_{t-j} + \sum_{j=1}^\ell b_j x_{t-j} + u_t^U$$
+</div>
+
+<p>The Granger F-statistic tests $H_0: b_1 = \cdots = b_\ell = 0$:</p>
+<div class="math-block">
+$$F = \frac{(SSR_R - SSR_U)/\ell}{SSR_U/(T - 2\ell - 1)} \sim F(\ell,\, T-2\ell-1) \text{ under } H_0$$
+</div>
+
+<h3>23.3 Weekly frequency</h3>
+<p>Daily Granger tests suffer from microstructure noise and false positives. Drishti compounds daily returns into weekly returns (W-FRI bucket) before testing:</p>
+<div class="math-block">
+$$R_{\text{weekly}} = \prod_{t \in \text{week}} (1 + r_t) - 1$$
+</div>
+<p>Tests are run at lags 1–13 weeks (≈ 3 months). This is the economically relevant horizon for commodity-to-equity propagation (supply chain adjustments, inflation pass-through).</p>
+
+<h3>23.4 AIC-summary</h3>
+<p>Running Granger up to lag 13 produces 13 test results per (factor, sector) pair. The AIC from the unrestricted regression $AIC = -2\hat\ell + 2k$ identifies the optimal lag; <code>summarize_granger_aic()</code> retains only the min-AIC row per pair for reporting.</p>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<h2 id="bh">24. Benjamini-Hochberg FDR Correction</h2>
+<!-- ══════════════════════════════════════════════════════════════ -->
+
+<div class="section-badge">Factor Research</div>
+
+<h3>24.1 The multiple testing problem</h3>
+<p>Drishti tests ≈ 200+ (factor × sector × lag) combinations for IC significance and ≈ 150+ pairs for Granger causality. At $\alpha = 0.05$ per test, we expect $0.05 \times 200 = 10$ false positives <em>by chance</em>. Reporting all $p < 0.05$ results would be misleading.</p>
+
+<h3>24.2 Benjamini-Hochberg procedure</h3>
+<p>Given $m$ tests with $p$-values $p_{(1)} \leq p_{(2)} \leq \cdots \leq p_{(m)}$, reject the $k$ hypotheses corresponding to the $k^* = \max\{k : p_{(k)} \leq \frac{k}{m}\alpha\}$ smallest $p$-values:</p>
+
+<div class="math-block">
+<div class="label">BH rejection threshold</div>
+$$k^* = \max\left\{k \in \{1,\ldots,m\} : p_{(k)} \leq \frac{k}{m} \cdot \alpha\right\}$$
+</div>
+
+<p>Reject $H_{(1)}, \ldots, H_{(k^*)}$ at level $\alpha$. BH controls the <strong>False Discovery Rate</strong> (FDR) — the expected proportion of false discoveries among all rejections — at level $\alpha$ under independence, and at level $\alpha \cdot m_0/m$ under positive dependence (where $m_0$ is the true number of null hypotheses).</p>
+
+<p>Drishti reports both the uncorrected $p$-value significance (<code>significant</code>) and the BH-corrected flag (<code>bh_significant</code>). The BH flag is the one used for reporting and charting — raw $p$-values are displayed for transparency.</p>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<h2 id="walkfwd">25. Walk-Forward Out-of-Sample Sharpe</h2>
+<!-- ══════════════════════════════════════════════════════════════ -->
+
+<div class="section-badge">Factor Research</div>
+
+<p>For each (factor, sector) pair that passes BH correction, Drishti estimates the OOS Sharpe ratio via walk-forward cross-validation to avoid overfitting:</p>
+
+<div class="steps">
+  <div class="step"><div class="step-num"></div><div class="step-body">
+    <strong>Train window:</strong> 252 trading days. <strong>OOS step:</strong> 21 days (monthly).
+  </div></div>
+  <div class="step"><div class="step-num"></div><div class="step-body">
+    <strong>Signal construction:</strong> at each refit point, use the IC-optimal lag from the training window to create a lagged factor signal.
+  </div></div>
+  <div class="step"><div class="step-num"></div><div class="step-body">
+    <strong>OOS return:</strong> sign(signal) × sector_return over the next 21 days (long when signal positive, flat or short otherwise).
+  </div></div>
+  <div class="step"><div class="step-num"></div><div class="step-body">
+    <strong>OOS Sharpe:</strong> $S = \frac{\bar R_{\text{OOS}}}{\hat\sigma_{\text{OOS}}} \cdot \sqrt{252}$ — annualized over all OOS periods.
+  </div></div>
+</div>
+
+<p>The result is a heatmap of OOS Sharpe per (factor × sector) — a measure of how consistently the commodity factor predicts sector returns in <em>unseen data</em>, not just in-sample.</p>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<h2 id="bull-bear">26. Bull/Bear Regime Classification (20% Rule)</h2>
+<!-- ══════════════════════════════════════════════════════════════ -->
+
+<div class="section-badge">Research Studies</div>
+
+<p>The classical 20% rule defines a bear market as a decline of ≥ 20% from a prior peak, and a bull market as a rally of ≥ 20% from a prior trough. This is the NBER turning-point methodology adapted for equity indices.</p>
+
+<div class="math-block">
+<div class="label">State machine</div>
+$$\text{State} = \begin{cases}\text{bear} & \text{if } V_t \leq V_{\text{peak}} \cdot (1-0.20) \text{ from bull state} \\ \text{bull} & \text{if } V_t \geq V_{\text{trough}} \cdot (1+0.20) \text{ from bear state}\end{cases}$$
+</div>
+
+<p>Peak and trough are tracked as running max/min within each state. The 20% threshold prevents false signals from noise — small corrections do not trigger state changes.</p>
+
+<h3>26.1 Regime signs table</h3>
+<p>For each regime, Drishti computes a statistical summary of return characteristics:</p>
+<table>
+<tr><th>Statistic</th><th>Formula</th></tr>
+<tr><td>Mean daily return</td><td>$\bar r = T_s^{-1}\sum_{t\in s} r_t$</td></tr>
+<tr><td>Annualized volatility</td><td>$\hat\sigma_{\text{ann}} = \hat\sigma \cdot \sqrt{252}$</td></tr>
+<tr><td>Skewness</td><td>$\text{Skew} = T_s^{-1}\sum (r_t - \bar r)^3 / \hat\sigma^3$</td></tr>
+<tr><td>Worst day</td><td>$\min_{t\in s} r_t$</td></tr>
+<tr><td>% Up days</td><td>$T_s^{-1}|\{t\in s: r_t > 0\}|$</td></tr>
+</table>
+
+<h3>26.2 HMM overlay</h3>
+<p>The 20% rule is deterministic and lagging (you only know a bear market started 20% after the peak). The HMM overlay provides a real-time probabilistic view: $\Pr(\text{high-vol state}_t)$ from the walk-forward HMM. The two views are complementary and both displayed on the Regimes tab.</p>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<h2 id="events">27. Market Shock Events Study</h2>
+<!-- ══════════════════════════════════════════════════════════════ -->
+
+<div class="section-badge">Research Studies</div>
+
+<h3>27.1 Drawdown episode detection algorithm</h3>
+<p>An episode is detected when the running drawdown from the current peak crosses the threshold $\delta = 10\%$:</p>
+
+<div class="steps">
+  <div class="step"><div class="step-num"></div><div class="step-body">Compute running maximum $M_t = \max_{s\leq t} P_s$ and drawdown $DD_t = P_t/M_t - 1$.</div></div>
+  <div class="step"><div class="step-num"></div><div class="step-body">Enter episode at the first $t$ where $DD_t \leq -\delta$. Record $t_{\text{start}}$.</div></div>
+  <div class="step"><div class="step-num"></div><div class="step-body">Within the episode, track the <strong>trough date</strong> $t^* = \arg\min_{t \geq t_{\text{start}}} DD_t$.</div></div>
+  <div class="step"><div class="step-num"></div><div class="step-body">Exit episode when $DD_t \geq 0$ (full recovery). Record recovery date.</div></div>
+  <div class="step"><div class="step-num"></div><div class="step-body">Peak date = the last date at which $P_t = M_{t^*}$ (the pre-crash high), found using relative tolerance $|P_t - M_{t^*}| < M_{t^*} \cdot 10^{-6}$ for float safety.</div></div>
+</div>
+
+<h3>27.2 Label matching</h3>
+<p>The 16 curated labels (dot-com through 2026 tariff shock) are matched to detected episodes by window overlap: label $l$ is attached to episode $e$ if $t_{\text{peak}} \leq W_l^{\text{end}}$ and $(t_{\text{recovery}} \text{ or } t_{\text{trough}}) \geq W_l^{\text{start}}$. Unmatched episodes are labeled "Unlabeled episode."</p>
+
+<h3>27.3 Statistical levels</h3>
+<p>Descriptive statistics of drawdown depths serve as a historical reference guide:</p>
+<div class="math-block">
+$$\text{Median fall} = \text{Median}\{|d_e|\}, \quad P_{75} = \text{Quantile}_{75\%}\{|d_e|\}, \quad P_{90} = \text{Quantile}_{90\%}\{|d_e|\}$$
+</div>
+<p>These are purely descriptive and explicitly labeled as "not predictions." A separate <em>practitioner appendix</em> contains technical analysis heuristics (round-number levels, 200-DMA distance at trough), clearly flagged as heuristics rather than statistics. The methodological separation between statistics and heuristics is a deliberate design choice.</p>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<h2 id="xgboost">28. XGBoost VaR Breach Classifier</h2>
+<!-- ══════════════════════════════════════════════════════════════ -->
+
+<div class="section-badge">Machine Learning</div>
+
+<h3>28.1 Task formulation</h3>
+<p>Predict whether tomorrow's portfolio return will exceed the historical 99% VaR (i.e., a VaR breach will occur) using today's information only. This is a binary classification problem:</p>
+<div class="math-block">
+$$Y_{t+1} = \mathbf{1}\!\left[R_{p,t+1} < -\text{VaR}_{0.99}\right]$$
+</div>
+
+<div class="callout warn">
+<p><strong>No look-ahead:</strong> The target variable uses <code>r.shift(-1)</code> — tomorrow's return. All features are based on information available today (or earlier). SMOTE for class imbalance is applied <em>after</em> train/test split — never on the test set.</p>
+</div>
+
+<h3>28.2 Feature engineering</h3>
+<table>
+<tr><th>Feature</th><th>Construction</th><th>Economic rationale</th></tr>
+<tr><td class="mono">brent_lag1</td><td>Yesterday's Brent crude return</td><td>Commodity shock → equity tail risk</td></tr>
+<tr><td class="mono">gold_lag1</td><td>Yesterday's gold return</td><td>Risk-off signal</td></tr>
+<tr><td class="mono">copper_lag1</td><td>Yesterday's copper return</td><td>Industrial demand signal</td></tr>
+<tr><td class="mono">rolling_vol_5</td><td>5-day rolling std of portfolio returns</td><td>Recent volatility clustering</td></tr>
+<tr><td class="mono">rolling_vol_21</td><td>21-day rolling std</td><td>Monthly vol regime</td></tr>
+<tr><td class="mono">regime</td><td>HMM state (0/1)</td><td>Structural risk level</td></tr>
+</table>
+
+<h3>28.3 Class imbalance handling</h3>
+<p>VaR breaches at 99% confidence occur ≈ 1% of the time — a severe class imbalance. XGBoost handles this via <code>scale_pos_weight</code> = (number of negatives) / (number of positives), which up-weights the rare positive class in the gradient computation. SMOTE (synthetic over-sampling) was evaluated but rejected in favor of <code>scale_pos_weight</code> to avoid distributional contamination of the test set.</p>
+
+<h3>28.4 XGBoost loss function</h3>
+<p>XGBoost minimizes a regularized second-order approximation of the binary cross-entropy loss:</p>
+<div class="math-block">
+$$\mathcal{L} = \sum_i \left[\ell(y_i, \hat y_i) + \Omega(f_k)\right]$$
+$$\Omega(f) = \gamma T + \frac{1}{2}\lambda\|\mathbf{w}\|^2$$
+</div>
+<p>where $T$ is the number of leaves and $\mathbf{w}$ are leaf weights. The model is a sum of $K$ CART trees fitted greedily on the negative gradient (pseudo-residuals) of the loss. The output probability is $\hat p = \sigma(\hat y)$ where $\sigma$ is the sigmoid function.</p>
+
+<h3>28.5 Evaluation</h3>
+<p>The primary metric is <strong>AUC-PR</strong> (area under the precision-recall curve), not AUC-ROC, because the positive class is rare. A model that predicts all zeros achieves AUC-ROC ≈ 0.99 but AUC-PR ≈ 0.01 — useless for the actual task. The dashboard shows breach probability as a gauge and feature importances as a bar chart.</p>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<h2 id="finbert">29. FinBERT Sentiment Analysis</h2>
+<!-- ══════════════════════════════════════════════════════════════ -->
+
+<div class="section-badge">Machine Learning</div>
+
+<h3>29.1 Architecture</h3>
+<p>FinBERT (Araci 2019; <code>ProsusAI/finbert</code>) is a BERT-base model fine-tuned on financial news corpora for three-class sentiment: <em>positive</em>, <em>negative</em>, <em>neutral</em>. The underlying architecture is a 12-layer Transformer encoder with 768-dimensional hidden states:</p>
+<div class="math-block">
+$$\mathbf{h}_t = \text{Transformer}\!\left(\mathbf{e}_t\right), \quad \hat{\mathbf{p}} = \text{softmax}\!\left(W\mathbf{h}_{[\text{CLS}]}\right) \in \mathbb{R}^3$$
+</div>
+<p>where $\mathbf{e}_t$ is the input embedding sequence and $\mathbf{h}_{[\text{CLS}]}$ is the representation of the special [CLS] token.</p>
+
+<h3>29.2 Pipeline</h3>
+<p>Drishti fetches RSS headlines from 6 Indian financial sources (ET Markets, NSE, Moneycontrol, Business Standard, LiveMint, Hindu BusinessLine), scores each headline through FinBERT, and caches results with a 2-hour staleness window. A composite sentiment score is injected into the deterministic risk memo as context.</p>
+
+<h3>29.3 Module-level pipeline cache</h3>
+<p>Loading the FinBERT model from disk takes ≈ 5–15 seconds. Drishti caches the <code>pipeline</code> object at module level so the model is loaded once per process, not once per request. The <code>/api/research/news/refresh</code> route offloads scoring to a thread pool (<code>asyncio.to_thread</code>) to avoid blocking FastAPI's event loop.</p>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<h2 id="safety">30. Investment-Advice Safety Filter</h2>
+<!-- ══════════════════════════════════════════════════════════════ -->
+
+<div class="section-badge">AI Safety</div>
+
+<h3>30.1 Design intent</h3>
+<p>Drishti's AI copilot (risk memo + MCP server) is a <em>diagnostic</em> tool. It must never generate content that could be construed as investment advice. The safety filter uses word-boundary regex to block advice-seeking prompts while passing risk-diagnostic language.</p>
+
+<h3>30.2 The regex pattern</h3>
+<pre>_TOKENS = r"buy|sell|hold|invest|recommend|purchase|exit|entry|accumulate|
+            liquidate|reallocate|rotate|trim|overweight|underweight|
+            allocate|rebalance"
+_PHRASES = r"go long|go short|should i|good (?:entry|buy|time)|
+             best (?:stock|return)|which (?:stock|share|fund)s? (?:to|should|give)"
+_RE = re.compile(rf"\b(?:{_TOKENS})\b|(?:{_PHRASES})", re.IGNORECASE)</pre>
+
+<h3>30.3 Word-boundary correctness</h3>
+<p>The <code>\b</code> word-boundary anchor is critical: without it, the token <code>hold</code> would match inside "shareholding" or "threshold". With <code>\b</code>:</p>
+<table>
+<tr><th>Input</th><th>Match?</th><th>Correct?</th></tr>
+<tr><td>"should I hold my portfolio?"</td><td class="mono" style="color:var(--danger)">YES (blocks)</td><td>✓ Advice request</td></tr>
+<tr><td>"explain my shareholding concentration"</td><td class="mono" style="color:var(--ok)">NO (passes)</td><td>✓ Diagnostic question</td></tr>
+<tr><td>"what is my expected shortfall?"</td><td class="mono" style="color:var(--ok)">NO (passes)</td><td>✓ Risk metric question</td></tr>
+<tr><td>"go long on NIFTY"</td><td class="mono" style="color:var(--danger)">YES (blocks)</td><td>✓ Advice request</td></tr>
+</table>
+
+<p>The same <code>is_advice_request()</code> function is shared by both the FastAPI copilot route and the MCP server tools — a single source of truth, tested across 18 BLOCK/PASS cases in <code>tests/test_safety_filter.py</code>.</p>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<hr>
+<h2 id="summary">Summary: Design Choices and Their Justifications</h2>
+<!-- ══════════════════════════════════════════════════════════════ -->
+
+<table>
+<tr><th>Choice</th><th>Alternative</th><th>Justification</th></tr>
+<tr>
+  <td>Non-overlapping windows for multi-day Historical VaR</td>
+  <td>$\sqrt{h}$ scaling</td>
+  <td>$\sqrt{h}$ assumes i.i.d. returns — violated by volatility clustering. Non-overlapping is empirically valid.</td>
+</tr>
+<tr>
+  <td>GARCH-FHS (not GARCH-normal VaR)</td>
+  <td>Parametric VaR with GARCH $\sigma$</td>
+  <td>Parametric-with-GARCH makes a normality assumption on standardized residuals. FHS keeps the empirical fat tail shape.</td>
+</tr>
+<tr>
+  <td>DCC over full multivariate GARCH</td>
+  <td>BEKK, VECH</td>
+  <td>BEKK: $O(k^2)$ parameters. VECH: no PSD guarantee. DCC: $k+2$ parameters; two-step consistent.</td>
+</tr>
+<tr>
+  <td>ADCC over symmetric DCC</td>
+  <td>Symmetric DCC</td>
+  <td>Leverage effect in correlations is empirically documented. ADCC adds one scalar $g$ with interpretable meaning.</td>
+</tr>
+<tr>
+  <td>Pesaran-Shin GFEVD over Cholesky FEVD</td>
+  <td>Cholesky FEVD</td>
+  <td>Cholesky FEVD depends on variable ordering — arbitrary for our use case. GFEVD is order-invariant.</td>
+</tr>
+<tr>
+  <td>Time-series IC (rolling Pearson)</td>
+  <td>Cross-sectional rank IC</td>
+  <td>A commodity return is a scalar at each $t$ — cross-sectional IC is undefined/degenerate. Time-series IC is the only valid specification.</td>
+</tr>
+<tr>
+  <td>HAC $t$-test for IC significance</td>
+  <td>Naive ICIR $\times \sqrt{N}$</td>
+  <td>Rolling-window ICs share $\approx W-1$ observations. Naive test overstates significance by $\approx\sqrt{W}$. HAC corrects for overlap-induced autocorrelation.</td>
+</tr>
+<tr>
+  <td>Weekly Granger (not daily)</td>
+  <td>Daily Granger</td>
+  <td>Daily tests suffer from microstructure noise and inflated power. Weekly is the appropriate horizon for commodity propagation through supply chains.</td>
+</tr>
+<tr>
+  <td>BH FDR correction</td>
+  <td>Bonferroni</td>
+  <td>Bonferroni controls FWER and is overly conservative with 200+ tests. BH controls FDR, more appropriate for exploratory factor research.</td>
+</tr>
+<tr>
+  <td>20% rule + HMM dual regime view</td>
+  <td>Only one method</td>
+  <td>20% rule: deterministic, lagging, investor-familiar. HMM: probabilistic, real-time, data-driven. Neither alone is sufficient.</td>
+</tr>
+<tr>
+  <td>Statistical levels separate from heuristics</td>
+  <td>Mixed presentation</td>
+  <td>Percentile levels (median/p75/p90 of historical drawdowns) are statistics. Round-number levels, 200-DMA distances are practitioner heuristics. Mixing them without labeling is methodologically dishonest.</td>
+</tr>
+<tr>
+  <td><code>scale_pos_weight</code> over SMOTE</td>
+  <td>SMOTE oversampling</td>
+  <td>SMOTE applied to the full dataset before split contaminates the test set. <code>scale_pos_weight</code> re-weights gradient updates in training only, with no distributional leakage.</td>
+</tr>
+</table>
+
+<hr>
+
+<p style="color:var(--muted); font-size:13px; margin-top:32px;">
+  Drishti · IIM Calcutta PGDBA Sem 3 · Financial Risk Management · 2026<br>
+  This document is for educational and course-examination purposes only.
+  Nothing herein constitutes investment advice.
+</p>
+
+</main>
+</div><!-- end flex -->
+</div><!-- end page -->
+
+<script>
+// Highlight active sidebar link on scroll
+const headings = document.querySelectorAll('h2[id], h3[id]');
+const links = document.querySelectorAll('aside li a');
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      links.forEach(l => l.classList.remove('active'));
+      const a = document.querySelector(`aside li a[href="#${e.target.id}"]`);
+      if (a) a.classList.add('active');
+    }
+  });
+}, { threshold: 0.3, rootMargin: '-80px 0px -60% 0px' });
+headings.forEach(h => observer.observe(h));
+</script>
+</body>
+</html>
