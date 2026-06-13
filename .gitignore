@@ -1,4 +1,5 @@
 data/cache/bloomberg/
+data/cache/bloomberg_v2/
 *.parquet
 *.env
 __pycache__/

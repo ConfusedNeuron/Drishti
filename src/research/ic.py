@@ -84,10 +84,16 @@ def time_series_ic(
     )
 
 
+def to_weekly(returns: pd.Series) -> pd.Series:
+    """Compound daily returns into weekly (W-FRI buckets, last trading day)."""
+    return (1 + returns).resample("W-FRI").prod().dropna() - 1
+
+
 def granger_test(
     factor_returns: pd.Series,
     target_returns: pd.Series,
     max_lag: int = 10,
+    freq: str = "daily",
 ) -> list[GrangerResult]:
     """
     Granger causality: does lagged factor improve prediction of target
@@ -95,11 +101,18 @@ def granger_test(
 
     Uses statsmodels grangercausalitytests.
     Returns one GrangerResult per lag (1 to max_lag).
+
+    freq: "daily" (default) or "weekly" — when "weekly", compounds daily returns
+          into weekly buckets before running the test.
     """
     from statsmodels.tsa.stattools import grangercausalitytests
 
     factor_name = factor_returns.name or "factor"
     target_name = target_returns.name or "target"
+
+    if freq == "weekly":
+        factor_returns = to_weekly(factor_returns)
+        target_returns = to_weekly(target_returns)
 
     df = pd.concat([target_returns.rename("target"),
                     factor_returns.rename("factor")], axis=1).dropna()
@@ -118,6 +131,11 @@ def granger_test(
         # Use F-test result
         f_stat = float(test_dict[0]["ssr_ftest"][0])
         p_val  = float(test_dict[0]["ssr_ftest"][1])
+        # Extract AIC from unrestricted model: gc[lag] = (stats_dict, (restricted_ols, unrestricted_ols))
+        try:
+            aic_val = float(test_dict[1][1].aic)
+        except Exception:
+            aic_val = 0.0
         results.append(GrangerResult(
             factor=factor_name,
             target=target_name,
@@ -125,6 +143,7 @@ def granger_test(
             f_stat=f_stat,
             p_value=p_val,
             significant=p_val < 0.05,
+            aic=aic_val,
         ))
 
     return results
@@ -136,14 +155,19 @@ def run_full_ic_study(
     lags: list[int] | None = None,
     max_granger_lag: int = 10,
     rolling_window: int = 63,
+    granger_freq: str = "daily",
 ) -> dict:
     """
     Run IC and Granger for all (factor, target, lag) combinations.
-    Applies Benjamini-Hochberg FDR correction to IC p-values.
+    Applies Benjamini-Hochberg FDR correction to both IC and Granger p-values.
+
+    granger_freq: "daily" (default) or "weekly" — passed through to granger_test().
 
     Returns:
-      ic_results   — list of ICResult
-      granger_results — list of GrangerResult
+      ic_results          — list of ICResult (BH corrected)
+      granger_results     — list of GrangerResult (BH corrected)
+      granger_aic_summary — list of GrangerResult, one per (factor, target) at min-AIC lag
+      n_tests             — number of IC tests run
     """
     if lags is None:
         lags = [1, 2, 3, 5, 10]
@@ -161,7 +185,7 @@ def run_full_ic_study(
                 ic = time_series_ic(f_series, t_series, lag, rolling_window)
                 ic_results.append(ic)
 
-            gc_list = granger_test(f_series, t_series, max_granger_lag)
+            gc_list = granger_test(f_series, t_series, max_granger_lag, freq=granger_freq)
             granger_results.extend(gc_list)
 
     # Benjamini-Hochberg FDR correction on IC p-values
@@ -171,14 +195,32 @@ def run_full_ic_study(
         for i, r in enumerate(ic_results):
             r.bh_significant = bool(bh_mask[i])
 
+    # Benjamini-Hochberg FDR correction on Granger p-values
+    if granger_results:
+        gp = np.array([r.p_value for r in granger_results])
+        g_bh = _bh_correction(gp, alpha=0.05)
+        for i, r in enumerate(granger_results):
+            r.bh_significant = bool(g_bh[i])
+
     # Sort by |t_stat| descending
     ic_results.sort(key=lambda x: abs(x.t_stat), reverse=True)
 
     return {
         "ic_results": ic_results,
         "granger_results": granger_results,
+        "granger_aic_summary": summarize_granger_aic(granger_results),
         "n_tests": len(ic_results),
     }
+
+
+def summarize_granger_aic(results: list[GrangerResult]) -> list[GrangerResult]:
+    """One row per (factor, target): the lag minimizing AIC of the unrestricted VAR."""
+    best: dict[tuple, GrangerResult] = {}
+    for r in results:
+        k = (r.factor, r.target)
+        if k not in best or r.aic < best[k].aic:
+            best[k] = r
+    return list(best.values())
 
 
 def _bh_correction(p_values: np.ndarray, alpha: float = 0.05) -> np.ndarray:

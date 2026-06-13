@@ -14,6 +14,13 @@ from src.bloomberg.cache import get_prices
 from src.models import PortfolioSnapshot
 
 
+def filter_min_history(price_df: pd.DataFrame, min_days: int) -> pd.DataFrame:
+    """Drop columns with fewer than min_days non-NaN observations.
+    Prevents one young listing from truncating the whole aligned matrix."""
+    keep = [c for c in price_df.columns if price_df[c].dropna().shape[0] >= min_days]
+    return price_df[keep]
+
+
 def build_return_matrix(
     snapshot: PortfolioSnapshot,
     start: date,
@@ -25,6 +32,8 @@ def build_return_matrix(
         returns_df  — DataFrame of daily simple returns, DatetimeIndex, columns = symbols
         missing     — symbols with no cached price data
     """
+    from src.config import MIN_HISTORY_DAYS
+
     prices = {}
     missing = []
 
@@ -44,6 +53,14 @@ def build_return_matrix(
     price_df = pd.DataFrame(prices)
     price_df.index = pd.to_datetime(price_df.index)
     price_df = price_df.sort_index().dropna(how="all")
+
+    # Drop young listings that don't meet minimum history threshold
+    dropped_young = [c for c in price_df.columns
+                     if c not in filter_min_history(price_df, MIN_HISTORY_DAYS).columns]
+    missing.extend(dropped_young)
+    price_df = filter_min_history(price_df, MIN_HISTORY_DAYS)
+    if price_df.empty:
+        return pd.DataFrame(), missing
 
     # Align: forward-fill small gaps (max 3 trading days), then drop any remaining NaN rows
     price_df = price_df.ffill(limit=3).dropna()

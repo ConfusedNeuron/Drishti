@@ -107,7 +107,7 @@ def _christoffersen_test(violation_series: np.ndarray) -> ChristoffersenResult:
 
     pi01 = n01 / (n00 + n01) if (n00 + n01) > 0 else 0.0
     pi11 = n11 / (n10 + n11) if (n10 + n11) > 0 else 0.0
-    pi   = (n01 + n11) / len(v) if len(v) > 0 else 0.0
+    pi   = (n01 + n11) / (n00 + n01 + n10 + n11) if (n00 + n01 + n10 + n11) > 0 else 0.0
 
     def _log(x: float) -> float:
         return np.log(max(x, 1e-10))
@@ -119,7 +119,8 @@ def _christoffersen_test(violation_series: np.ndarray) -> ChristoffersenResult:
     )
 
     p_value = float(1 - stats.chi2.cdf(lr_ind, df=1))
-    clustering = pi11 > pi01
+    pass_ = p_value > 0.05
+    clustering = (pi11 > pi01) and not pass_
     finding = (
         "Violations cluster — model underestimates volatility persistence."
         if clustering else
@@ -129,7 +130,7 @@ def _christoffersen_test(violation_series: np.ndarray) -> ChristoffersenResult:
     return ChristoffersenResult(
         lr_statistic=float(lr_ind),
         p_value=p_value,
-        pass_=p_value > 0.05,
+        pass_=pass_,
         pi01=pi01,
         pi11=pi11,
         finding=finding,

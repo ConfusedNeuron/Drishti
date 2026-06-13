@@ -6,6 +6,7 @@ from datetime import date, timedelta
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
+from src.dashboard.json_safe import clean_json
 from src.dashboard.routes.portfolio import get_snapshot
 from src.risk.returns import build_return_matrix, portfolio_returns, covariance_matrix
 from src.risk.var import all_var_methods
@@ -71,7 +72,7 @@ async def memo_endpoint():
         news_sentiment=news_sentiment_dict,
     )
 
-    return {"memo": memo_md, "missing_symbols": missing}
+    return clean_json({"memo": memo_md, "missing_symbols": missing})
 
 
 @router.post("/ask")
@@ -97,16 +98,12 @@ async def ask_endpoint(req: AskRequest):
         }
 
     # Refuse investment advice
-    advice_keywords = ["buy", "sell", "hold", "invest", "rebalance", "allocate", "recommend"]
-    if any(kw in req.question.lower() for kw in advice_keywords):
+    from src.copilot.safety import is_advice_request, REFUSAL
+    if is_advice_request(req.question):
         return {
-            "answer": (
-                "I'm a risk analytics tool and cannot provide investment advice. "
-                "I can explain your VaR, backtest results, regime status, or factor signals. "
-                "What risk metric would you like to understand?"
-            ),
+            "answer": REFUSAL,
             "advice_refused": True,
-            "source": "policy",
+            "source": "safety_filter",
         }
 
     # Build prompt from structured memo (not raw holdings)

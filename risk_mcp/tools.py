@@ -12,34 +12,19 @@ Safety contract (enforced in every tool):
 from __future__ import annotations
 
 import dataclasses
-import re
 
 import numpy as np
 import pandas as pd
 
-# ── Shared helpers ─────────────────────────────────────────────────────────────
+from src.copilot.safety import is_advice_request, REFUSAL
 
-_ADVICE_KEYWORDS = frozenset(
-    ["buy", "sell", "hold", "invest", "recommend", "purchase", "short", "trade"]
-)
+# ── Shared helpers ─────────────────────────────────────────────────────────────
 
 
 def _check_prompt(text: str) -> str | None:
-    """
-    Return a safe redirect message if the text contains advisory keywords,
-    or None if the text is acceptable.
-    """
-    lower = text.lower()
-    flagged = [kw for kw in _ADVICE_KEYWORDS if re.search(r'\b' + re.escape(kw) + r'\b', lower)]
-    if flagged:
-        return (
-            "Drishti is an educational risk analytics platform and cannot provide "
-            f"investment advice. The following advisory terms were detected: "
-            f"{', '.join(sorted(flagged))}. "
-            "Please rephrase your question in terms of risk metrics — e.g. "
-            "'What is the portfolio VaR?', 'Is the backtest passing?', "
-            "'Which regime is the portfolio in?'."
-        )
+    """Return a refusal message if text requests investment advice, else None."""
+    if is_advice_request(text):
+        return REFUSAL
     return None
 
 

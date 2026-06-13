@@ -1,0 +1,18 @@
+[
+  {"id": "dotcom",        "label": "Dot-com bust",                  "cause": "global tech bubble unwind",             "window": ["2000-02-01", "2001-09-30"]},
+  {"id": "nine_eleven",   "label": "9/11 attacks",                  "cause": "geopolitical shock",                    "window": ["2001-09-11", "2001-10-31"]},
+  {"id": "election_2004", "label": "2004 election surprise",        "cause": "domestic political shock",              "window": ["2004-05-14", "2004-06-30"]},
+  {"id": "may_2006",      "label": "May 2006 EM sell-off",          "cause": "commodity correction + Fed tightening", "window": ["2006-05-10", "2006-07-31"]},
+  {"id": "gfc",           "label": "Global Financial Crisis",       "cause": "global credit crisis",                  "window": ["2008-01-08", "2009-03-31"]},
+  {"id": "us_downgrade",  "label": "2011 US downgrade / EU debt",   "cause": "sovereign debt stress",                 "window": ["2011-07-01", "2011-12-31"]},
+  {"id": "taper",         "label": "2013 taper tantrum",            "cause": "Fed taper + INR crisis",                "window": ["2013-05-22", "2013-09-30"]},
+  {"id": "china_2015",    "label": "2015-16 China slowdown",        "cause": "yuan devaluation, commodity rout",      "window": ["2015-08-01", "2016-02-29"]},
+  {"id": "demonetization","label": "Demonetization",                "cause": "domestic policy shock",                 "window": ["2016-11-08", "2016-12-31"]},
+  {"id": "ilfs",          "label": "IL&FS / NBFC crisis",           "cause": "domestic credit event",                 "window": ["2018-09-01", "2018-10-31"]},
+  {"id": "covid",         "label": "COVID-19 crash",                "cause": "pandemic",                              "window": ["2020-02-20", "2020-04-30"]},
+  {"id": "ukraine",       "label": "Russia-Ukraine war",            "cause": "geopolitical + commodity price shock",  "window": ["2022-02-24", "2022-06-30"]},
+  {"id": "adani",         "label": "Adani short-seller episode",    "cause": "single-group credibility shock",        "window": ["2023-01-24", "2023-03-31"]},
+  {"id": "election_2024", "label": "2024 election result day",      "cause": "domestic political surprise",           "window": ["2024-06-03", "2024-06-30"]},
+  {"id": "fii_outflow_2024", "label": "2024-25 FII outflow + dollar rally", "cause": "Trump election → strong dollar + record FII selling on India overvaluation", "window": ["2024-09-01", "2025-03-31"]},
+  {"id": "tariff_shock_2026", "label": "2026 US tariff shock",             "cause": "US tariff escalation + global trade war fears",  "window": ["2025-12-15", "2026-04-30"]}
+]

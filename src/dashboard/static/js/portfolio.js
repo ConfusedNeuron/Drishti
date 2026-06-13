@@ -3,6 +3,8 @@ let _regimeLoaded = false;
 let _icLoaded = false;
 let _newsLoaded = false;
 let _breachLoaded = false;
+let _eventsLoaded = false;
+let _regimesStudyLoaded = false;
 
 function showTab(name, btn) {
   document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
@@ -16,6 +18,12 @@ function showTab(name, btn) {
     if (!_icLoaded)     loadIC();
   }
   if (name === "spillover") { loadDY(); loadDCC(); loadRollingSpillover(); }
+  if (name === "events") {
+    if (!_eventsLoaded) loadEvents();
+  }
+  if (name === "regimes") {
+    if (!_regimesStudyLoaded) loadRegimesStudy();
+  }
   if (name === "risk") {
     if (riskData) renderRiskDetail(riskData);
     if (!_regimeLoaded) loadRegime();

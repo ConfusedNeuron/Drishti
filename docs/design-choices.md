@@ -117,4 +117,29 @@ All significant architectural and methodology decisions, with alternatives consi
 
 ---
 
-*Last updated: 2026-06-09*
+---
+
+## Session 6 — v2 Expansion (2026-06-12)
+
+## ADCC over BEKK/VECH
+Chosen: ADCC (Cappiello-Engle-Sheppard 2006) as the asymmetric extension to DCC.
+Alternatives: BEKK-GARCH (parameter explosion: O(k²) parameters), VECH-GARCH (not positive-definite guaranteed). ADCC adds a single scalar asymmetry parameter γ with constraint a+b+γ<1; interpretable and estimable. Fallback: if optimizer fails, grid-profile γ over [0,0.15] — documented in dcc_garch.py.
+Status: SHIPPED (fit_dcc_garch(..., asymmetric=True)).
+
+## Weekly Granger frequency
+Daily-frequency Granger tests had inflated test power due to microstructure noise and non-synchronous trading. Weekly compounding (W-FRI buckets, up to lag 13 weeks ≈ 3 months) is the appropriate horizon for commodity→equity factor propagation. Both daily and weekly variants are available; granger_freq=weekly is now the default in /api/research/ic.
+Status: SHIPPED.
+
+## Regime definition: 20% rule + HMM dual view
+Classical 20% rule (NBER turning-point method) for the narrative (investor-familiar, deterministic). HMM 2-state overlay for the statistical view (data-driven, probabilistic). Neither alone is sufficient: the 20% rule can be late; HMM can label regimes inconsistently across refits (canonical relabeling applied). Both are displayed in the Regimes tab.
+Status: SHIPPED (src/research/market_regimes.py + existing hmm.py).
+
+## Statistical levels vs practitioner appendix
+Historical drawdown depth percentiles (median/p75/p90/max) are proper descriptive statistics and appear in the headline output. Round-number support levels and 200-DMA distances are practitioner heuristics with no statistical derivation — segregated into a clearly-labeled practitioner_appendix block in events_study.json, styled with a warning callout in the UI. This separation is a deliberate methodological choice.
+Status: SHIPPED.
+
+## Min-history knob: 3yr default, 5yr deferred
+MIN_HISTORY_DAYS=756 (~3yr of trading days) is the default. The 5yr alternative (1260 days) would exclude more IPOs and mid-cap names from the v2 universe but give better distributional estimates for GARCH. Decision deferred — user preference was to see the universe size at 3yr before committing to 5yr. Change via DRISHTI_MIN_HISTORY_DAYS env var.
+Status: DEFERRED — configurable now, final value TBD after v2 pull.
+
+*Last updated: 2026-06-12*

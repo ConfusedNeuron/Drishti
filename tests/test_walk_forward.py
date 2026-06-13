@@ -32,7 +32,7 @@ def sector_returns(factor_returns) -> pd.DataFrame:
 
 
 def test_ic_on_window_positive_signal(factor_returns, sector_returns):
-    """Mean rolling IC should be positive when factor leads target."""
+    """_compute_ic_on_window returns a finite float for a weak lead-lag signal."""
     ic = _compute_ic_on_window(
         factor_returns["brent"],
         sector_returns["energy"],
