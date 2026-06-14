@@ -2,14 +2,13 @@
 Build bull/bear regime study artifact for v2 data.
 
 Usage:
-    DRISHTI_DATA_VERSION=v2 PYTHONPATH=. python scripts/build_regime_study.py [--since 2020-01-01]
+    PYTHONPATH=. python scripts/build_regime_study.py [--since 2020-01-01]
 
 Writes: data/cache/research_artifacts_v2/regime_study.json
 """
 from __future__ import annotations
 import argparse
 import json
-import os
 import sys
 from datetime import date
 from pathlib import Path
@@ -22,10 +21,6 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--since", default="2020-01-01")
     args = ap.parse_args()
-
-    if os.environ.get("DRISHTI_DATA_VERSION") != "v2":
-        print("ERROR: Set DRISHTI_DATA_VERSION=v2 before running.")
-        sys.exit(1)
 
     from src.research.market_regimes import classify_bull_bear, regime_signs, current_state
     from src.config import DATA_DIR, ARTIFACTS_DIR

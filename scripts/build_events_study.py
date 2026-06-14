@@ -2,10 +2,10 @@
 Market shock events study — drawdown episode detection over NIFTY 50 with sector cross-section.
 
 Usage:
-    DRISHTI_DATA_VERSION=v2 PYTHONPATH=. python scripts/build_events_study.py
+    PYTHONPATH=. python scripts/build_events_study.py
 
 Writes: data/cache/research_artifacts_v2/events_study.json
-Requires: v2 bloomberg cache (indices/ folder with NIFTY Index parquet)
+Requires: bloomberg_v2 cache (indices/ folder with NIFTY Index parquet)
 """
 from __future__ import annotations
 import json
@@ -17,16 +17,6 @@ import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-
-
-# ── v2 guard ──────────────────────────────────────────────────────────────────
-
-def _require_v2() -> None:
-    import os
-    if os.environ.get("DRISHTI_DATA_VERSION") != "v2":
-        print("ERROR: Set DRISHTI_DATA_VERSION=v2 before running this script.")
-        print("  DRISHTI_DATA_VERSION=v2 PYTHONPATH=. python scripts/build_events_study.py")
-        sys.exit(1)
 
 
 # ── helpers ───────────────────────────────────────────────────────────────────
@@ -106,8 +96,6 @@ def build_events_study(
 # ── main ──────────────────────────────────────────────────────────────────────
 
 def main() -> None:
-    _require_v2()
-
     from src.config import ARTIFACTS_DIR, DATA_DIR, MAPPINGS_DIR
 
     cache_dir = DATA_DIR / "cache" / "bloomberg_v2"
@@ -124,7 +112,7 @@ def main() -> None:
     if nifty_px is None or nifty_px.empty:
         print("ERROR: NIFTY index price series not found in v2 cache.")
         print(f"  Expected: {cache_dir / 'indices' / 'NIFTY_Index.parquet'}")
-        print("  Run: DRISHTI_DATA_VERSION=v2 PYTHONPATH=. python scripts/pull_drishti_v2.py")
+        print("  Run: PYTHONPATH=. python scripts/pull_drishti_v2.py")
         sys.exit(1)
 
     print(f"NIFTY: {len(nifty_px)} rows  ({nifty_px.index[0].date()} → {nifty_px.index[-1].date()})")

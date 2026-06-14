@@ -5,11 +5,10 @@ from pydantic_settings import BaseSettings
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = ROOT / "data"
-_DATA_VERSION = os.environ.get("DRISHTI_DATA_VERSION", "v1")
-CACHE_DIR = DATA_DIR / "cache" / ("bloomberg_v2" if _DATA_VERSION == "v2" else "bloomberg")
+CACHE_DIR = DATA_DIR / "cache" / "bloomberg_v2"
 SAMPLES_DIR = DATA_DIR / "samples"
 MAPPINGS_DIR = DATA_DIR / "mappings"
-ARTIFACTS_DIR = DATA_DIR / "cache" / ("research_artifacts_v2" if _DATA_VERSION == "v2" else "research_artifacts")
+ARTIFACTS_DIR = DATA_DIR / "cache" / "research_artifacts_v2"
 MIN_HISTORY_DAYS = int(os.environ.get("DRISHTI_MIN_HISTORY_DAYS", "756"))
 
 for _d in [CACHE_DIR, SAMPLES_DIR, MAPPINGS_DIR, ARTIFACTS_DIR]:

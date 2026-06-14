@@ -2,10 +2,10 @@
 Expanded Diebold-Yilmaz spillover study — large/mid/combined panels with IS-OOS split.
 
 Usage:
-    DRISHTI_DATA_VERSION=v2 PYTHONPATH=. python scripts/build_spillover_study.py
+    PYTHONPATH=. python scripts/build_spillover_study.py
 
 Writes: data/cache/research_artifacts_v2/spillover_study.json
-Requires: v2 bloomberg cache + universe manifest + sectors_v2.json
+Requires: bloomberg_v2 cache + universe manifest + sectors_v2.json
 """
 from __future__ import annotations
 import json
@@ -140,12 +140,6 @@ def build_study(
 
 
 def main() -> None:
-    import os
-    if os.environ.get("DRISHTI_DATA_VERSION") != "v2":
-        print("ERROR: Set DRISHTI_DATA_VERSION=v2 before running this script.")
-        print("  DRISHTI_DATA_VERSION=v2 PYTHONPATH=. python scripts/build_spillover_study.py")
-        sys.exit(1)
-
     from src.research.universe import load_universe, load_sectors, build_size_buckets, sector_composites, load_v2_returns
     from src.risk.returns import load_factor_series
     from src.config import ARTIFACTS_DIR
