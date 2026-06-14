@@ -8,7 +8,7 @@ Drishti is a local-first quant risk research platform for Indian equity portfoli
 
 ---
 
-## Current status (as of 2026-06-13)
+## Current status (as of 2026-06-14)
 
 **Track A — Frontend overhaul: COMPLETE ✅**
 **Track B — Data layer: COMPLETE ✅**
@@ -34,9 +34,9 @@ Executed subagent-driven (validator → implementer → reviewer per task; valid
 - ✅ `notebooks/README.md` syllabus-coverage matrix; `docs/methodology.html` extended to 39 sections; README v3 section
 - ✅ Test suite: **163 passing** (122 baseline + 41 new); all 8 notebooks verified headless
 
-**REMAINING (operational, not code):**
-- 🔲 OHLC data pull at FRTL (run `scripts/pull_ohlc_frtl.py`) — notebook 13 extreme-value section fills in once `data/cache/bloomberg_v2/ohlc/` exists; degrades gracefully until then
-- 🔲 Merge PR #10 → main
+**REMAINING:**
+- ✅ OHLC pulled at FRTL and copied to `data/cache/bloomberg_v2/ohlc/` (29 indices + 433 equities + 15 commodities, ~2000→2026, gitignored) — notebook 13 range-based volatility (Parkinson/GK/RS) now computes live (NIFTY ≈ 0.19 annualized)
+- 🔲 Merge PR #10 → main (in progress)
 
 ### Previous active branch
 `feature/v2-expansion` — merged to main (PR #8)
@@ -201,6 +201,7 @@ Walk-forward IC/Granger              →    served via FastAPI
 │       │   ├── indices/             # 29 indices (v1 set + NSE100/500/NSEMD150/sector additions)
 │       │   ├── commodities/         # 15 commodities (v1 7 + silver/aluminium/zinc/sugar/cotton/CPO/coal/iron ore)
 │       │   ├── macro/               # USDINR, GIND10YR, INVIXN, DXY
+│       │   ├── ohlc/                # PX_OPEN/HIGH/LOW/LAST for indices/equities/commodities (range-vol; pull_ohlc_frtl.py)
 │       │   └── meta/                # universe_v2.json, sectors_v2.json, failed_v2.json, membership snapshots
 │       ├── research_artifacts/      # Exported from BQuant (gitignored, not yet populated)
 │       ├── research_artifacts_v2/   # Built by build_*.py scripts (NOT gitignored — JSON, commit for demo)
