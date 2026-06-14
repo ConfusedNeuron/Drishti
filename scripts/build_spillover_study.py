@@ -117,11 +117,19 @@ def build_study(
         panels["mid"] = {"total_spillover": None, "net_spillover": None,
                          "in_sample": None, "out_of_sample": None, "rolling": {}}
 
-    # Combined panel: large + mid + factors
-    all_frames = [df for df in [large_sectors, mid_sectors, factors] if not df.empty]
-    if all_frames:
-        combined_df = pd.concat(all_frames, axis=1).dropna(how="all")
-        # Drop duplicate columns (overlap between large and mid)
+    # Combined panel: a genuine whole-universe view. Blend the large- and mid-cap sector
+    # composites 50/50 per sector (NaN-aware mean across buckets) rather than dropping the
+    # mid duplicates — otherwise "combined" collapses to the large-only panel. A sector
+    # present in only one bucket keeps that bucket's series.
+    bucket_frames = {k: v for k, v in {"large": large_sectors, "mid": mid_sectors}.items()
+                     if not v.empty}
+    if bucket_frames:
+        blended = pd.concat(bucket_frames, axis=1)             # cols: (bucket, sector)
+        # Mean across buckets per sector; transpose-groupby avoids the deprecated axis=1 form.
+        combined_sectors = blended.T.groupby(level=1).mean().T
+        frames = [df for df in [combined_sectors, factors] if not df.empty]
+        combined_df = pd.concat(frames, axis=1).dropna(how="all")
+        # Guard only against an accidental sector/factor name collision (keeps the sector).
         combined_df = combined_df.loc[:, ~combined_df.columns.duplicated()]
         panels["combined"] = _build_panel(combined_df, train_end)
     else:
