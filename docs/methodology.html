@@ -224,6 +224,18 @@ MathJax = {
     <li><a href="#finbert">FinBERT Sentiment</a></li>
     <li><a href="#safety">Safety Filter</a></li>
   </ul>
+  <h3>v3 — Findings & Methods</h3>
+  <ul>
+    <li><a href="#perf-ratios">Sharpe / Treynor / Jensen</a></li>
+    <li><a href="#frontier">Markowitz Frontier</a></li>
+    <li><a href="#ewma">EWMA / RiskMetrics</a></li>
+    <li><a href="#evt">EVT-VaR (POT/GPD)</a></li>
+    <li><a href="#extreme-vol">Range-Based Volatility</a></li>
+    <li><a href="#tar">TAR Regimes</a></li>
+    <li><a href="#cointegration">Cointegration &amp; VECM</a></li>
+    <li><a href="#altman">Altman Z-Score</a></li>
+    <li><a href="#amihud">Amihud Illiquidity</a></li>
+  </ul>
 </aside>
 
 <!-- HEADER -->
@@ -1109,6 +1121,120 @@ _RE = re.compile(rf"\b(?:{_TOKENS})\b|(?:{_PHRASES})", re.IGNORECASE)</pre>
 </table>
 
 <p>The same <code>is_advice_request()</code> function is shared by both the FastAPI copilot route and the MCP server tools — a single source of truth, tested across 18 BLOCK/PASS cases in <code>tests/test_safety_filter.py</code>.</p>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<hr>
+<h2 id="perf-ratios">31. Risk-Adjusted Performance: Sharpe, Treynor, Jensen</h2>
+<!-- ══════════════════════════════════════════════════════════════ -->
+
+<div class="section-badge">v3 — Performance (FRM Wk3)</div>
+
+<p>Three complementary risk-adjusted return measures, each dividing excess return by a different risk denominator. With daily returns $r_t$, market $m_t$, and an annualized risk-free rate $r_f$ (converted to per-period $r_f/252$):</p>
+
+<p><strong>Sharpe</strong> — excess return per unit of <em>total</em> volatility, annualized:
+$$S = \frac{\overline{(r-r_f/252)}}{\hat\sigma_{r-r_f/252}}\,\sqrt{252}$$</p>
+
+<p><strong>Beta</strong> and <strong>Treynor</strong> — excess return per unit of <em>systematic</em> risk:
+$$\beta = \frac{\mathrm{Cov}(r,m)}{\mathrm{Var}(m)}, \qquad T = \frac{\overline{r}\cdot 252 - r_f}{\beta}$$</p>
+
+<p><strong>Jensen's alpha</strong> — return above the CAPM prediction:
+$$\alpha_J = \overline{r}\cdot 252 - \big[\,r_f + \beta\,(\overline{m}\cdot 252 - r_f)\,\big]$$</p>
+
+<p>Implemented in <code>src/risk/performance.py</code>; beta and the mean terms are computed on the index-aligned common sample. The risk-free rate is taken from the India 10Y G-Sec yield (GIND10YR), which is stored in <em>percent</em> and divided by 100 before use.</p>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<h2 id="frontier">32. Markowitz Mean-Variance Efficient Frontier</h2>
+<!-- ══════════════════════════════════════════════════════════════ -->
+
+<div class="section-badge">v3 — Portfolio (FRM Wk1)</div>
+
+<p>Given an annualized mean vector $\mu$ and covariance $\Sigma$, the <strong>minimum-variance portfolio</strong> solves
+$$\min_{w}\; w^\top \Sigma w \quad \text{s.t.}\quad \mathbf{1}^\top w = 1,\; (w \ge 0 \text{ if long-only}).$$</p>
+
+<p>The <strong>efficient frontier</strong> traces the minimum variance for each target return $\mu^\star$ over $[\mu_{\text{mv}}, \max_i \mu_i]$:
+$$\min_{w}\; w^\top \Sigma w \quad \text{s.t.}\quad \mathbf{1}^\top w = 1,\; w^\top\mu = \mu^\star.$$</p>
+
+<p>The <strong>tangency portfolio</strong> maximizes the Sharpe ratio $\frac{w^\top\mu - r_f}{\sqrt{w^\top\Sigma w}}$; the capital market line runs from $(0, r_f)$ through it.</p>
+
+<p>Solved with SLSQP (<code>src/portfolio/frontier.py</code>). Because the long-only frontier variance is theoretically non-decreasing above the min-variance vertex, the first frontier point is anchored to the exact min-variance solution and a running-max clamp removes residual solver noise so the frontier is deterministically monotone. Diagnostic only — never a recommendation to hold the weights.</p>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<h2 id="ewma">33. EWMA / RiskMetrics Volatility &amp; Covariance</h2>
+<!-- ══════════════════════════════════════════════════════════════ -->
+
+<div class="section-badge">v3 — Volatility (FRM Wk7/8)</div>
+
+<p>The RiskMetrics exponentially weighted moving average gives the conditional variance more weight to recent observations:
+$$h_t = \lambda\, h_{t-1} + (1-\lambda)\, r_{t-1}^2,$$
+with $\lambda = 0.94$ for daily data (RiskMetrics; J.R. Varma committee for NSE). The multivariate analogue updates the covariance by the lagged outer product:
+$$\Sigma_t = \lambda\,\Sigma_{t-1} + (1-\lambda)\, r_{t-1} r_{t-1}^\top,$$
+which is positive semi-definite by construction (a convex combination of a PSD seed and PSD rank-one terms). In <code>src/risk/ewma.py</code>.</p>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<h2 id="evt">34. EVT-VaR via Peaks-Over-Threshold (GPD)</h2>
+<!-- ══════════════════════════════════════════════════════════════ -->
+
+<div class="section-badge">v3 — Tail Risk (FRM Wk8)</div>
+
+<p>Extreme Value Theory models the tail of the loss distribution ($L = -r$) above a high threshold $u$ with a Generalized Pareto Distribution. With $N_u$ exceedances out of $n$ losses and fitted shape $\xi$, scale $\beta$ (MLE), the McNeil–Frey tail estimators are:
+$$\mathrm{VaR}_q = u + \frac{\beta}{\xi}\!\left[\Big(\tfrac{n}{N_u}(1-q)\Big)^{-\xi} - 1\right], \qquad \mathrm{ES}_q = \frac{\mathrm{VaR}_q + \beta - \xi u}{1-\xi}\;\;(\xi<1).$$</p>
+
+<p>Valid only for $q \ge$ the threshold quantile (the formula extrapolates <em>into</em> the tail). <code>src/risk/evt.py</code> guards against $q<$ threshold, too few exceedances, and an absent loss tail. Genuinely different from the Gaussian methods — it captures heavy tails parametrically.</p>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<h2 id="extreme-vol">35. Range-Based (Extreme-Value) Volatility Estimators</h2>
+<!-- ══════════════════════════════════════════════════════════════ -->
+
+<div class="section-badge">v3 — Volatility (FRM Wk7)</div>
+
+<p>OHLC range estimators are several times more efficient than close-to-close standard deviation. With open $O$, high $H$, low $L$, close $C$ per bar:</p>
+
+<p><strong>Parkinson:</strong> $\;\hat\sigma^2_P = \dfrac{1}{4\ln 2}\,\overline{\big(\ln \tfrac{H}{L}\big)^2}$</p>
+<p><strong>Garman–Klass:</strong> $\;\hat\sigma^2_{GK} = \overline{\tfrac12\big(\ln\tfrac{H}{L}\big)^2 - (2\ln 2 - 1)\big(\ln\tfrac{C}{O}\big)^2}$</p>
+<p><strong>Rogers–Satchell (drift-independent):</strong> $\;\hat\sigma^2_{RS} = \overline{\ln\tfrac{H}{C}\ln\tfrac{H}{O} + \ln\tfrac{L}{C}\ln\tfrac{L}{O}}$</p>
+
+<p>Each per-bar term is non-negative, so the estimators are well-defined. In <code>src/risk/extreme_value_vol.py</code>; fed by the dedicated OHLC pull (<code>scripts/pull_ohlc_frtl.py</code>).</p>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<h2 id="tar">36. Threshold Autoregression (TAR) for Regimes</h2>
+<!-- ══════════════════════════════════════════════════════════════ -->
+
+<div class="section-badge">v3 — Regimes (SAAPM Wk4)</div>
+
+<p>A two-regime self-exciting TAR (Tsay/Tong) fits a separate AR($p$) on either side of a threshold $\tau$ on the delay-$d$ lagged value $y_{t-d}$:
+$$y_t = \begin{cases} \phi_0^{(1)} + \sum_{k=1}^p \phi_k^{(1)} y_{t-k} + \varepsilon_t, & y_{t-d} \le \tau \\[4pt] \phi_0^{(2)} + \sum_{k=1}^p \phi_k^{(2)} y_{t-k} + \varepsilon_t, & y_{t-d} > \tau \end{cases}$$</p>
+
+<p>$\tau$ is chosen by grid search over the trimmed quantile band of $y_{t-d}$ to minimize the combined regime SSR (conditional least squares). Because the threshold is unidentified under the linear null (Davies' problem), significance is assessed by a <strong>bootstrap likelihood-ratio test</strong>, $\mathrm{LR} = n\ln(\mathrm{SSR}_0/\mathrm{SSR}_1)$, with the p-value from residual-bootstrap replicates under the linear AR. Applied to the detrended log-price (above-trend = bull, below = bear) and cross-checked against the HMM and 20%-rule regimes. In <code>src/research/tar.py</code>.</p>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<h2 id="cointegration">37. Johansen Cointegration &amp; VECM</h2>
+<!-- ══════════════════════════════════════════════════════════════ -->
+
+<div class="section-badge">v3 — Multivariate (SAAPM Wk3/4)</div>
+
+<p>Before differencing to returns, the Johansen trace test checks for long-run equilibrium relationships among the $I(1)$ log-levels. The cointegrating rank $r$ is the number of trace statistics exceeding their 95% critical values. If $r \ge 1$, a Vector Error Correction Model
+$$\Delta y_t = \Pi\, y_{t-1} + \sum_{i=1}^{k-1}\Gamma_i\,\Delta y_{t-i} + \varepsilon_t, \qquad \Pi = \alpha\beta^\top,\;\; \mathrm{rank}(\Pi)=r,$$
+captures both the short-run dynamics and the error-correction toward equilibrium. This complements the VAR-on-returns spillover study, which would otherwise discard any long-run relationship. In <code>src/research/cointegration.py</code> (wrapping statsmodels).</p>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<h2 id="altman">38. Altman Z-Score Credit Screen</h2>
+<!-- ══════════════════════════════════════════════════════════════ -->
+
+<div class="section-badge">v3 — Credit (FRM Wk9)</div>
+
+<p>Altman's (1968) discriminant score combines five fundamental ratios:
+$$Z = 1.2\,x_1 + 1.4\,x_2 + 3.3\,x_3 + 0.6\,x_4 + 1.0\,x_5,$$
+where $x_1=\tfrac{\text{WC}}{\text{TA}}$, $x_2=\tfrac{\text{RE}}{\text{TA}}$, $x_3=\tfrac{\text{EBIT}}{\text{TA}}$, $x_4=\tfrac{\text{MVE}}{\text{TL}}$, $x_5=\tfrac{\text{Sales}}{\text{TA}}$. Zones: $Z>2.99$ safe, $1.81 \le Z \le 2.99$ grey, $Z<1.81$ distress. Implemented in <code>src/research/credit.py</code> and complemented by a reduced credit-health screen (leverage, ROA, ROE, market-cap/debt, cash-flow/debt) on the available cached fundamentals.</p>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<h2 id="amihud">39. Amihud Illiquidity</h2>
+<!-- ══════════════════════════════════════════════════════════════ -->
+
+<div class="section-badge">v3 — Liquidity (FRM Wk9)</div>
+
+<p>The Amihud (2002) ILLIQ measure is the average price impact per unit of traded value — the mean absolute return divided by daily currency volume (price × shares):
+$$\text{ILLIQ} = \frac{1}{D}\sum_{t=1}^{D} \frac{|r_t|}{P_t\,V_t}\times 10^6.$$
+Higher values indicate thinner liquidity (more price impact per rupee traded). In <code>src/research/liquidity.py</code>; ranked across names and against market capitalization.</p>
 
 <!-- ══════════════════════════════════════════════════════════════ -->
 <hr>
