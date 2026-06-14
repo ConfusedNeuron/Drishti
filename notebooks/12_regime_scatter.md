@@ -1,0 +1,286 @@
+## Cell 1 [MARKDOWN]
+
+# Notebook 12 — Regime Detection via Threshold Autoregression (TAR)
+
+**Course:** Financial Risk Management — SAAPM Wk4 (Threshold / non-linear time series; Tsay, Tong)
+**Data source:** Bloomberg Terminal, FRTL IIM Calcutta (bloomberg_v2 parquet cache)
+**Methodology reference:** Tsay, *Analysis of Financial Time Series*; Tong, *Threshold Models in Non-Linear Time Series Analysis*
+
+This notebook is a **diagnostic illustration only**. It is not investment advice; no regime label here constitutes a recommendation to buy, sell, or hold any security.
+
+**The idea (the professor's method).** Plot the series against its own lag — the *phase scatter* of $y_t$ versus $y_{t-1}$. A single straight cloud means a linear AR process. A **bend, or two distinct slopes**, hints at *regimes*: the dynamics differ depending on where the series sits. A **Threshold Autoregression (TAR)** formalises this. It searches for a threshold $c$ on a delay-$d$ lagged value of the series and fits a **separate AR($p$) slope in each regime**:
+
+$$
+y_t = \begin{cases}
+\phi_0^{(L)} + \phi_1^{(L)} y_{t-1} + \varepsilon_t, & y_{t-d} \le c \quad\text{(lower regime)}\\[4pt]
+\phi_0^{(U)} + \phi_1^{(U)} y_{t-1} + \varepsilon_t, & y_{t-d} > c \quad\text{(upper regime)}
+\end{cases}
+$$
+
+The threshold $c$ is chosen by grid search to minimise the combined residual sum of squares of the two regime fits. A bootstrap likelihood-ratio test then asks whether the two-regime split is genuinely better than a single linear AR — i.e. whether the regimes are *real* or just noise.
+
+---
+
+## Cell 2 [CODE]
+
+```python
+import os, sys
+sys.path.insert(0, os.path.abspath("."))
+os.environ["DRISHTI_DATA_VERSION"] = "v2"
+
+import json
+import numpy as np
+import pandas as pd
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+import seaborn as sns
+sns.set_theme(style="whitegrid")
+
+from statsmodels.nonparametric.smoothers_lowess import lowess
+
+from pathlib import Path
+FIG = Path("notebooks/figures/12")
+FIG.mkdir(parents=True, exist_ok=True)
+
+from src.research.series_io import load_index_prices
+from src.research.tar import fit_tar, threshold_test
+
+print("imports OK")
+```
+
+---
+
+## Cell 3 [MARKDOWN]
+
+**Why detrend first.** A TAR threshold variable should be (roughly) stationary — the threshold $c$ is a *level* the series crosses, so it only makes sense if the series oscillates around a stable centre rather than drifting away. The copper example shown in class was detrended before fitting for exactly this reason.
+
+NIFTY's log-price trends upward over two decades, so a raw threshold would just split "early years" from "late years". Instead we **OLS-detrend the log-price** (remove a linear time trend) and work with the deviation `dev`. The threshold then separates **above-trend (bull-like)** from **below-trend (bear-like)** states — a far more meaningful regime variable.
+
+---
+
+## Cell 4 [CODE]
+
+```python
+s = np.log(load_index_prices(["NIFTY Index"])["NIFTY Index"].dropna())
+
+# OLS detrend: remove a linear time trend from the log-price
+t = np.arange(len(s))
+b = np.polyfit(t, s.values, 1)
+dev = pd.Series(s.values - (b[0] * t + b[1]), index=s.index)
+
+print(f"n daily points: {len(dev)}")
+print(f"dev range: [{dev.min():.3f}, {dev.max():.3f}], mean {dev.mean():.4f}")
+
+fig, ax = plt.subplots(figsize=(11, 4))
+ax.plot(dev.index, dev.values, lw=0.8, color="#2b6cb0")
+ax.axhline(0, color="grey", lw=0.8, ls="--")
+ax.set_title("NIFTY detrended log-price (deviation from linear trend)")
+ax.set_xlabel("date"); ax.set_ylabel("dev = log P - trend")
+fig.tight_layout()
+fig.savefig(FIG / "detrended_logprice.png", dpi=120)
+plt.close(fig)
+print("saved detrended_logprice.png")
+```
+
+---
+
+## Cell 5 [CODE]
+
+```python
+# Phase scatter: dev_t vs dev_{t-1}, with a non-parametric LOWESS overlay.
+x = dev.values[:-1]
+y = dev.values[1:]
+
+lo = lowess(y, x)  # returns (n,2) array, x-sorted ascending: [:,0]=x, [:,1]=smoothed y
+
+fig, ax = plt.subplots(figsize=(6.5, 6.5))
+ax.scatter(x, y, s=4, alpha=0.25, color="#4a5568", label="dev_t vs dev_{t-1}")
+ax.plot(lo[:, 0], lo[:, 1], "r", lw=2, label="LOWESS")
+lim = [min(x.min(), y.min()), max(x.max(), y.max())]
+ax.plot(lim, lim, color="grey", lw=0.7, ls=":", label="45°")
+ax.set_title("Phase scatter — looking for a bend / two-slope structure")
+ax.set_xlabel("dev(t-1)"); ax.set_ylabel("dev(t)")
+ax.legend(loc="upper left", fontsize=8)
+fig.tight_layout()
+fig.savefig(FIG / "phase_scatter.png", dpi=120)
+plt.close(fig)
+print("saved phase_scatter.png")
+```
+
+---
+
+## Cell 6 [CODE]
+
+```python
+# Fit TAR on the FULL DAILY dev (fast, <1s).
+f = fit_tar(dev, p=1, d=1)
+thr = f["threshold"]
+lc = f["lower_coef"]   # [intercept, slope] for dev_{t-1} <= thr
+uc = f["upper_coef"]   # [intercept, slope] for dev_{t-1} >  thr
+print(f"threshold        : {thr:.4f}")
+print(f"lower regime AR(1): intercept {lc[0]:.4f}, slope {lc[1]:.4f}  (n={f['n_lower']})")
+print(f"upper regime AR(1): intercept {uc[0]:.4f}, slope {uc[1]:.4f}  (n={f['n_upper']})")
+
+# Bootstrap LR test (linear AR vs two-regime TAR) is SLOW on the full daily series
+# (~61s for n_boot=50). Run it on the WEEKLY-downsampled series for tractability — the
+# weekly series preserves the threshold structure while shrinking n ~5x.
+dev_w = dev.resample("W").last().dropna()
+tt = threshold_test(dev_w, p=1, d=1, n_boot=100)
+print(f"\nthreshold_test (WEEKLY dev, n={len(dev_w)}, n_boot=100):")
+print(f"  LR stat = {tt['lr_stat']:.3f},  p-value = {tt['p_value']:.3f},  thr = {tt['threshold']:.4f}")
+
+# Draw the two regime regression lines on the phase scatter.
+fig, ax = plt.subplots(figsize=(6.5, 6.5))
+ax.scatter(x, y, s=4, alpha=0.20, color="#4a5568")
+xl = np.linspace(x.min(), thr, 50)
+xu = np.linspace(thr, x.max(), 50)
+ax.plot(xl, lc[0] + lc[1] * xl, color="#c53030", lw=2.2, label=f"lower (slope {lc[1]:.3f})")
+ax.plot(xu, uc[0] + uc[1] * xu, color="#2f855a", lw=2.2, label=f"upper (slope {uc[1]:.3f})")
+ax.axvline(thr, color="grey", lw=1.0, ls="--", label=f"threshold {thr:.3f}")
+ax.set_title("TAR two-regime fit on the phase scatter")
+ax.set_xlabel("dev(t-1)"); ax.set_ylabel("dev(t)")
+ax.legend(loc="upper left", fontsize=8)
+fig.tight_layout()
+fig.savefig(FIG / "tar_regimes_scatter.png", dpi=120)
+plt.close(fig)
+print("saved tar_regimes_scatter.png")
+```
+
+---
+
+## Cell 7 [CODE]
+
+```python
+# Shade the price history by TAR regime: bull where dev > threshold, bear otherwise.
+price = load_index_prices(["NIFTY Index"])["NIFTY Index"].dropna()
+bull_mask = (dev > thr).reindex(price.index).fillna(False)
+
+fig, ax = plt.subplots(figsize=(12, 4.5))
+ax.plot(price.index, price.values, color="#1a202c", lw=0.9, label="NIFTY")
+# Contiguous shading via fill_between with where=
+ax.fill_between(price.index, price.min(), price.max(), where=bull_mask.values,
+                color="#2f855a", alpha=0.12, label="TAR bull (dev > thr)")
+ax.fill_between(price.index, price.min(), price.max(), where=~bull_mask.values,
+                color="#c53030", alpha=0.12, label="TAR bear (dev ≤ thr)")
+ax.set_ylim(price.min(), price.max())
+ax.set_title("NIFTY price shaded by TAR regime (above/below detrended threshold)")
+ax.set_xlabel("date"); ax.set_ylabel("NIFTY level")
+ax.legend(loc="upper left", fontsize=8)
+fig.tight_layout()
+fig.savefig(FIG / "tar_regime_shading.png", dpi=120)
+plt.close(fig)
+print(f"saved tar_regime_shading.png  (TAR-bull days: {int(bull_mask.sum())}/{len(bull_mask)})")
+```
+
+---
+
+## Cell 8 [MARKDOWN]
+
+### Tie-back to Drishti's 20%-rule bull/bear (an HMM cousin)
+
+Drishti already ships a regime study built on the classic **20%-drawdown rule**: a bear market begins after a 20% fall from a peak, a bull after a 20% rise from a trough. That artifact (`regime_study.json`) is conceptually a cousin of the HMM regime detector — both label persistent up/down states — but it is rule-based and easy to read.
+
+We **load the prebuilt artifact** (no re-fitting) and overlay its bull/bear labels against the TAR classification over the same window. Note that the artifact's labels **only cover 2020 onward**, so the comparison is restricted to that period.
+
+---
+
+## Cell 9 [CODE]
+
+```python
+art = json.load(open("data/cache/research_artifacts_v2/regime_study.json"))
+nifty = art["indices"]["NIFTY Index"]
+
+tl = pd.DataFrame(nifty["timeline"])
+tl["date"] = pd.to_datetime(tl["date"])
+tl = tl.set_index("date").sort_index()
+print(f"artifact timeline: {len(tl)} rows, {tl.index.min().date()} -> {tl.index.max().date()}")
+print(f"current state: {nifty['current']}")
+
+# Restrict TAR regime to the artifact window (2020+).
+start = tl.index.min()
+dev_2020 = dev[dev.index >= start]
+tar_bull = (dev_2020 > thr)
+
+# Align the 20%-rule labels onto the TAR daily index.
+rule_bull = (tl["regime"] == "bull").reindex(dev_2020.index, method="ffill")
+
+# Agreement: how many days both call bull.
+both = (tar_bull & (rule_bull == True))
+agree_bull = int(both.sum())
+n_common = int((~rule_bull.isna()).sum())
+print(f"\nDays both TAR and 20%-rule call BULL: {agree_bull} / {n_common} common days")
+
+fig, axes = plt.subplots(2, 1, figsize=(12, 6), sharex=True)
+price_2020 = price[price.index >= start]
+
+# Top: TAR regime
+axes[0].plot(price_2020.index, price_2020.values, color="#1a202c", lw=0.9)
+axes[0].fill_between(price_2020.index, price_2020.min(), price_2020.max(),
+                     where=tar_bull.reindex(price_2020.index).fillna(False).values,
+                     color="#2f855a", alpha=0.14)
+axes[0].fill_between(price_2020.index, price_2020.min(), price_2020.max(),
+                     where=~tar_bull.reindex(price_2020.index).fillna(False).values,
+                     color="#c53030", alpha=0.14)
+axes[0].set_ylim(price_2020.min(), price_2020.max())
+axes[0].set_title("TAR regime (green=bull / red=bear), 2020+")
+axes[0].set_ylabel("NIFTY")
+
+# Bottom: 20%-rule
+rule_bull_px = (tl["regime"] == "bull").reindex(price_2020.index, method="ffill").fillna(False)
+axes[1].plot(price_2020.index, price_2020.values, color="#1a202c", lw=0.9)
+axes[1].fill_between(price_2020.index, price_2020.min(), price_2020.max(),
+                     where=rule_bull_px.values, color="#2f855a", alpha=0.14)
+axes[1].fill_between(price_2020.index, price_2020.min(), price_2020.max(),
+                     where=~rule_bull_px.values, color="#c53030", alpha=0.14)
+axes[1].set_ylim(price_2020.min(), price_2020.max())
+axes[1].set_title("Drishti 20%-rule bull/bear, 2020+")
+axes[1].set_ylabel("NIFTY"); axes[1].set_xlabel("date")
+
+fig.tight_layout()
+fig.savefig(FIG / "regime_overlay.png", dpi=120)
+plt.close(fig)
+print("saved regime_overlay.png")
+```
+
+---
+
+## Cell 10 [CODE]
+
+```python
+# For contrast: fit TAR on the RAW price level (NOT detrended).
+lvl = load_index_prices(["NIFTY Index"])["NIFTY Index"].dropna()
+fr = fit_tar(lvl, p=1, d=1)
+print(f"raw-level threshold: {fr['threshold']:.2f}")
+print(f"  lower slope {fr['lower_coef'][1]:.4f} (n={fr['n_lower']}), "
+      f"upper slope {fr['upper_coef'][1]:.4f} (n={fr['n_upper']})")
+
+xr = lvl.values[:-1]
+yr = lvl.values[1:]
+fig, ax = plt.subplots(figsize=(6.5, 6.5))
+ax.scatter(xr, yr, s=4, alpha=0.20, color="#4a5568")
+ax.axvline(fr["threshold"], color="grey", lw=1.0, ls="--",
+           label=f"threshold {fr['threshold']:.0f}")
+ax.set_title("TAR on RAW NIFTY level — threshold just splits early vs late years")
+ax.set_xlabel("level(t-1)"); ax.set_ylabel("level(t)")
+ax.legend(loc="upper left", fontsize=8)
+fig.tight_layout()
+fig.savefig(FIG / "tar_raw_level.png", dpi=120)
+plt.close(fig)
+print("saved tar_raw_level.png")
+# On the raw trending level the threshold mostly separates the price era, not a behavioural
+# regime — which is exactly why detrending gives the cleaner regime read.
+```
+
+---
+
+## Cell 11 [MARKDOWN]
+
+## Findings
+
+- **Both regimes are near-unit-root.** The fitted AR(1) slopes in both the lower and upper regimes sit at roughly **0.99** — the detrended NIFTY log-price is highly persistent in *either* state. There is no sharp difference in dynamics across the threshold.
+- **The bootstrap threshold test does NOT reject linearity** (p-value ≈ **0.95** on the weekly series). Formally, a single linear AR fits the detrended series about as well as the two-regime TAR. In plain terms: **detrended NIFTY log-price behaves like a persistent random walk**, and the TAR split is statistically weak. This is an honest, defensible negative result — the phase scatter *looks* like it might bend, but the data do not support a genuine two-regime threshold.
+- **Bull/bear is better captured by the 20%-drawdown rule.** The prebuilt `regime_study.json` labels the 2020–2026 window as **mostly bull with short bear episodes** (current state: bull, ~10% off peak). That rule-based, drawdown-anchored definition matches the intuitive notion of a market regime far better than a threshold on a persistent log-price ever could.
+- **Detrending matters.** TAR on the raw price level merely splits the early years from the late years (the threshold is just a price level the trending series crosses once). Detrending is the cleaner regime read, but even then the regimes are not statistically distinct here.
+
+**Educational / diagnostic only** — nothing in this notebook is a forecast or investment recommendation.

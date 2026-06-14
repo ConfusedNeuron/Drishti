@@ -16,9 +16,30 @@ Drishti is a local-first quant risk research platform for Indian equity portfoli
 **Track D — News+FinBERT + XGBoost breach classifier: COMPLETE ✅**
 **Track E — Frontend UX fixes: COMPLETE ✅**
 **Track F — v2 Expansion: COMPLETE ✅**
+**Track G — v3 Findings Notebooks: COMPLETE ✅** (pending merge of PR #10)
 
 ### Active branch
-`feature/v2-expansion` — all tasks shipped; pending final commit + merge to main
+`feature/v3-findings-notebooks` — v3 phase-1 (course-grounded findings notebooks + analytics helpers). Open PR: #10.
+
+### Track G — v3 status (as of 2026-06-14)
+Executed subagent-driven (validator → implementer → reviewer per task; validator caught real defects on 6 tasks). All on `feature/v3-findings-notebooks`.
+
+**DONE & committed (all reviewed, tests green, notebooks run headless):**
+- ✅ `scripts/run_notebook_md.py` — notebook `[CODE]`-cell execution harness
+- ✅ `scripts/pull_ohlc_frtl.py` — OHLC pull for v2 universe (extreme-value vol)
+- ✅ `src/research/series_io.py` — v2 index/commodity/macro/OHLC loaders
+- ✅ `src/risk/performance.py` (Sharpe/Treynor/Jensen), `src/risk/ewma.py`, `src/risk/evt.py` (POT/GPD), `src/risk/extreme_value_vol.py` (Parkinson/GK/RS)
+- ✅ `src/portfolio/frontier.py` (Markowitz), `src/research/tar.py` (TAR + bootstrap test), `src/research/cointegration.py` (Johansen/VECM), `src/research/credit.py` (Altman), `src/research/liquidity.py` (Amihud)
+- ✅ Notebooks `08`–`15` (growth, risk/perf, covariance, frontier, TAR regime, advanced Box-Jenkins/GARCH ×17 series, spillover/connectedness, credit/liquidity) — all run headless, all reviewed
+- ✅ `notebooks/README.md` syllabus-coverage matrix; `docs/methodology.html` extended to 39 sections; README v3 section
+- ✅ Test suite: **163 passing** (122 baseline + 41 new); all 8 notebooks verified headless
+
+**REMAINING (operational, not code):**
+- 🔲 OHLC data pull at FRTL (run `scripts/pull_ohlc_frtl.py`) — notebook 13 extreme-value section fills in once `data/cache/bloomberg_v2/ohlc/` exists; degrades gracefully until then
+- 🔲 Merge PR #10 → main
+
+### Previous active branch
+`feature/v2-expansion` — merged to main (PR #8)
 
 ### Pre-demo checklist (presentation: 2026-06-16 Mon)
 - [ ] `pip install transformers torch` — required for FinBERT sentiment panel (~2 GB, one-time)
@@ -382,6 +403,7 @@ Theme logic is split across `theme.js`, `components.css`, and `layout.css`.
 - **Session 5:** Frontend UX fixes — tooltip hover-bridge, theme picker (`overflow:hidden` + render-on-open + hardcoded colour bugs), `/learn` header link, section subtitles + chart reading notes, 81 tests
 - **Session 6:** v2 expansion — ADCC, diagnostics ladder, weekly Granger, universe module, expanded spillover study, market shock events, bull/bear regimes, IPO truncation fix, unified safety filter, news dry-run, pull_drishti_v2.py + verify_v2_cache.py, v2 data version switch, 122 tests
 - **Session 7:** v2 data import (433 equities, 29 indices, 15 commodities), v2 artifact builds (spillover/events/regime), IS/IN Equity cache fallback fix, 2 new event labels (FII outflow 2024 + tariff shock 2026), Events + Regimes frontend tabs, docs/methodology.html (30-section math reference)
+- **Session 8:** v3 findings notebooks (PR #10) — 9 tested analytics helpers (performance ratios, EWMA, EVT-VaR, range volatility, Markowitz frontier, TAR, Johansen/VECM, Altman, Amihud), notebook execution harness, OHLC pull script, notebooks 08–15 (all run headless + reviewed), notebooks/README coverage matrix. Subagent-driven (validator→implementer→reviewer; validator caught 6 real defects). 163 tests. docs/methodology.html extended to 39 sections; README v3 section. Remaining: OHLC pull at FRTL + merge PR #10.
 
 ---
 
