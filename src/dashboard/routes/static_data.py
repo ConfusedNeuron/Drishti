@@ -2,8 +2,8 @@
 from __future__ import annotations
 import json
 from functools import lru_cache
-from pathlib import Path
 from fastapi import APIRouter
+from src.config import ARTIFACTS_DIR
 
 router = APIRouter()
 
@@ -24,22 +24,28 @@ def _load() -> dict:
     except Exception:
         pass
 
-    artifacts = Path(__file__).resolve().parents[3] / "data" / "cache" / "research_artifacts"
-    _try_json(artifacts / "hmm_result.json",  result, ["regime", "regime_prob"])
-    _try_json(artifacts / "dy_result.json",   result, ["dy_total"])
-    _try_json(artifacts / "ic_result.json",   result, ["ic_signals"])
-    _try_json(artifacts / "var_range.json",   result, ["var_range"])
-    return result
-
-
-def _try_json(path: Path, result: dict, keys: list[str]) -> None:
+    # regime + hmm_prob_high_vol from v2 regime study (NIFTY Index current state)
     try:
-        data = json.loads(path.read_text())
-        for k in keys:
-            if k in data:
-                result[k] = data[k]
+        data = json.loads((ARTIFACTS_DIR / "regime_study.json").read_text())
+        current = data["indices"]["NIFTY Index"]["current"]
+        result["regime"] = current.get("regime")
+        result["regime_prob"] = current.get("hmm_prob_high_vol")
     except Exception:
         pass
+
+    # total connectedness from v2 spillover study; prefer in_sample sub-key (same value, but explicit)
+    try:
+        data = json.loads((ARTIFACTS_DIR / "spillover_study.json").read_text())
+        combined = data["panels"]["combined"]
+        ts = combined.get("in_sample", {}).get("total_spillover")
+        if ts is None:
+            ts = combined.get("total_spillover")
+        result["dy_total"] = ts
+    except Exception:
+        pass
+
+    # ic_signals and var_range: no v2 source exists — remain None
+    return result
 
 
 @router.get("/api/static-data")

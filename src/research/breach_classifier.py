@@ -128,8 +128,13 @@ def predict_breach(model: object, features_today: pd.Series) -> BreachPrediction
     (all columns in build_breach_features output except 'breach').
     """
     try:
-        # Reshape to (1, n_features) for sklearn-compatible .predict_proba()
-        x = features_today.values.reshape(1, -1)
+        # When the model carries feature names (trained with a DataFrame), reindex
+        # today's features to the training column order to guard against positional
+        # mismatches. Fall back to positional order for older name-less pickles.
+        if hasattr(model, "feature_names_in_"):
+            x = features_today.reindex(model.feature_names_in_).to_frame().T
+        else:
+            x = features_today.values.reshape(1, -1)
         prob = float(model.predict_proba(x)[0, 1])
 
         if prob < _THRESH_LOW:

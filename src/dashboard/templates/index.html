@@ -168,6 +168,45 @@
     <div class="chart-wrap"><div id="dcc-chart" style="height:300px"></div></div>
     <p class="chart-note">How to read: lines climbing toward 1 = pairs diversify less when it matters; dips = more diversification.</p>
   </div>
+
+  <div class="section" id="spillover-study-section" style="margin-top:16px">
+    <h2>Universe Spillover Study (Nifty 100 vs Midcap 150)</h2>
+    <p class="section-sub">Diebold-Yilmaz connectedness across the full 433-name v2 universe, split by market-cap cohort.
+      In-sample: 2006–2023; out-of-sample: 2024–present. A higher total connectedness means cross-market shocks
+      explain a larger share of forecast-error variance — a sign of systemic risk, not individual stock behaviour.</p>
+    <div class="spinner" id="study-spinner">Loading spillover study</div>
+
+    <div class="grid-3" id="study-kpi-row" style="margin:16px 0">
+      <div class="card">
+        <h3>Large-Cap (Nifty 100)</h3>
+        <div class="big" id="study-kpi-large">—</div>
+        <div class="sub">In-sample total connectedness</div>
+      </div>
+      <div class="card">
+        <h3>Mid-Cap (Nifty Midcap 150)</h3>
+        <div class="big" id="study-kpi-mid">—</div>
+        <div class="sub">In-sample total connectedness</div>
+      </div>
+      <div class="card">
+        <h3>Combined Universe</h3>
+        <div class="big" id="study-kpi-combined">—</div>
+        <div class="sub">In-sample total connectedness</div>
+      </div>
+    </div>
+
+    <div class="chart-wrap" style="margin-top:16px">
+      <div id="study-rolling-chart" style="height:240px"></div>
+    </div>
+    <p class="chart-note">↳ How to read: three lines show rolling total connectedness for large-, mid-, and combined cohorts.
+      A rising gap between large and mid indicates diverging systemic-risk profiles across market-cap tiers.</p>
+
+    <div class="chart-wrap" style="margin-top:16px">
+      <div id="study-net-chart" style="height:300px"></div>
+    </div>
+    <p class="chart-note">↳ How to read (net spillover — combined panel): positive bar = net transmitter (sends more shocks than it absorbs);
+      negative = net receiver. Width reflects how asymmetric a sector's role is in the Indian equity risk network.
+      Educational/diagnostic only — not investment advice.</p>
+  </div>
 </div>
 
 <!-- ── EVENTS ─────────────────────────────────────────────────────────────── -->

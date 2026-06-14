@@ -9,6 +9,21 @@ from src.config import DATA_DIR
 
 V2_META = DATA_DIR / "cache" / "bloomberg_v2" / "meta"
 
+# Bloomberg INDUSTRY_SECTOR (BICS) labels → GICS sector names. Used only as a fallback
+# when GICS_SECTOR_NAME is null; without it the same economic sector fragments into two
+# buckets (e.g. "Financial" vs "Financials", "Technology" vs "Information Technology"),
+# which splinters the spillover composites and sector counts.
+_INDUSTRY_TO_GICS = {
+    "Financial": "Financials",
+    "Technology": "Information Technology",
+    "Industrial": "Industrials",
+    "Basic Materials": "Materials",
+    "Communications": "Communication Services",
+    "Consumer, Cyclical": "Consumer Discretionary",
+    "Consumer, Non-cyclical": "Consumer Staples",
+    "Diversified": "Unknown",
+}
+
 
 def load_universe() -> dict:
     p = V2_META / "universe_v2.json"
@@ -20,10 +35,12 @@ def load_sectors() -> dict[str, str]:
     if not p.exists():
         return {}
     raw = json.loads(p.read_text())
-    return {
-        t: (rec.get("GICS_SECTOR_NAME") or rec.get("INDUSTRY_SECTOR") or "Unknown")
-        for t, rec in raw.items()
-    }
+    out: dict[str, str] = {}
+    for t, rec in raw.items():
+        s = rec.get("GICS_SECTOR_NAME") or rec.get("INDUSTRY_SECTOR") or "Unknown"
+        # GICS names pass through unchanged; only BICS fallbacks are remapped.
+        out[t] = _INDUSTRY_TO_GICS.get(s, s)
+    return out
 
 
 def build_size_buckets(manifest: dict) -> dict[str, list[str]]:

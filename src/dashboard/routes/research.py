@@ -306,7 +306,7 @@ async def events_endpoint():
     if not p.exists():
         raise HTTPException(
             status_code=503,
-            detail="Events artifact not built. Run scripts/build_events_study.py with DRISHTI_DATA_VERSION=v2.",
+            detail="Events artifact not built. Run: PYTHONPATH=. python scripts/build_events_study.py",
         )
     return json.loads(p.read_text())
 
@@ -319,7 +319,21 @@ async def regimes_study_endpoint():
     if not p.exists():
         raise HTTPException(
             status_code=503,
-            detail="Regime study artifact not built. Run scripts/build_regime_study.py with DRISHTI_DATA_VERSION=v2.",
+            detail="Regime study artifact not built. Run: PYTHONPATH=. python scripts/build_regime_study.py",
+        )
+    return json.loads(p.read_text())
+
+
+@router.get("/spillover/study")
+async def spillover_study_endpoint():
+    """Return the pre-built expanded Diebold-Yilmaz spillover study (large/mid/combined
+    panels, IS/OOS split), or 503 if not yet generated."""
+    import json
+    p = DATA_DIR / "cache" / "research_artifacts_v2" / "spillover_study.json"
+    if not p.exists():
+        raise HTTPException(
+            status_code=503,
+            detail="Spillover study artifact not built. Run: PYTHONPATH=. python scripts/build_spillover_study.py",
         )
     return json.loads(p.read_text())
 

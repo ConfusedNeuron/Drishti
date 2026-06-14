@@ -30,7 +30,7 @@ Executed subagent-driven (validator → implementer → reviewer per task; valid
 - ✅ `src/research/series_io.py` — v2 index/commodity/macro/OHLC loaders
 - ✅ `src/risk/performance.py` (Sharpe/Treynor/Jensen), `src/risk/ewma.py`, `src/risk/evt.py` (POT/GPD), `src/risk/extreme_value_vol.py` (Parkinson/GK/RS)
 - ✅ `src/portfolio/frontier.py` (Markowitz), `src/research/tar.py` (TAR + bootstrap test), `src/research/cointegration.py` (Johansen/VECM), `src/research/credit.py` (Altman), `src/research/liquidity.py` (Amihud)
-- ✅ Notebooks `08`–`15` (growth, risk/perf, covariance, frontier, TAR regime, advanced Box-Jenkins/GARCH ×17 series, spillover/connectedness, credit/liquidity) — all run headless, all reviewed
+- ✅ Notebooks `08`–`15` (growth, risk/perf, covariance, frontier, TAR regime, advanced Box-Jenkins/GARCH ×17 series, spillover/connectedness, credit/liquidity) — all run headless, all reviewed. **Authoritative format is `.ipynb`, executed headless via `nbconvert` on the v2 cache** (`python -m nbconvert --to notebook --execute notebooks/NN.ipynb`; needs `nbconvert`/`nbclient`/`ipykernel` + a `python3` kernelspec). The paired `08`–`15` `.md` files are readable exports **without** `## Cell [CODE]` markers, so `run_notebook_md.py` runs only the `01`–`07` spec notebooks, not these. Re-verified end-to-end on v2 2026-06-15 (8/8 pass).
 - ✅ `notebooks/README.md` syllabus-coverage matrix; `docs/methodology.html` extended to 39 sections; README v3 section
 - ✅ Test suite: **163 passing** (122 baseline + 41 new); all 8 notebooks verified headless
 
@@ -88,7 +88,7 @@ Executed subagent-driven (validator → implementer → reviewer per task; valid
 - ✅ **Rolling Diebold-Yilmaz** — `/api/research/spillover/rolling` route; wires pre-existing `rolling_spillover()`; filled-area connectedness chart auto-loads in Spillover tab
 - ✅ **News RSS + FinBERT** — `src/research/news.py`; 5 Indian finance RSS sources; `ProsusAI/finbert` sentiment scoring; file-cached (`data/cache/news/latest.json`); Refresh button in Research tab; sentiment injected into risk memo; module-level pipeline cache avoids reload cost
 - ✅ **XGBoost VaR breach classifier** — `src/research/breach_classifier.py` + `scripts/train_breach_classifier.py`; next-day breach probability (no look-ahead — target uses `r.shift(-1)`); class imbalance via `scale_pos_weight` (SMOTE evaluated and removed — see design-choices.md); commodity lags (`brent_lag1`, `gold_lag1`, `copper_lag1`) + regime + rolling vol features; breach probability gauge + feature importance chart in Research tab
-- ✅ **v2 data switch** — DRISHTI_DATA_VERSION=v2 env var routes to bloomberg_v2/ and research_artifacts_v2/; v1 is still the default
+- ✅ **v2 data switch** — `DRISHTI_DATA_VERSION` env var REMOVED (2026-06-15); app now runs unconditionally on the v2 data source (`bloomberg_v2/` + `research_artifacts_v2/`); v1 data archived to `../drishti_v1_archive/`
 - ✅ **Diagnostics ladder** — ADF → Ljung-Box → ARCH-LM → GARCH order scan (BIC table) → Engle-Sheppard CCC test; GET /api/research/diagnostics
 - ✅ **ADCC** — asymmetric DCC (Cappiello-Engle-Sheppard 2006); fit_dcc_garch(..., asymmetric=True) returns gamma; grid-search fallback for optimizer failures
 - ✅ **Weekly Granger** — granger_test(..., freq="weekly") compounds daily→weekly; BH-corrected over Granger table; summarize_granger_aic() picks min-AIC lag per pair
@@ -104,7 +104,7 @@ Executed subagent-driven (validator → implementer → reviewer per task; valid
 - ✅ **Events tab** — src/research/events.py; detect_drawdown_episodes (≥10% threshold); 16 curated labels (dot-com → 2026 tariff shock); statistical levels; practitioner appendix; GET /api/research/events; events.js + Events nav tab
 - ✅ **Regimes tab** — src/research/market_regimes.py; 20% bull/bear rule; regime_signs stats table; current_state; HMM overlay; GET /api/research/regimes-study; regimes.js + Regimes nav tab
 - ✅ **IS/IN Equity fallback** — cache.py read_cache() falls back from `TICKER IN Equity` → `TICKER IS Equity` filename; v2 Bloomberg pull uses IS exchange code, v1 tickers.py maps to IN; both work transparently
-- ✅ **v2 Bloomberg data imported** — 433 equities (229 NSE100 + 204 NSEMD150), 29 indices, 15 commodities, 4 macro; date range ~2006–2026-06-12; loaded via DRISHTI_DATA_VERSION=v2
+- ✅ **v2 Bloomberg data imported** — 433 equities (229 NSE100 + 204 NSEMD150), 29 indices, 15 commodities, 4 macro; date range ~2006–2026-06-12
 - ✅ **v2 research artifacts built** — data/cache/research_artifacts_v2/: spillover_study.json, events_study.json, regime_study.json (built via build_*.py scripts)
 - ✅ **docs/methodology.html** — comprehensive 30-section mathematical reference; all VaR methods, ES, backtests, GARCH, HMM, DCC/ADCC, Diebold-Yilmaz, IC, Granger, BH, walk-forward, XGBoost, FinBERT; MathJax equations; dark-themed HTML matching dashboard
 

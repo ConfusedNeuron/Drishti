@@ -37,8 +37,6 @@ warnings.filterwarnings("ignore")   # ARIMA grid + arch optimizer flood ValueWar
 
 import os, sys
 sys.path.insert(0, os.path.abspath("."))
-os.environ["DRISHTI_DATA_VERSION"] = "v2"
-
 import numpy as np
 import pandas as pd
 

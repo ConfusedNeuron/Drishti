@@ -2,10 +2,10 @@
 Expanded Diebold-Yilmaz spillover study — large/mid/combined panels with IS-OOS split.
 
 Usage:
-    DRISHTI_DATA_VERSION=v2 PYTHONPATH=. python scripts/build_spillover_study.py
+    PYTHONPATH=. python scripts/build_spillover_study.py
 
 Writes: data/cache/research_artifacts_v2/spillover_study.json
-Requires: v2 bloomberg cache + universe manifest + sectors_v2.json
+Requires: bloomberg_v2 cache + universe manifest + sectors_v2.json
 """
 from __future__ import annotations
 import json
@@ -117,11 +117,19 @@ def build_study(
         panels["mid"] = {"total_spillover": None, "net_spillover": None,
                          "in_sample": None, "out_of_sample": None, "rolling": {}}
 
-    # Combined panel: large + mid + factors
-    all_frames = [df for df in [large_sectors, mid_sectors, factors] if not df.empty]
-    if all_frames:
-        combined_df = pd.concat(all_frames, axis=1).dropna(how="all")
-        # Drop duplicate columns (overlap between large and mid)
+    # Combined panel: a genuine whole-universe view. Blend the large- and mid-cap sector
+    # composites 50/50 per sector (NaN-aware mean across buckets) rather than dropping the
+    # mid duplicates — otherwise "combined" collapses to the large-only panel. A sector
+    # present in only one bucket keeps that bucket's series.
+    bucket_frames = {k: v for k, v in {"large": large_sectors, "mid": mid_sectors}.items()
+                     if not v.empty}
+    if bucket_frames:
+        blended = pd.concat(bucket_frames, axis=1)             # cols: (bucket, sector)
+        # Mean across buckets per sector; transpose-groupby avoids the deprecated axis=1 form.
+        combined_sectors = blended.T.groupby(level=1).mean().T
+        frames = [df for df in [combined_sectors, factors] if not df.empty]
+        combined_df = pd.concat(frames, axis=1).dropna(how="all")
+        # Guard only against an accidental sector/factor name collision (keeps the sector).
         combined_df = combined_df.loc[:, ~combined_df.columns.duplicated()]
         panels["combined"] = _build_panel(combined_df, train_end)
     else:
@@ -140,12 +148,6 @@ def build_study(
 
 
 def main() -> None:
-    import os
-    if os.environ.get("DRISHTI_DATA_VERSION") != "v2":
-        print("ERROR: Set DRISHTI_DATA_VERSION=v2 before running this script.")
-        print("  DRISHTI_DATA_VERSION=v2 PYTHONPATH=. python scripts/build_spillover_study.py")
-        sys.exit(1)
-
     from src.research.universe import load_universe, load_sectors, build_size_buckets, sector_composites, load_v2_returns
     from src.risk.returns import load_factor_series
     from src.config import ARTIFACTS_DIR

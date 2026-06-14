@@ -22,8 +22,8 @@ source .venv/bin/activate
 MPLBACKEND=Agg PYTHONPATH=. python scripts/run_notebook_md.py notebooks/08_growth_trends.md
 ```
 
-Each notebook's Cell 2 sets `DRISHTI_DATA_VERSION=v2` and a headless matplotlib
-backend, so they run without a display.
+Each notebook reads the v2 cache directly (`data/cache/bloomberg_v2/`). Cell 2
+sets a headless matplotlib backend so they run without a display.
 
 | Notebook | Topic | Course |
 |----------|-------|--------|

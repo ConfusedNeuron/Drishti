@@ -10,7 +10,7 @@ Simulates 5 years of daily returns for:
 Run from the drishti/ directory:
     python scripts/generate_synthetic_cache.py
 
-Output: data/cache/bloomberg/{equities,indices,commodities,macro}/*.parquet
+Output: data/cache/bloomberg_v2/{equities,indices,commodities,macro}/*.parquet
 """
 from __future__ import annotations
 import sys
@@ -185,6 +185,6 @@ nifty_prices = returns_to_prices(market, 17500)
 write_cache("NIFTY Index", pd.DataFrame({"PX_LAST": nifty_prices}, index=dates))
 
 print("\n✅ Synthetic cache written.")
-print(f"   Location: {ROOT / 'data' / 'cache' / 'bloomberg'}")
+print(f"   Location: {ROOT / 'data' / 'cache' / 'bloomberg_v2'}")
 print("\nYou can now run: uvicorn src.dashboard.app:app --reload")
 print("Then visit: http://localhost:8000")

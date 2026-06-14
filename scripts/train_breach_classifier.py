@@ -102,12 +102,12 @@ def main() -> None:
         print(f"Feature matrix shape: {feat_df.shape}")
 
         feature_cols = [c for c in feat_df.columns if c != "breach"]
-        X = feat_df[feature_cols].values
+        X = feat_df[feature_cols]          # keep as DataFrame so XGBoost records feature names
         y = feat_df["breach"].values
 
         # Split on time order (80/20) — chronological, no shuffling.
         split = int(len(X) * 0.8)
-        X_train_raw, X_test = X[:split], X[split:]
+        X_train_raw, X_test = X.iloc[:split], X.iloc[split:]
         y_train_raw, y_test = y[:split], y[split:]
 
         # Class distribution (training set)

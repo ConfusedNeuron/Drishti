@@ -16,7 +16,6 @@ set -eo pipefail
 cd "$(dirname "$0")/.."   # repo root
 
 # ── config (override via env) ──
-export DRISHTI_DATA_VERSION="${DRISHTI_DATA_VERSION:-v2}"
 export PYTHONPATH="${PYTHONPATH:-.}"
 export PYTHONWARNINGS="${PYTHONWARNINGS:-ignore::RuntimeWarning}"   # silence the Diebold-Yilmaz 0/0 noise
 SERVE="${SERVE:-1}"
@@ -31,7 +30,6 @@ fi
 
 step() { echo; echo "════════════════════ $* ════════════════════"; }
 echo "Python:        $(command -v python)"
-echo "Data version:  $DRISHTI_DATA_VERSION"
 
 # ── deps ──
 if [ "$INSTALL_DEPS" = "1" ]; then
@@ -77,5 +75,5 @@ if [ "$SERVE" = "1" ]; then
   exec uvicorn src.dashboard.app:app --reload
 else
   echo "SERVE=0 → not launching. Start the dashboard with:"
-  echo "  DRISHTI_DATA_VERSION=$DRISHTI_DATA_VERSION PYTHONPATH=. uvicorn src.dashboard.app:app --reload"
+  echo "  PYTHONPATH=. uvicorn src.dashboard.app:app --reload"
 fi

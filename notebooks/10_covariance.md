@@ -32,8 +32,6 @@ This notebook is part of the Drishti findings series for the Financial Risk Mana
 ```python
 import os, sys
 sys.path.insert(0, os.path.abspath("."))
-os.environ["DRISHTI_DATA_VERSION"] = "v2"
-
 import numpy as np
 import pandas as pd
 import matplotlib
