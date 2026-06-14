@@ -116,16 +116,11 @@ def load_factor_series(
     df.index = pd.to_datetime(df.index)
     df = df.sort_index().ffill(limit=3).dropna()
 
-    # For yield-type series (gsec10y), use level changes not pct returns
+    ret = df.pct_change()
     if "gsec10y" in df.columns:
-        df["gsec10y"] = df["gsec10y"].diff()
-
-    ret = df.pct_change().dropna()
-    if "gsec10y" in ret.columns:
-        # Overwrite with raw change (already computed above)
-        ret["gsec10y"] = df["gsec10y"].reindex(ret.index)
-
-    return ret
+        # 10y G-sec is a yield: use level changes (bps move), not percentage returns.
+        ret["gsec10y"] = df["gsec10y"].diff()
+    return ret.dropna()
 
 
 def load_sector_returns(

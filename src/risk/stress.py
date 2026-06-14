@@ -3,6 +3,17 @@ from __future__ import annotations
 from src.config import STRESS_SCENARIOS
 from src.models import PortfolioSnapshot, StressResult
 
+# Stress override keys (index-style) → canonical GICS sector names on holdings.
+_OVERRIDE_KEY_TO_GICS = {
+    "energy": "Energy",
+    "metals": "Materials",
+    "banks": "Financials",
+    "fmcg": "Consumer Staples",
+    "it": "Information Technology",
+    "pharma": "Health Care",
+    "auto": "Consumer Discretionary",
+}
+
 
 def run_stress_scenario(
     snapshot: PortfolioSnapshot,
@@ -20,12 +31,14 @@ def run_stress_scenario(
     affected_sectors = set()
 
     for h in snapshot.modeled_holdings:
-        sector_key = h.gics_sector.lower().replace(" ", "_")
+        holding_gics = h.gics_sector if h.gics_sector != "Unknown" else h.sector
 
-        # Find applicable shock
+        # Find applicable shock — map each override key to its canonical GICS name
+        # and match the holding's GICS sector exactly (case-insensitive).
         shock = equity_shock
         for sc_sector, sc_shock in sector_overrides.items():
-            if sc_sector in sector_key or sc_sector in h.sector.lower():
+            canonical = _OVERRIDE_KEY_TO_GICS.get(sc_sector, sc_sector)
+            if holding_gics.lower() == canonical.lower():
                 shock = sc_shock
                 affected_sectors.add(h.sector)
                 break

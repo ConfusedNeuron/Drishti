@@ -27,7 +27,7 @@ from src.models import SpilloverTable
 def _select_var_lag(data: np.ndarray, max_lag: int = 10) -> int:
     """Select VAR lag order using AIC (capped at max_lag)."""
     model = VAR(data)
-    result = model.select_order(maxlags=max_lag, verbose=False)
+    result = model.select_order(maxlags=max_lag)
     lag = result.aic
     return max(1, int(lag))
 
