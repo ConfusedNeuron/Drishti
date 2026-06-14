@@ -469,13 +469,13 @@ $$\widehat{\text{ES}}_\alpha = -\frac{1}{|\mathcal{T}|} \sum_{t \in \mathcal{T}}
 <h3>7.1 Marginal VaR</h3>
 <p>Under the parametric (delta-normal) framework, the portfolio VaR is:</p>
 <div class="math-block">
-$$\text{VaR}_p = z_\alpha \cdot \sigma_p = z_\alpha \sqrt{\mathbf{w}^\top \boldsymbol{\Sigma} \mathbf{w}}$$
+$$\text{VaR}_p = |z_{1-\alpha}| \cdot \sigma_p = |z_{1-\alpha}| \sqrt{\mathbf{w}^\top \boldsymbol{\Sigma} \mathbf{w}}$$
 </div>
 
 <p>The marginal VaR of asset $i$ is the sensitivity of portfolio VaR to a small change in weight $w_i$:</p>
 <div class="math-block">
 <div class="label">Marginal VaR</div>
-$$\text{MVaR}_i = \frac{\partial \text{VaR}_p}{\partial w_i} = z_\alpha \cdot \frac{(\boldsymbol{\Sigma}\mathbf{w})_i}{\sigma_p}$$
+$$\text{MVaR}_i = \frac{\partial \text{VaR}_p}{\partial w_i} = |z_{1-\alpha}| \cdot \frac{(\boldsymbol{\Sigma}\mathbf{w})_i}{\sigma_p}$$
 </div>
 
 <p>where $(\boldsymbol{\Sigma}\mathbf{w})_i$ is the $i$-th element of the covariance vector between asset $i$ and the portfolio.</p>
@@ -484,12 +484,12 @@ $$\text{MVaR}_i = \frac{\partial \text{VaR}_p}{\partial w_i} = z_\alpha \cdot \f
 <p>Component VaR is the dollar contribution of asset $i$ to total portfolio VaR:</p>
 <div class="math-block">
 <div class="label">Component VaR (Euler decomposition)</div>
-$$\text{CVaR}_i = w_i \cdot \text{MVaR}_i = w_i \cdot z_\alpha \cdot \frac{(\boldsymbol{\Sigma}\mathbf{w})_i}{\sigma_p}$$
+$$\text{CVaR}_i = w_i \cdot \text{MVaR}_i = w_i \cdot |z_{1-\alpha}| \cdot \frac{(\boldsymbol{\Sigma}\mathbf{w})_i}{\sigma_p}$$
 </div>
 
 <p>This is Euler's theorem for homogeneous functions of degree 1: since $\text{VaR}_p(\lambda \mathbf{w}) = \lambda \cdot \text{VaR}_p(\mathbf{w})$, the component VaRs sum exactly to the total:</p>
 <div class="math-block">
-$$\sum_{i=1}^n \text{CVaR}_i = \mathbf{w}^\top (\boldsymbol{\Sigma}\mathbf{w}) \cdot \frac{z_\alpha}{\sigma_p} = \sigma_p \cdot z_\alpha = \text{VaR}_p$$
+$$\sum_{i=1}^n \text{CVaR}_i = \mathbf{w}^\top (\boldsymbol{\Sigma}\mathbf{w}) \cdot \frac{|z_{1-\alpha}|}{\sigma_p} = \sigma_p \cdot |z_{1-\alpha}| = \text{VaR}_p$$
 </div>
 
 <div class="callout ok">
@@ -1046,7 +1046,7 @@ $$Y_{t+1} = \mathbf{1}\!\left[R_{p,t+1} < -\text{VaR}_{0.99}\right]$$
 </div>
 
 <div class="callout warn">
-<p><strong>No look-ahead:</strong> The target variable uses <code>r.shift(-1)</code> — tomorrow's return. All features are based on information available today (or earlier). SMOTE for class imbalance is applied <em>after</em> train/test split — never on the test set.</p>
+<p><strong>No look-ahead:</strong> The target variable uses <code>r.shift(-1)</code> — tomorrow's return. All features are based on information available today (or earlier). Class imbalance is handled by <code>scale_pos_weight</code> (see §28.3), which reweights the training gradient only — never resampling or contaminating the test set.</p>
 </div>
 
 <h3>28.2 Feature engineering</h3>

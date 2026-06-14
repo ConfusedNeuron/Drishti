@@ -5,7 +5,8 @@ Pure functions for feature construction, model loading, and inference.
 Training is handled by scripts/train_breach_classifier.py.
 
 Design decisions (from design-choices.md):
-- SMOTE oversampling of breach days (rare ~1% tail events).
+- Class imbalance (rare ~1% breach days) handled by XGBoost scale_pos_weight,
+  not SMOTE — SMOTE was evaluated and removed (no synthetic tail rows).
 - Pre-trained model loaded from data/cache/models/breach_classifier.pkl.
 - Risk levels: Low < 0.10, Elevated 0.10–0.25, High > 0.25.
 """
