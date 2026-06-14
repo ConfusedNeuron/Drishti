@@ -8,7 +8,7 @@ Drishti is a local-first quant risk research platform for Indian equity portfoli
 
 ---
 
-## Current status (as of 2026-06-14)
+## Current status (as of 2026-06-15)
 
 **Track A — Frontend overhaul: COMPLETE ✅**
 **Track B — Data layer: COMPLETE ✅**
@@ -16,10 +16,22 @@ Drishti is a local-first quant risk research platform for Indian equity portfoli
 **Track D — News+FinBERT + XGBoost breach classifier: COMPLETE ✅**
 **Track E — Frontend UX fixes: COMPLETE ✅**
 **Track F — v2 Expansion: COMPLETE ✅**
-**Track G — v3 Findings Notebooks: COMPLETE ✅** (pending merge of PR #10)
+**Track G — v3 Findings Notebooks: COMPLETE ✅** (merged)
+**Track H — v2 Unification + Audit Remediation: COMPLETE ✅** (merged to `main` 2026-06-15)
 
 ### Active branch
-`feature/v3-findings-notebooks` — v3 phase-1 (course-grounded findings notebooks + analytics helpers). Open PR: #10.
+None — all work is on `main`. `fix/v2-unification` (Track H) was merged 2026-06-15 (merge commit `605c729`) and the branch deleted. **Test suite: 175 passing.**
+
+### Track H — v2 unification + audit remediation (2026-06-15)
+Full-repo audit → subagent-driven fixes (sonnet implementers). See `docs/audit-2026-06-15-data-version.md` (findings) + `docs/audit-2026-06-15-fix-plan.md` (plan).
+- ✅ **`DRISHTI_DATA_VERSION` DELETED** — the env-var data switch is gone; everything runs unconditionally on the v2 source (`bloomberg_v2/` + `research_artifacts_v2/`). `config.py` paths are unconditional; build-script `_require_v2()` guards removed; `generate_synthetic_cache.py` repointed to v2; v1-only `pull_drishti_data.py` deleted. **v1 cache archived OUT of the repo to `../drishti_v1_archive/data_cache/`** (v2 already carried daily + `equities_annual/` + full OHLC, so nothing lost).
+- ✅ **Spillover study surfaced** — new `GET /api/research/spillover/study` + Spillover-tab UI (large/mid/combined KPIs, rolling line, net-spillover bars). Previously built-but-orphaned.
+- ✅ **Header badge wired to v2 artifacts** (`static_data.py`) — regime from `regime_study.json`, connectedness from `spillover_study.json`. Previously read v1 JSONs that no script produced → always null.
+- ✅ **Stress sector overrides fixed** (`src/risk/stress.py`) — explicit GICS↔override-key map; the old substring match (`"banks" in "financials"` = False) silently dropped every sector-specific shock.
+- ✅ **Sectors normalized BICS→GICS** (`universe.load_sectors`) — `Financial`/`Technology`/`Industrial`/`Basic Materials`/… fallbacks collapse into GICS buckets (no more `Financial` vs `Financials` split).
+- ✅ **Combined spillover panel now blends large+mid** (50/50 per sector, NaN-aware) instead of collapsing to large-only — combined 57.3 vs large 61.9 / mid 42.5. Artifact rebuilt.
+- ✅ Minor: gsec10y diff cleanup (`returns.py`), breach feature-name guard + DataFrame training, statsmodels `verbose=` deprecation removed, obsolete `test_v2_switch.py` deleted, new route/stress/badge tests added.
+- ✅ **Notebooks 08–15 re-verified headless on v2** (8/8 via `nbconvert`; deps added to `requirements.txt`).
 
 ### Track G — v3 status (as of 2026-06-14)
 Executed subagent-driven (validator → implementer → reviewer per task; validator caught real defects on 6 tasks). All on `feature/v3-findings-notebooks`.
@@ -36,7 +48,7 @@ Executed subagent-driven (validator → implementer → reviewer per task; valid
 
 **REMAINING:**
 - ✅ OHLC pulled at FRTL and copied to `data/cache/bloomberg_v2/ohlc/` (29 indices + 433 equities + 15 commodities, ~2000→2026, gitignored) — notebook 13 range-based volatility (Parkinson/GK/RS) now computes live (NIFTY ≈ 0.19 annualized)
-- 🔲 Merge PR #10 → main (in progress)
+- ✅ Merged to `main` (superseded by Track H, 2026-06-15)
 
 ### Previous active branch
 `feature/v2-expansion` — merged to main (PR #8)
