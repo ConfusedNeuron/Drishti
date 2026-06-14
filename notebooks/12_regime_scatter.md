@@ -24,8 +24,6 @@ The threshold $c$ is chosen by grid search to minimise the combined residual sum
 ```python
 import os, sys
 sys.path.insert(0, os.path.abspath("."))
-os.environ["DRISHTI_DATA_VERSION"] = "v2"
-
 import json
 import numpy as np
 import pandas as pd

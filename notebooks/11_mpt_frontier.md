@@ -13,8 +13,6 @@ This notebook is a **diagnostic illustration only**. It maps the mean-variance o
 ```python
 import os, sys
 sys.path.insert(0, os.path.abspath("."))
-os.environ["DRISHTI_DATA_VERSION"] = "v2"
-
 import numpy as np
 import pandas as pd
 import matplotlib

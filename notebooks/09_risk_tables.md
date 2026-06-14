@@ -30,7 +30,6 @@ Week 3 introduces the canonical measures that compare return earned relative to 
 ```python
 import os, sys
 sys.path.insert(0, os.path.abspath("."))
-os.environ["DRISHTI_DATA_VERSION"] = "v2"
 import numpy as np, pandas as pd
 import matplotlib; matplotlib.use("Agg")
 import matplotlib.pyplot as plt, seaborn as sns
