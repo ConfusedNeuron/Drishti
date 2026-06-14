@@ -5,7 +5,6 @@
 
 ---
 
-## Cell 1 [MARKDOWN]
 
 # Drishti — Portfolio Risk Analytics
 ## IIM Calcutta PGDBA | Financial Risk Management | Sem 3
@@ -18,7 +17,6 @@ The research findings feed directly into the Drishti dashboard's *Factor Researc
 
 ---
 
-## Cell 2 [MARKDOWN]
 
 ## Notebook 02 — Factor IC Research
 
@@ -47,7 +45,6 @@ A single commodity return at time t is a *scalar* — identical across all stock
 
 ---
 
-## Cell 3 [CODE]
 
 ```python
 # ── Imports ────────────────────────────────────────────────────────────────
@@ -67,7 +64,6 @@ print("Loading data from Notebook 01 exports...")
 
 ---
 
-## Cell 4 [CODE]
 
 ```python
 # ── Load data ───────────────────────────────────────────────────────────────
@@ -91,7 +87,6 @@ print(f"Observations: {len(common_idx)} trading days")
 
 ---
 
-## Cell 5 [MARKDOWN]
 
 ### IC computation — rolling Pearson correlation
 
@@ -104,7 +99,6 @@ A 63-day window ≈ 1 quarter of trading days — long enough for stable correla
 
 ---
 
-## Cell 6 [CODE]
 
 ```python
 # ── Core IC function ─────────────────────────────────────────────────────────
@@ -171,7 +165,6 @@ print("IC function defined.")
 
 ---
 
-## Cell 7 [MARKDOWN]
 
 ### Run IC for all (factor, target, lag) combinations
 
@@ -179,7 +172,6 @@ With 7 factors × 4 sector targets × 5 lags = 140 tests. Without multiple-testi
 
 ---
 
-## Cell 8 [CODE]
 
 ```python
 # ── Run all (factor, target, lag) combinations ───────────────────────────────
@@ -203,7 +195,6 @@ print(f"Significant at 5% (uncorrected): {sum(r['significant'] for r in results)
 
 ---
 
-## Cell 9 [MARKDOWN]
 
 ### Benjamini-Hochberg FDR correction
 
@@ -216,7 +207,6 @@ With 140 tests and α=0.05, we expect ~7 false discoveries by chance. BH control
 
 ---
 
-## Cell 10 [CODE]
 
 ```python
 # ── Benjamini-Hochberg FDR correction ────────────────────────────────────────
@@ -251,7 +241,6 @@ print(f"Significant after BH correction (FDR ≤ 5%): {n_bh} / {len(results)}")
 
 ---
 
-## Cell 11 [MARKDOWN]
 
 ### Results table — top factor-lag pairs
 
@@ -259,7 +248,6 @@ Ranked by |t-stat|. The BH column indicates whether the finding survives multipl
 
 ---
 
-## Cell 12 [CODE]
 
 ```python
 # ── Display results ───────────────────────────────────────────────────────────
@@ -279,7 +267,6 @@ print(bh_sig[display_cols].to_string(index=False))
 
 ---
 
-## Cell 13 [MARKDOWN]
 
 ### IC profile chart — best lag per factor
 
@@ -287,7 +274,6 @@ For the top 3 factors (by |t-stat|), plot IC mean across all lags. A clean lag p
 
 ---
 
-## Cell 14 [CODE]
 
 ```python
 # ── IC lag profile for top factors ──────────────────────────────────────────
@@ -329,7 +315,6 @@ print("Chart saved.")
 
 ---
 
-## Cell 15 [CODE]
 
 ```python
 # ── Export results ────────────────────────────────────────────────────────────

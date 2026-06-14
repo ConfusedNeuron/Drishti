@@ -6,7 +6,6 @@
 
 ---
 
-## Cell 1 [MARKDOWN]
 
 # Notebook 08 — Growth & the Transformation Ladder
 
@@ -22,7 +21,6 @@ This notebook is part of the Drishti findings series for the Financial Risk Mana
 
 ---
 
-## Cell 2 [CODE]
 
 ```python
 import os, sys
@@ -90,7 +88,6 @@ print("Preamble loaded. FIG dir:", FIG.resolve())
 
 ---
 
-## Cell 3 [MARKDOWN]
 
 ## Why we transform price series
 
@@ -106,7 +103,6 @@ Most risk models (VaR, GARCH, HMM) require stationary inputs. The ADF test (Note
 
 ---
 
-## Cell 4 [CODE]
 
 ```python
 # ── Index headlines: growth of ₹100 ─────────────────────────────────────────
@@ -141,7 +137,6 @@ print(rb_idx.describe().loc[["min","max"]].round(1))
 
 ---
 
-## Cell 5 [CODE]
 
 ```python
 # ── Sector indices: growth of ₹100 ──────────────────────────────────────────
@@ -186,7 +181,6 @@ print(rb_sec.describe().loc[["min","max"]].round(1))
 
 ---
 
-## Cell 6 [CODE]
 
 ```python
 # ── Commodity futures: growth of ₹100 ────────────────────────────────────────
@@ -229,7 +223,6 @@ print(rb_com.describe().loc[["min","max"]].round(1))
 
 ---
 
-## Cell 7 [MARKDOWN]
 
 ## The Transformation Ladder
 
@@ -245,7 +238,6 @@ The four panels in Cell 8 step through the canonical stationarity transformation
 
 ---
 
-## Cell 8 [CODE]
 
 ```python
 # ── NIFTY transformation ladder ───────────────────────────────────────────────
@@ -292,7 +284,6 @@ print("Saved ladder_nifty.png")
 
 ---
 
-## Cell 9 [CODE]
 
 ```python
 # ── NIFTY drawdown underwater chart ──────────────────────────────────────────
@@ -331,7 +322,6 @@ print(f"Current drawdown: {drawdown.iloc[-1]*100:.2f}%")
 
 ---
 
-## Cell 10 [MARKDOWN]
 
 ## Findings
 

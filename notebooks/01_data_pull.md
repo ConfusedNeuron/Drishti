@@ -4,7 +4,6 @@
 
 ---
 
-## Cell 1 [MARKDOWN]
 
 # Drishti — Portfolio Risk Analytics
 ## IIM Calcutta PGDBA | Financial Risk Management | Sem 3
@@ -21,7 +20,6 @@ Drishti is a local-first quantitative risk research platform for Indian equity p
 
 ---
 
-## Cell 2 [MARKDOWN]
 
 ## Notebook 01 — Data Pull
 
@@ -43,7 +41,6 @@ Pulls all time-series data needed for downstream research notebooks using the BQ
 
 ---
 
-## Cell 3 [CODE]
 
 ```python
 # ── Imports ────────────────────────────────────────────────────────────────
@@ -67,7 +64,6 @@ print(f"Artifacts will be saved to: {OUTPUT_DIR}")
 
 ---
 
-## Cell 4 [MARKDOWN]
 
 ### Date range and universe definition
 
@@ -79,7 +75,6 @@ Having both events is essential for DCC-GARCH crisis correlation analysis and HM
 
 ---
 
-## Cell 5 [CODE]
 
 ```python
 # ── Date range ──────────────────────────────────────────────────────────────
@@ -99,7 +94,6 @@ print(f"Date range: {START_DATE} to today")
 
 ---
 
-## Cell 6 [MARKDOWN]
 
 ### Pull 1: NIFTY 50 equity adjusted close prices
 
@@ -107,7 +101,6 @@ print(f"Date range: {START_DATE} to today")
 
 ---
 
-## Cell 7 [CODE]
 
 ```python
 # ── Pull equity returns for NIFTY 50 universe ───────────────────────────────
@@ -135,7 +128,6 @@ print(f"Tickers: {list(equity_returns.columns[:5])} … ({equity_returns.shape[1
 
 ---
 
-## Cell 8 [MARKDOWN]
 
 ### Pull 2: Sector indices
 
@@ -143,7 +135,6 @@ These are the primary spillover targets — we test how commodity and macro shoc
 
 ---
 
-## Cell 9 [CODE]
 
 ```python
 # ── Sector index tickers ────────────────────────────────────────────────────
@@ -174,7 +165,6 @@ print(sector_returns.describe().round(4))
 
 ---
 
-## Cell 10 [MARKDOWN]
 
 ### Pull 3: Commodity futures (front-month continuous)
 
@@ -182,7 +172,6 @@ Front-month continuous contracts embed roll returns when the contract rolls to t
 
 ---
 
-## Cell 11 [CODE]
 
 ```python
 # ── Commodity futures ────────────────────────────────────────────────────────
@@ -212,7 +201,6 @@ print(commodity_returns.describe().round(4))
 
 ---
 
-## Cell 12 [MARKDOWN]
 
 ### Pull 4: Macro series
 
@@ -222,7 +210,6 @@ print(commodity_returns.describe().round(4))
 
 ---
 
-## Cell 13 [CODE]
 
 ```python
 # ── Macro series ─────────────────────────────────────────────────────────────
@@ -256,7 +243,6 @@ print(macro_returns.head())
 
 ---
 
-## Cell 14 [MARKDOWN]
 
 ### Data quality checks
 
@@ -267,7 +253,6 @@ Before exporting, we verify:
 
 ---
 
-## Cell 15 [CODE]
 
 ```python
 # ── Data quality checks ──────────────────────────────────────────────────────
@@ -303,7 +288,6 @@ flag_extremes(commodity_returns)
 
 ---
 
-## Cell 16 [MARKDOWN]
 
 ### Align to common trading dates
 
@@ -311,7 +295,6 @@ All downstream notebooks require aligned DataFrames (same date index). We align 
 
 ---
 
-## Cell 17 [CODE]
 
 ```python
 # ── Align all series to common trading dates ─────────────────────────────────
@@ -350,7 +333,6 @@ print(f"  Macro:     {macro_returns.shape}")
 
 ---
 
-## Cell 18 [MARKDOWN]
 
 ### Export to Parquet
 
@@ -358,7 +340,6 @@ Parquet is column-oriented, compressed, and preserves dtypes — ideal for large
 
 ---
 
-## Cell 19 [CODE]
 
 ```python
 # ── Export to Parquet ────────────────────────────────────────────────────────

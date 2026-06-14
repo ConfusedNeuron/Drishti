@@ -1,4 +1,3 @@
-## Cell 1 [MARKDOWN]
 
 # Notebook 14 — Cross-Market Spillover & Connectedness
 
@@ -27,7 +26,6 @@ This notebook is a **diagnostic illustration only**. Nothing here is investment 
 
 ---
 
-## Cell 2 [CODE]
 
 ```python
 import os, sys, warnings
@@ -79,7 +77,6 @@ print(f"  Series: {list(ret.columns)}")
 
 ---
 
-## Cell 3 [CODE]
 
 ```python
 # ── ADF stationarity: levels (log-price) vs returns ──────────────────────────
@@ -114,7 +111,6 @@ print("saved 03_adf_stationarity.png")
 
 ---
 
-## Cell 4 [MARKDOWN]
 
 ### Taught layer 1 — cointegration first (don't difference blindly)
 
@@ -124,7 +120,6 @@ We test the equity-index triple **NIFTY / Bank / Financials** on log-price level
 
 ---
 
-## Cell 5 [CODE]
 
 ```python
 # ── Johansen cointegration on log-levels of an equity-index triple ───────────
@@ -167,7 +162,6 @@ print("saved 05_vecm_forecast.png")
 
 ---
 
-## Cell 6 [CODE]
 
 ```python
 # ── VAR on the stationary return panel; AIC lag select; Ljung-Box residuals ──
@@ -196,7 +190,6 @@ print("\nResidual p<0.05 -> leftover autocorrelation (common for daily equity VA
 
 ---
 
-## Cell 7 [CODE]
 
 ```python
 # ── Granger causality grid: does lagged X improve forecasts of Y? ────────────
@@ -232,7 +225,6 @@ print("saved 07_granger_heatmap.png")
 
 ---
 
-## Cell 8 [CODE]
 
 ```python
 # ── Orthogonalized impulse responses (taught: order-dependent IRF) ───────────
@@ -258,7 +250,6 @@ print("Note: orthogonalized IRFs use a Cholesky factorization -> depend on varia
 
 ---
 
-## Cell 9 [CODE]
 
 ```python
 # ── Cholesky FEVD (taught) — ORDER-DEPENDENT variance decomposition ──────────
@@ -293,7 +284,6 @@ print("This decomposition CHANGES if the Cholesky variable order changes — the
 
 ---
 
-## Cell 10 [MARKDOWN]
 
 ### Advanced layer — generalized (order-invariant) FEVD: Diebold-Yilmaz
 
@@ -307,7 +297,6 @@ The Cholesky FEVD above is honest but fragile: reorder the variables and the num
 
 ---
 
-## Cell 11 [CODE]
 
 ```python
 # ── Diebold-Yilmaz connectedness table (order-invariant GFEVD) ───────────────
@@ -341,7 +330,6 @@ print("Net receivers:   ", list(net[net < 0].index))
 
 ---
 
-## Cell 12 [CODE]
 
 ```python
 # ── Rolling total connectedness — spillover spikes in crises ─────────────────
@@ -372,7 +360,6 @@ print("saved 12_rolling_connectedness.png")
 
 ---
 
-## Cell 13 [CODE]
 
 ```python
 # ── DCC-GARCH dynamic correlations on a 3-series subset ──────────────────────
@@ -405,7 +392,6 @@ print("saved 13_dcc_correlations.png")
 
 ---
 
-## Cell 14 [CODE]
 
 ```python
 # ── Spillover network diagram (directed, weighted by pairwise spillover) ─────
@@ -446,7 +432,6 @@ print(f"saved 14_spillover_network.png  ({G.number_of_edges()} directed edges)")
 
 ---
 
-## Cell 15 [MARKDOWN]
 
 ## Findings
 

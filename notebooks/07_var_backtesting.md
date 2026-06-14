@@ -5,7 +5,6 @@
 
 ---
 
-## Cell 1 [MARKDOWN]
 
 # Drishti — Portfolio Risk Analytics
 ## IIM Calcutta PGDBA | Financial Risk Management | Sem 3
@@ -18,7 +17,6 @@ This notebook performs the formal statistical validation of the VaR model — th
 
 ---
 
-## Cell 2 [MARKDOWN]
 
 ## Notebook 07 — VaR Model Backtesting
 
@@ -47,7 +45,6 @@ Tests whether violations are independent (randomly distributed through time) or 
 
 ---
 
-## Cell 3 [CODE]
 
 ```python
 # ── Imports ────────────────────────────────────────────────────────────────
@@ -70,7 +67,6 @@ print("Loading equity returns...")
 
 ---
 
-## Cell 4 [CODE]
 
 ```python
 # ── Load data and build portfolio return series ───────────────────────────────
@@ -90,7 +86,6 @@ print(f"  Ann. return: {portfolio_returns.mean() * 252:.2%}")
 
 ---
 
-## Cell 5 [MARKDOWN]
 
 ### Rolling VaR computation
 
@@ -103,7 +98,6 @@ A **violation** occurs when the actual return is worse than the VaR estimate.
 
 ---
 
-## Cell 6 [CODE]
 
 ```python
 # ── Rolling historical VaR ────────────────────────────────────────────────────
@@ -144,7 +138,6 @@ print(f"Violation rate: {viol_rate:.3%} vs expected {ALPHA:.2%}")
 
 ---
 
-## Cell 7 [MARKDOWN]
 
 ### Test 1: Kupiec Likelihood Ratio Test
 
@@ -158,7 +151,6 @@ LR ~ χ²(1) under H₀. Reject H₀ if LR > 3.841 (5% critical value).
 
 ---
 
-## Cell 8 [CODE]
 
 ```python
 # ── Kupiec unconditional coverage test ───────────────────────────────────────
@@ -202,7 +194,6 @@ print(f"Interpretation: violation rate {kupiec['violation_rate']:.3%} vs expecte
 
 ---
 
-## Cell 9 [MARKDOWN]
 
 ### Test 2: Christoffersen Independence Test
 
@@ -215,7 +206,6 @@ Clustering: π₁₁ > π₀₁ (violation today → higher probability of viola
 
 ---
 
-## Cell 10 [CODE]
 
 ```python
 # ── Christoffersen independence test ─────────────────────────────────────────
@@ -276,7 +266,6 @@ print(f"Finding: {christo['finding']}")
 
 ---
 
-## Cell 11 [CODE]
 
 ```python
 # ── Verdict ────────────────────────────────────────────────────────────────────
@@ -296,7 +285,6 @@ print(f"\nVerdict: {verdict}")
 
 ---
 
-## Cell 12 [CODE]
 
 ```python
 # ── Visualise violations ──────────────────────────────────────────────────────
@@ -331,7 +319,6 @@ print("Chart saved.")
 
 ---
 
-## Cell 13 [CODE]
 
 ```python
 # ── Export results ────────────────────────────────────────────────────────────

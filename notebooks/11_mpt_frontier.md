@@ -1,4 +1,3 @@
-## Cell 1 [MARKDOWN]
 
 # Notebook 11 — Markowitz Efficient Frontier
 
@@ -10,7 +9,6 @@ This notebook is a **diagnostic illustration only**. It maps the mean-variance o
 
 ---
 
-## Cell 2 [CODE]
 
 ```python
 import os, sys
@@ -53,7 +51,6 @@ def mu_cov(tickers):
 
 ---
 
-## Cell 3 [MARKDOWN]
 
 ## Markowitz Mean-Variance Framework
 
@@ -67,7 +64,6 @@ Long-only constraints restrict weights to `[0, 1]` and generally shrink the feas
 
 ---
 
-## Cell 4 [CODE]
 
 ```python
 def plot_frontier(tickers, title, fname):
@@ -114,7 +110,6 @@ print("tangency Sharpe (sectors):", round(tan_sharpe, 3))
 
 ---
 
-## Cell 5 [CODE]
 
 ```python
 plot_frontier(HEADLINES, "Index-headline efficient frontier", "frontier_headlines.png")
@@ -122,7 +117,6 @@ plot_frontier(HEADLINES, "Index-headline efficient frontier", "frontier_headline
 
 ---
 
-## Cell 6 [CODE]
 
 ```python
 mu, cov, names = mu_cov(SECTORS)
@@ -142,7 +136,6 @@ plt.close(fig)
 
 ---
 
-## Cell 7 [CODE]
 
 ```python
 mvt = pd.Series(wmv_s, index=names_s).sort_values(ascending=False)
@@ -154,7 +147,6 @@ print("\nTangency weights:\n", tnt[tnt > 1e-4].round(3))
 
 ---
 
-## Cell 8 [MARKDOWN]
 
 ## Findings
 

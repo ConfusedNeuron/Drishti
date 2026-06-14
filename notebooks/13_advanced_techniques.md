@@ -1,4 +1,3 @@
-## Cell 1 [MARKDOWN]
 
 # Notebook 13 — Advanced Univariate Time-Series & Volatility
 
@@ -31,7 +30,6 @@ We **narrate NIFTY 50 step-by-step** as the worked example, then run the **ident
 
 ---
 
-## Cell 2 [CODE]
 
 ```python
 import warnings
@@ -90,7 +88,6 @@ print(f"imports OK — {len(SERIES)} series, {len(ARIMA_GRID)} ARIMA orders in g
 
 ---
 
-## Cell 3 [CODE]
 
 ```python
 def _slug(ticker: str) -> str:
@@ -355,7 +352,6 @@ print("helpers defined OK")
 
 ---
 
-## Cell 4 [MARKDOWN]
 
 ## Worked example — NIFTY 50 (every step narrated)
 
@@ -363,7 +359,6 @@ We walk the **complete pipeline on the headline NIFTY 50 index**, narrating each
 
 ---
 
-## Cell 5 [MARKDOWN]
 
 ### Step 1 — Transformation ladder
 
@@ -378,7 +373,6 @@ We use the **simple return** `pct_change` throughout (matching the rest of the p
 
 ---
 
-## Cell 6 [CODE]
 
 ```python
 NIFTY = "NIFTY Index"
@@ -395,7 +389,6 @@ print("both motivate the t / skew-t GARCH and EVT steps later.")
 
 ---
 
-## Cell 7 [MARKDOWN]
 
 ### Step 2 — Stationarity (ADF) &nbsp;·&nbsp; Step 3 — STL decomposition
 
@@ -405,7 +398,6 @@ print("both motivate the t / skew-t GARCH and EVT steps later.")
 
 ---
 
-## Cell 8 [CODE]
 
 ```python
 adf_level = adf_report(np.log(px))
@@ -432,7 +424,6 @@ print(f"saved {FIG / 'NIFTY_worked_stl.png'}")
 
 ---
 
-## Cell 9 [MARKDOWN]
 
 ### Step 4 — ACF / PACF &nbsp;·&nbsp; Step 5 — ARIMA AIC selection
 
@@ -442,7 +433,6 @@ The **ARIMA AIC grid** (capped at 13 orders for runtime: ARMA(p,q) for p,q≤2, 
 
 ---
 
-## Cell 10 [CODE]
 
 ```python
 # ACF / PACF
@@ -464,7 +454,6 @@ print("(A near-trivial mean model is the expected, correct result for index retu
 
 ---
 
-## Cell 11 [MARKDOWN]
 
 ### Step 6 — Residual whiteness (Ljung-Box) &nbsp;·&nbsp; Step 7 — ARCH-LM
 
@@ -474,7 +463,6 @@ But white-in-levels does **not** mean white-in-squares. **Engle's ARCH-LM** test
 
 ---
 
-## Cell 12 [CODE]
 
 ```python
 resid = np.asarray(fit.resid, dtype=float); resid = resid[np.isfinite(resid)]
@@ -490,7 +478,6 @@ print("ARCH effects present ⇒ a constant-variance model is misspecified ⇒ fi
 
 ---
 
-## Cell 13 [MARKDOWN]
 
 ### Step 8 — GARCH family &nbsp;·&nbsp; Step 9 — News-impact curve
 
@@ -508,7 +495,6 @@ We compare by **AIC** and adopt the minimum-AIC model. The **news-impact curve**
 
 ---
 
-## Cell 14 [CODE]
 
 ```python
 garch = fit_garch_family(r)
@@ -533,7 +519,6 @@ if ni is not None:
 
 ---
 
-## Cell 15 [MARKDOWN]
 
 ### Step 10 — EWMA vs GARCH conditional volatility &nbsp;·&nbsp; Step 11/12 forecast & tails
 
@@ -545,7 +530,6 @@ if ni is not None:
 
 ---
 
-## Cell 16 [CODE]
 
 ```python
 ewma = ewma_vol(r)
@@ -591,7 +575,6 @@ print("\nNIFTY worked example complete.")
 
 ---
 
-## Cell 17 [MARKDOWN]
 
 ## The same complete pipeline for every index + sector
 
@@ -601,7 +584,6 @@ Each series prints its own **`### <ticker>`** section with the full diagnostic r
 
 ---
 
-## Cell 18 [CODE]
 
 ```python
 summaries = [run_series("NIFTY Index", narrate=False)]   # NIFTY summary row (already narrated above)
@@ -617,7 +599,6 @@ print(f"\nall {len(summaries)} series processed")
 
 ---
 
-## Cell 19 [CODE]
 
 ```python
 summary_df = pd.DataFrame(summaries)[[
@@ -654,7 +635,6 @@ print(f"EVT VaR99 > Gaussian VaR99 in {evt_heavier}/{len(summary_df)} series")
 
 ---
 
-## Cell 20 [MARKDOWN]
 
 ## Findings
 

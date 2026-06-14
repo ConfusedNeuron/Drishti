@@ -5,7 +5,6 @@
 
 ---
 
-## Cell 1 [MARKDOWN]
 
 # Notebook 15 — Credit & Liquidity Screens
 
@@ -22,7 +21,6 @@ Drishti is fundamentally an *equity* market-risk tool, but even an equity tool t
 
 ---
 
-## Cell 2 [CODE]
 
 ```python
 import os, sys
@@ -55,7 +53,6 @@ print("Sector map entries     :", len(SECTORS))
 
 ---
 
-## Cell 3 [MARKDOWN]
 
 ## Altman Z-score Methodology (FRM Wk9)
 
@@ -81,7 +78,6 @@ The coefficients are weights estimated to best separate failing from non-failing
 
 ---
 
-## Cell 4 [CODE]
 
 ```python
 # DEMONSTRATE altman_z on two textbook firms.
@@ -102,7 +98,6 @@ print("  components:", {k: round(v, 3) for k, v in distressed["components"].item
 
 ---
 
-## Cell 5 [MARKDOWN]
 
 ## Data-Reality Note — Why We Cannot Compute a Full Z-score Here
 
@@ -127,7 +122,6 @@ A full Altman Z-score for these names awaits an extended fundamentals pull (work
 
 ---
 
-## Cell 6 [CODE]
 
 ```python
 # Pick ~40 large names: rank by latest CUR_MKT_CAP from the matching daily parquet.
@@ -201,7 +195,6 @@ print(credit[["GICS", "mktcap", "debt_to_assets", "roa", "roe_pct",
 
 ---
 
-## Cell 7 [CODE]
 
 ```python
 # (a) Histogram of debt_to_assets across the sample.
@@ -238,7 +231,6 @@ print(by_sec.round(3).to_string())
 
 ---
 
-## Cell 8 [MARKDOWN]
 
 ## Liquidity — Amihud Illiquidity Ratio (FRM Wk9)
 
@@ -252,7 +244,6 @@ The intuition for the equity-risk context: illiquid names carry an extra, often 
 
 ---
 
-## Cell 9 [CODE]
 
 ```python
 # Amihud illiquidity for the same ~40 names.
@@ -295,7 +286,6 @@ print(f"\nFigure saved: {FIG}/amihud_ranking.png")
 
 ---
 
-## Cell 10 [CODE]
 
 ```python
 # Scatter: Amihud illiquidity (y, log) vs market cap (x, log). Expect inverse relation.
@@ -327,7 +317,6 @@ print(f"Spearman rank correlation (mktcap vs Amihud): {rho:.3f}")
 
 ---
 
-## Cell 11 [MARKDOWN]
 
 ## Findings
 

@@ -5,7 +5,6 @@
 
 ---
 
-## Cell 1 [MARKDOWN]
 
 # Drishti — Portfolio Risk Analytics
 ## IIM Calcutta PGDBA | Financial Risk Management | Sem 3
@@ -21,7 +20,6 @@ The HMM regime labels produced by this notebook allow Drishti to:
 
 ---
 
-## Cell 2 [MARKDOWN]
 
 ## Notebook 04 — HMM Volatility Regime Detection
 
@@ -45,7 +43,6 @@ HMM does not guarantee which state number corresponds to which economic regime. 
 
 ---
 
-## Cell 3 [CODE]
 
 ```python
 # ── Imports ────────────────────────────────────────────────────────────────
@@ -65,7 +62,6 @@ print("Loading data from Notebook 01 exports...")
 
 ---
 
-## Cell 4 [CODE]
 
 ```python
 # ── Load data ────────────────────────────────────────────────────────────────
@@ -85,7 +81,6 @@ print(f"Ann. vol (full sample): {portfolio_returns.std()*252**0.5:.2%}")
 
 ---
 
-## Cell 5 [MARKDOWN]
 
 ### Build HMM features
 
@@ -99,7 +94,6 @@ All features are standardized (z-scored) so the HMM covariance matrix isn't domi
 
 ---
 
-## Cell 6 [CODE]
 
 ```python
 # ── Build HMM feature matrix ─────────────────────────────────────────────────
@@ -130,7 +124,6 @@ print(features.describe().round(4))
 
 ---
 
-## Cell 7 [MARKDOWN]
 
 ### Canonical state labeling
 
@@ -140,7 +133,6 @@ This must be applied after *every* refit in the walk-forward loop — not just o
 
 ---
 
-## Cell 8 [CODE]
 
 ```python
 # ── Canonical labeling helper ────────────────────────────────────────────────
@@ -173,7 +165,6 @@ print("Canonical labeling function defined.")
 
 ---
 
-## Cell 9 [MARKDOWN]
 
 ### Walk-forward HMM fitting
 
@@ -187,7 +178,6 @@ This mirrors how a risk manager would operate: the model is retrained monthly on
 
 ---
 
-## Cell 10 [CODE]
 
 ```python
 # ── Walk-forward HMM ─────────────────────────────────────────────────────────
@@ -249,7 +239,6 @@ print(f"\nWalk-forward complete. OOS labels: {len(oos_results)} days")
 
 ---
 
-## Cell 11 [MARKDOWN]
 
 ### Regime history analysis
 
@@ -261,7 +250,6 @@ If the model misses these, reconsider features or the number of states.
 
 ---
 
-## Cell 12 [CODE]
 
 ```python
 # ── Build regime history DataFrame ───────────────────────────────────────────
@@ -294,7 +282,6 @@ for label, (start, end) in [
 
 ---
 
-## Cell 13 [CODE]
 
 ```python
 # ── Plot regime history ───────────────────────────────────────────────────────
@@ -337,7 +324,6 @@ print("Chart saved.")
 
 ---
 
-## Cell 14 [MARKDOWN]
 
 ### Regime-conditioned VaR validation
 
@@ -345,7 +331,6 @@ Compute historical VaR separately for each regime using the OOS regime labels. H
 
 ---
 
-## Cell 15 [CODE]
 
 ```python
 # ── Regime-conditioned VaR ────────────────────────────────────────────────────
@@ -371,7 +356,6 @@ for state, label in [(0, "Low-Vol"), (1, "High-Vol")]:
 
 ---
 
-## Cell 16 [CODE]
 
 ```python
 # ── Export artifacts ──────────────────────────────────────────────────────────

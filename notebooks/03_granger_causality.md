@@ -5,7 +5,6 @@
 
 ---
 
-## Cell 1 [MARKDOWN]
 
 # Drishti — Portfolio Risk Analytics
 ## IIM Calcutta PGDBA | Financial Risk Management | Sem 3
@@ -18,7 +17,6 @@ The assigned reading (Mukherjee-Bardhan gold spillover paper) uses a VAR-MGARCH/
 
 ---
 
-## Cell 2 [MARKDOWN]
 
 ## Notebook 03 — Granger Causality
 
@@ -44,7 +42,6 @@ For each (factor X, sector Y) pair:
 
 ---
 
-## Cell 3 [CODE]
 
 ```python
 # ── Imports ────────────────────────────────────────────────────────────────
@@ -64,7 +61,6 @@ print("Loading data from Notebook 01 exports...")
 
 ---
 
-## Cell 4 [CODE]
 
 ```python
 # ── Load data ────────────────────────────────────────────────────────────────
@@ -85,7 +81,6 @@ print(f"Observations: {len(common_idx)} trading days")
 
 ---
 
-## Cell 5 [MARKDOWN]
 
 ### Stationarity check (ADF test)
 
@@ -93,7 +88,6 @@ Granger causality tests assume stationary series. Daily *returns* are generally 
 
 ---
 
-## Cell 6 [CODE]
 
 ```python
 # ── ADF stationarity test ────────────────────────────────────────────────────
@@ -122,7 +116,6 @@ for col in factor_returns.columns:
 
 ---
 
-## Cell 7 [MARKDOWN]
 
 ### Granger causality test function
 
@@ -130,7 +123,6 @@ For each (factor, sector) pair, `statsmodels.grangercausalitytests` fits both re
 
 ---
 
-## Cell 8 [CODE]
 
 ```python
 # ── Granger causality function ────────────────────────────────────────────────
@@ -185,7 +177,6 @@ print("Granger causality function defined.")
 
 ---
 
-## Cell 9 [MARKDOWN]
 
 ### Run all (factor, sector) pairs
 
@@ -193,7 +184,6 @@ print("Granger causality function defined.")
 
 ---
 
-## Cell 10 [CODE]
 
 ```python
 # ── Run all Granger tests ─────────────────────────────────────────────────────
@@ -218,7 +208,6 @@ print(f"Significant (uncorrected, p<0.05): {sum(r['significant'] for r in all_re
 
 ---
 
-## Cell 11 [CODE]
 
 ```python
 # ── Benjamini-Hochberg FDR correction ────────────────────────────────────────
@@ -246,7 +235,6 @@ print(f"BH-significant (FDR ≤ 5%): {sum(r['bh_significant'] for r in all_resul
 
 ---
 
-## Cell 12 [MARKDOWN]
 
 ### Results: Granger causality matrix
 
@@ -254,7 +242,6 @@ Summarise the minimum p-value across all lags for each (factor, sector) pair, an
 
 ---
 
-## Cell 13 [CODE]
 
 ```python
 # ── Granger causality summary matrix ─────────────────────────────────────────
@@ -304,7 +291,6 @@ print("Heatmap saved.")
 
 ---
 
-## Cell 14 [CODE]
 
 ```python
 # ── Display best-lag summary ─────────────────────────────────────────────────
@@ -314,7 +300,6 @@ print(best_lag_df.sort_values("p_value").to_string(index=False))
 
 ---
 
-## Cell 15 [CODE]
 
 ```python
 # ── Export results ────────────────────────────────────────────────────────────
