@@ -565,10 +565,11 @@ print(f"GARCH persistence (α+β+γ/2) ≈ {persist:.3f}  "
 
 ev = evt_block(r)
 g_var = -(r.mean() + r.std() * 2.326)
+g_loss = abs(g_var)   # positive loss magnitude, comparable to EVT VaR (also a positive loss)
 print(f"\nGaussian VaR99 = {g_var:.4f}")
 print(f"EVT      VaR99 = {ev['evt_var99']:.4f}   EVT ES99 = {ev['evt_es99']:.4f}")
-print(f"EVT/Gaussian VaR ratio = {ev['evt_var99'] / g_var:.2f}x "
-      f"({'EVT heavier — fat tails' if ev['evt_var99'] > g_var else 'comparable'})")
+print(f"EVT/Gaussian VaR ratio = {ev['evt_var99'] / g_loss:.2f}x "
+      f"({'EVT heavier — fat tails' if ev['evt_var99'] > g_loss else 'comparable'})")
 
 # tail-distribution chart
 fig, ax = plt.subplots(figsize=(7, 4))
@@ -644,7 +645,7 @@ print(f"\nrows = {len(summary_df)}  (expected 17)")
 n_arch = int(summary_df["arch_y/n"].sum())
 n_stat = int(summary_df["ret_stationary"].sum())
 fam_counts = summary_df["garch_chosen"].value_counts().to_dict()
-evt_heavier = int((summary_df["EVT_VaR99"] > summary_df["Gauss_VaR99"]).sum())
+evt_heavier = int((summary_df["EVT_VaR99"] > summary_df["Gauss_VaR99"].abs()).sum())
 print(f"\nARCH effects present in {n_arch}/{len(summary_df)} series")
 print(f"returns stationary in {n_stat}/{len(summary_df)} series")
 print(f"GARCH family chosen: {fam_counts}")
