@@ -1,4 +1,3 @@
-## Cell 1 [MARKDOWN]
 
 # Notebook 12 — Regime Detection via Threshold Autoregression (TAR)
 
@@ -21,7 +20,6 @@ The threshold $c$ is chosen by grid search to minimise the combined residual sum
 
 ---
 
-## Cell 2 [CODE]
 
 ```python
 import os, sys
@@ -51,7 +49,6 @@ print("imports OK")
 
 ---
 
-## Cell 3 [MARKDOWN]
 
 **Why detrend first.** A TAR threshold variable should be (roughly) stationary — the threshold $c$ is a *level* the series crosses, so it only makes sense if the series oscillates around a stable centre rather than drifting away. The copper example shown in class was detrended before fitting for exactly this reason.
 
@@ -59,7 +56,6 @@ NIFTY's log-price trends upward over two decades, so a raw threshold would just 
 
 ---
 
-## Cell 4 [CODE]
 
 ```python
 s = np.log(load_index_prices(["NIFTY Index"])["NIFTY Index"].dropna())
@@ -85,7 +81,6 @@ print("saved detrended_logprice.png")
 
 ---
 
-## Cell 5 [CODE]
 
 ```python
 # Phase scatter: dev_t vs dev_{t-1}, with a non-parametric LOWESS overlay.
@@ -110,7 +105,6 @@ print("saved phase_scatter.png")
 
 ---
 
-## Cell 6 [CODE]
 
 ```python
 # Fit TAR on the FULL DAILY dev (fast, <1s).
@@ -149,7 +143,6 @@ print("saved tar_regimes_scatter.png")
 
 ---
 
-## Cell 7 [CODE]
 
 ```python
 # Shade the price history by TAR regime: bull where dev > threshold, bear otherwise.
@@ -175,7 +168,6 @@ print(f"saved tar_regime_shading.png  (TAR-bull days: {int(bull_mask.sum())}/{le
 
 ---
 
-## Cell 8 [MARKDOWN]
 
 ### Tie-back to Drishti's 20%-rule bull/bear (an HMM cousin)
 
@@ -185,7 +177,6 @@ We **load the prebuilt artifact** (no re-fitting) and overlay its bull/bear labe
 
 ---
 
-## Cell 9 [CODE]
 
 ```python
 art = json.load(open("data/cache/research_artifacts_v2/regime_study.json"))
@@ -245,7 +236,6 @@ print("saved regime_overlay.png")
 
 ---
 
-## Cell 10 [CODE]
 
 ```python
 # For contrast: fit TAR on the RAW price level (NOT detrended).
@@ -274,7 +264,6 @@ print("saved tar_raw_level.png")
 
 ---
 
-## Cell 11 [MARKDOWN]
 
 ## Findings
 

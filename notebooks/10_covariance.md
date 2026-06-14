@@ -6,7 +6,6 @@
 
 ---
 
-## Cell 1 [MARKDOWN]
 
 # Notebook 10 — Covariance Structures
 
@@ -29,7 +28,6 @@ This notebook is part of the Drishti findings series for the Financial Risk Mana
 
 ---
 
-## Cell 2 [CODE]
 
 ```python
 import os, sys
@@ -68,7 +66,6 @@ print("series:", list(r.columns))
 
 ---
 
-## Cell 3 [MARKDOWN]
 
 ## Covariance vs Correlation
 
@@ -82,7 +79,6 @@ The **correlation matrix** ρᵢⱼ = Σᵢⱼ / (σᵢ σⱼ) normalises the co
 
 ---
 
-## Cell 4 [CODE]
 
 ```python
 # Sample correlation heatmap
@@ -122,7 +118,6 @@ print(corr_vals.sort_values(ascending=True).head(5).to_string())
 
 ---
 
-## Cell 5 [CODE]
 
 ```python
 # Sample covariance (annualized)
@@ -142,7 +137,6 @@ print(f"Diagonal (annualized volatilities %): min={np.sqrt(np.diag(cov_arr).min(
 
 ---
 
-## Cell 6 [MARKDOWN]
 
 ## Why Sample Covariance is Noisy — and Two Fixes
 
@@ -162,7 +156,6 @@ For a 17×17 system with ~1835 observations (n/p ≈ 108), both the sample and E
 
 ---
 
-## Cell 7 [CODE]
 
 ```python
 # EWMA covariance
@@ -205,7 +198,6 @@ print(ec_ann.iloc[:3, :3].round(6).to_string())
 
 ---
 
-## Cell 8 [CODE]
 
 ```python
 # Ledoit-Wolf shrinkage
@@ -244,7 +236,6 @@ print(vols.round(2).to_string(index=False))
 
 ---
 
-## Cell 9 [CODE]
 
 ```python
 # Rolling 63-day pairwise correlations for two representative pairs
@@ -279,7 +270,6 @@ print(f"{pair2_a} / {pair2_b}:  mean={roll2.mean():.3f}, min={roll2.min():.3f}, 
 
 ---
 
-## Cell 10 [MARKDOWN]
 
 ## Findings
 

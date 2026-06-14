@@ -5,7 +5,6 @@
 
 ---
 
-## Cell 1 [MARKDOWN]
 
 # Drishti — Portfolio Risk Analytics
 ## IIM Calcutta PGDBA | Financial Risk Management | Sem 3
@@ -18,7 +17,6 @@ A signal that looks great in-sample but fails OOS is almost certainly overfit. T
 
 ---
 
-## Cell 2 [MARKDOWN]
 
 ## Notebook 05 — Walk-Forward Factor Signal Backtest
 
@@ -36,7 +34,6 @@ Simulates trading the top-ranked factor signals discovered in Notebook 02 on an 
 
 ---
 
-## Cell 3 [CODE]
 
 ```python
 # ── Imports ────────────────────────────────────────────────────────────────
@@ -56,7 +53,6 @@ print("Loading data from Notebook 01 + 02 exports...")
 
 ---
 
-## Cell 4 [CODE]
 
 ```python
 # ── Load data ────────────────────────────────────────────────────────────────
@@ -94,7 +90,6 @@ print(best_pairs.to_string(index=False))
 
 ---
 
-## Cell 5 [MARKDOWN]
 
 ### Walk-forward engine
 
@@ -109,7 +104,6 @@ print(best_pairs.to_string(index=False))
 
 ---
 
-## Cell 6 [CODE]
 
 ```python
 # ── Walk-forward backtest function ───────────────────────────────────────────
@@ -222,7 +216,6 @@ print("Walk-forward function defined.")
 
 ---
 
-## Cell 7 [MARKDOWN]
 
 ### Run walk-forward backtest for all selected pairs
 
@@ -230,7 +223,6 @@ This may take a few minutes depending on the number of pairs.
 
 ---
 
-## Cell 8 [CODE]
 
 ```python
 # ── Run backtests ────────────────────────────────────────────────────────────
@@ -272,7 +264,6 @@ print(f"\nCompleted {len(backtest_results)} backtests.")
 
 ---
 
-## Cell 9 [MARKDOWN]
 
 ### Results summary
 
@@ -280,7 +271,6 @@ OOS Sharpe > 0.5 is considered promising for a prototype. The primary evidence i
 
 ---
 
-## Cell 10 [CODE]
 
 ```python
 # ── Summary table ─────────────────────────────────────────────────────────────
@@ -301,7 +291,6 @@ print(summary.to_string(index=False))
 
 ---
 
-## Cell 11 [CODE]
 
 ```python
 # ── Cumulative return chart ───────────────────────────────────────────────────
@@ -332,7 +321,6 @@ print("Chart saved.")
 
 ---
 
-## Cell 12 [CODE]
 
 ```python
 # ── Export results ────────────────────────────────────────────────────────────

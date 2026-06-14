@@ -5,7 +5,6 @@
 
 ---
 
-## Cell 1 [MARKDOWN]
 
 # Drishti — Portfolio Risk Analytics
 ## IIM Calcutta PGDBA | Financial Risk Management | Sem 3
@@ -18,7 +17,6 @@ Understanding spillover has a direct risk management application: if Brent crude
 
 ---
 
-## Cell 2 [MARKDOWN]
 
 ## Notebook 06 — DCC-GARCH + Diebold-Yilmaz Spillover
 
@@ -46,7 +44,6 @@ Implements two complementary spillover methodologies:
 
 ---
 
-## Cell 3 [CODE]
 
 ```python
 # ── Imports ────────────────────────────────────────────────────────────────
@@ -68,7 +65,6 @@ print("Loading data from Notebook 01 exports...")
 
 ---
 
-## Cell 4 [CODE]
 
 ```python
 # ── Load and align data ──────────────────────────────────────────────────────
@@ -91,7 +87,6 @@ print(f"  Date range: {combined.index[0].date()} to {combined.index[-1].date()}"
 
 ---
 
-## Cell 5 [MARKDOWN]
 
 ### DCC-GARCH — Step 1: Univariate GARCH(1,1)
 
@@ -103,7 +98,6 @@ Stationarity requires α + β < 1.
 
 ---
 
-## Cell 6 [CODE]
 
 ```python
 # ── Step 1: Fit GARCH(1,1) to each series ────────────────────────────────────
@@ -138,7 +132,6 @@ for col in combined.columns:
 
 ---
 
-## Cell 7 [MARKDOWN]
 
 ### DCC-GARCH — Step 2: DCC parameter estimation
 
@@ -155,7 +148,6 @@ The constraint α_DCC + β_DCC < 1 ensures stationarity of the DCC process.
 
 ---
 
-## Cell 8 [CODE]
 
 ```python
 # ── Step 2: Estimate DCC parameters ─────────────────────────────────────────
@@ -215,7 +207,6 @@ print(f"Persistence: α+β = {dcc_alpha+dcc_beta:.4f}")
 
 ---
 
-## Cell 9 [MARKDOWN]
 
 ### Step 3: Compute time-varying correlations
 
@@ -223,7 +214,6 @@ With DCC parameters estimated, we compute R_t for every t in the sample. The res
 
 ---
 
-## Cell 10 [CODE]
 
 ```python
 # ── Step 3: Compute full R_t time series ─────────────────────────────────────
@@ -258,7 +248,6 @@ print(corr_df.tail(60).mean().round(3))
 
 ---
 
-## Cell 11 [CODE]
 
 ```python
 # ── Crisis correlation analysis ───────────────────────────────────────────────
@@ -307,7 +296,6 @@ print("Chart saved.")
 
 ---
 
-## Cell 12 [MARKDOWN]
 
 ### Diebold-Yilmaz Connectedness Index
 
@@ -319,7 +307,6 @@ Entry (i,j) of the DY table = fraction of H-step forecast error variance of vari
 
 ---
 
-## Cell 13 [CODE]
 
 ```python
 # ── Diebold-Yilmaz: Fit VAR ──────────────────────────────────────────────────
@@ -343,7 +330,6 @@ for i, n in enumerate(names):
 
 ---
 
-## Cell 14 [CODE]
 
 ```python
 # ── Generalized FEVD (Pesaran-Shin) ─────────────────────────────────────────
@@ -392,7 +378,6 @@ print(dy_df.round(1).to_string())
 
 ---
 
-## Cell 15 [CODE]
 
 ```python
 # ── Directional spillover: To / From / Net ────────────────────────────────────
@@ -417,7 +402,6 @@ print("Negative net = net receiver of risk (sector indices typically)")
 
 ---
 
-## Cell 16 [CODE]
 
 ```python
 # ── DY heatmap ────────────────────────────────────────────────────────────────
@@ -451,7 +435,6 @@ print("Heatmap saved.")
 
 ---
 
-## Cell 17 [CODE]
 
 ```python
 # ── Export artifacts ──────────────────────────────────────────────────────────

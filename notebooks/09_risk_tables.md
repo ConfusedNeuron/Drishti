@@ -5,7 +5,6 @@
 
 ---
 
-## Cell 1 [MARKDOWN]
 
 # Notebook 09 — Variance-Based Risk & Risk-Adjusted Performance
 
@@ -27,7 +26,6 @@ Week 3 introduces the canonical measures that compare return earned relative to 
 
 ---
 
-## Cell 2 [CODE]
 
 ```python
 import os, sys
@@ -49,7 +47,6 @@ print("Preamble loaded. CATS:", len(CATS), "tickers")
 
 ---
 
-## Cell 3 [MARKDOWN]
 
 ## Risk = Variance of Returns
 
@@ -68,7 +65,6 @@ This allows comparison across indices and sectors on a common scale regardless o
 
 ---
 
-## Cell 4 [CODE]
 
 ```python
 # Load prices and compute daily returns
@@ -105,7 +101,6 @@ print(f"\nFigure saved: {FIG}/volatility_bar.png")
 
 ---
 
-## Cell 5 [MARKDOWN]
 
 ## Risk-Adjusted Performance
 
@@ -127,7 +122,6 @@ Risk-free rate: **GIND10YR Index** (India 10-year Government Bond yield, Bloombe
 
 ---
 
-## Cell 6 [CODE]
 
 ```python
 # Risk-free rate from Bloomberg India 10Y yield (stored in percent — must divide by 100)
@@ -162,7 +156,6 @@ print(perf.round(3).to_string())
 
 ---
 
-## Cell 7 [CODE]
 
 ```python
 # Risk-return scatter: annualized mean return vs annualized volatility
@@ -195,7 +188,6 @@ print(f"Figure saved: {FIG}/risk_return_scatter.png")
 
 ---
 
-## Cell 8 [MARKDOWN]
 
 ## Findings
 

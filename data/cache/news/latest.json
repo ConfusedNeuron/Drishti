@@ -1,0 +1,202 @@
+{
+  "headlines": [
+    {
+      "title": "Small-cap stock under  ₹50 to be in focus on Monday. Details here",
+      "link": "https://www.livemint.com/market/stock-market-news/smallcap-stock-under-rs-50-sudarshan-pharma-share-price-to-be-in-focus-on-monday-details-here-11781345535950.html",
+      "published": "Sun, 14 Jun 2026 00:09:52 +0530",
+      "source": "Mint",
+      "sentiment_label": "neutral",
+      "sentiment_score": 0.9119753241539001
+    },
+    {
+      "title": "Stocks to buy: 3 stocks to beat the market in 2026: YES Securities lists Entero, Maruti and Lupin as June stock picks",
+      "link": "https://www.livemint.com/market/stock-market-news/stocks-to-buy-3-stocks-to-beat-the-market-in-2026-yes-securities-lists-entero-maruti-and-lupin-as-june-stock-picks-11781342740773.html",
+      "published": "Sat, 13 Jun 2026 15:07:48 +0530",
+      "source": "Mint",
+      "sentiment_label": "neutral",
+      "sentiment_score": 0.918794572353363
+    },
+    {
+      "title": "Gold prices to rise? JP Morgan forecasts yellow metal could reach $6,000/ounce by year-end — Here's why",
+      "link": "https://www.livemint.com/market/commodities/gold-prices-may-rise-jp-morgan-forecasts-yellow-metal-could-reach-6000-per-ounce-by-year-end-2026-why-safe-haven-11781338030777.html",
+      "published": "Sat, 13 Jun 2026 14:43:32 +0530",
+      "source": "Mint",
+      "sentiment_label": "neutral",
+      "sentiment_score": 0.8879621624946594
+    },
+    {
+      "title": "GREED &amp; Fear Report: Too much India exposure hurt returns, says Jefferies' Chris Wood - but he isn’t giving up",
+      "link": "https://www.livemint.com/market/stock-market-news/greed-fear-report-too-much-india-exposure-hurt-returns-says-jefferies-chris-wood-but-he-isn-t-giving-up-11781333502673.html",
+      "published": "Sat, 13 Jun 2026 13:12:51 +0530",
+      "source": "Mint",
+      "sentiment_label": "negative",
+      "sentiment_score": 0.6060132384300232
+    },
+    {
+      "title": "SpaceX has taken Wall Street by storm. Here's how Indian stock market investors can invest in Elon Musk-led company",
+      "link": "https://www.livemint.com/market/stock-market-news/spacex-has-taken-wall-street-by-storm-heres-how-indian-stock-market-investors-can-invest-in-elon-musk-led-company-11781330357275.html",
+      "published": "Sat, 13 Jun 2026 12:13:26 +0530",
+      "source": "Mint",
+      "sentiment_label": "neutral",
+      "sentiment_score": 0.9216871857643127
+    },
+    {
+      "title": "US stock markets this week: Dow, S&amp;P 500 and Nasdaq jump 0.7%; SpaceX becomes a $2.1 trillion giant",
+      "link": "https://www.livemint.com/market/stock-market-news/us-stock-markets-this-week-dow-s-p-500-and-nasdaq-jump-0-7-spacex-becomes-a-2-1-trillion-giant-11781325179378.html",
+      "published": "Sat, 13 Jun 2026 10:23:49 +0530",
+      "source": "Mint",
+      "sentiment_label": "positive",
+      "sentiment_score": 0.48142480850219727
+    },
+    {
+      "title": "Stocks to buy under  ₹100: Mehul Kothari of Anand Rathi recommends three shares to buy or sell",
+      "link": "https://www.livemint.com/market/stock-market-news/stocks-to-buy-under-rs-100-mehul-kothari-of-anand-rathi-recommends-three-shares-to-buy-or-sell-11781321285321.html",
+      "published": "Sat, 13 Jun 2026 09:45:18 +0530",
+      "source": "Mint",
+      "sentiment_label": "neutral",
+      "sentiment_score": 0.924238920211792
+    },
+    {
+      "title": "Buy or sell: Sumeet Bagadia recommends three stocks to buy on Monday - 15 June 2026",
+      "link": "https://www.livemint.com/market/stock-market-news/buy-or-sell-sumeet-bagadia-recommends-three-stocks-to-buy-on-monday-15-june-2026-11781318395096.html",
+      "published": "Sat, 13 Jun 2026 08:56:42 +0530",
+      "source": "Mint",
+      "sentiment_label": "neutral",
+      "sentiment_score": 0.9346969723701477
+    },
+    {
+      "title": "Can India remain the preferred emerging market for foreign investors?",
+      "link": "https://www.livemint.com/market/stock-market-news/can-india-remain-the-preferred-emerging-market-for-foreign-investors-11781316344694.html",
+      "published": "Sat, 13 Jun 2026 08:21:34 +0530",
+      "source": "Mint",
+      "sentiment_label": "neutral",
+      "sentiment_score": 0.8257284164428711
+    },
+    {
+      "title": "The great, big, boring SpaceX IPO",
+      "link": "https://www.livemint.com/market/stock-market-news/the-great-big-boring-spacex-ipo-11781317656038.html",
+      "published": "Sat, 13 Jun 2026 08:01:47 +0530",
+      "source": "Mint",
+      "sentiment_label": "neutral",
+      "sentiment_score": 0.7930591106414795
+    },
+    {
+      "title": "Taking Stock: Market fails to hold on to day#39;s gains, ends marginally higher",
+      "link": "https://www.moneycontrol.com/news/local-markets/taking-stock-market-fails-to-holdto-day39s-gains-ends-marginally-higher_17531871.html",
+      "published": "Tue, 23 Apr 2024 15:46:31 +0530",
+      "source": "MoneyControl",
+      "sentiment_label": "positive",
+      "sentiment_score": 0.6094940304756165
+    },
+    {
+      "title": "Sensex, Nifty gain for third day in a row; easing volatility to support bull trend",
+      "link": "https://www.moneycontrol.com/news/local-markets/sensex-nifty-gain-for-third-daya-row-easing-volatility-to-support-bull-trend_17531821.html",
+      "published": "Tue, 23 Apr 2024 14:51:26 +0530",
+      "source": "MoneyControl",
+      "sentiment_label": "positive",
+      "sentiment_score": 0.9374226331710815
+    },
+    {
+      "title": "Mid-day Mood | Cooling volatility sparks market rally, India VIX sees steepest fall in 4 years",
+      "link": "https://www.moneycontrol.com/news/local-markets/mid-day-mood-|-cooling-volatility-sparks-market-rally-india-vix-sees-steepest-fall4-years_17531481.html",
+      "published": "Tue, 23 Apr 2024 12:23:21 +0530",
+      "source": "MoneyControl",
+      "sentiment_label": "negative",
+      "sentiment_score": 0.9564252495765686
+    },
+    {
+      "title": "Sensex, Nifty extend gains to 3rd day, Q4 results to guide stock-specific action",
+      "link": "https://www.moneycontrol.com/news/local-markets/sensex-nifty-extend-gains-to-3rd-day-q4-results-to-guide-stock-specific-action_17530901.html",
+      "published": "Tue, 23 Apr 2024 09:45:50 +0530",
+      "source": "MoneyControl",
+      "sentiment_label": "neutral",
+      "sentiment_score": 0.6047633290290833
+    },
+    {
+      "title": "Elon Musk’s empire: Here’s a look at what the world’s first trillionaire owns",
+      "link": "https://www.thehindubusinessline.com/companies/elon-musks-empire-heres-a-look-at-what-the-worlds-first-trillionaire-owns/article71097964.ece",
+      "published": "Sat, 13 Jun 2026 19:53:28 +0530",
+      "source": "Hindu BusinessLine",
+      "sentiment_label": "neutral",
+      "sentiment_score": 0.9307090044021606
+    },
+    {
+      "title": "Mag 7? MANGOS? SpaceX forces name rethink on Wall Street's tech-stock moniker",
+      "link": "https://www.thehindubusinessline.com/markets/mag-7-mangos-spacex-forces-name-rethink-on-wall-streets-tech-stock-moniker/article71097309.ece",
+      "published": "Sat, 13 Jun 2026 17:23:26 +0530",
+      "source": "Hindu BusinessLine",
+      "sentiment_label": "neutral",
+      "sentiment_score": 0.8692042231559753
+    },
+    {
+      "title": "Gold expected to touch $6,000/oz by end-2026 despite recent price cooling: JP Morgan",
+      "link": "https://www.thehindubusinessline.com/markets/gold/gold-expected-to-touch-6000oz-by-end-2026-despite-recent-price-cooling-jp-morgan/article71096940.ece",
+      "published": "Sat, 13 Jun 2026 14:53:22 +0530",
+      "source": "Hindu BusinessLine",
+      "sentiment_label": "positive",
+      "sentiment_score": 0.6676824688911438
+    },
+    {
+      "title": "SpaceX opens higher in strong Nasdaq debut",
+      "link": "https://www.thehindubusinessline.com/markets/after-record-ipo-musks-spacex-faces-next-test-in-market-debut/article71092827.ece",
+      "published": "Sat, 13 Jun 2026 12:24:55 +0530",
+      "source": "Hindu BusinessLine",
+      "sentiment_label": "positive",
+      "sentiment_score": 0.9072831869125366
+    },
+    {
+      "title": "SpaceX IPO: Investing platforms anticipate increased traction from Indian investors",
+      "link": "https://www.thehindubusinessline.com/markets/spacex-ipo-investing-platforms-anticipate-increased-traction-from-indian-investors/article71094073.ece",
+      "published": "Sat, 13 Jun 2026 12:24:26 +0530",
+      "source": "Hindu BusinessLine",
+      "sentiment_label": "positive",
+      "sentiment_score": 0.9496520757675171
+    },
+    {
+      "title": "What Elon Musk’s $1 trillion wealth means in real terms",
+      "link": "https://www.thehindubusinessline.com/markets/what-elon-musks-1-trillion-wealth-means-in-real-terms/article71095047.ece",
+      "published": "Sat, 13 Jun 2026 12:23:29 +0530",
+      "source": "Hindu BusinessLine",
+      "sentiment_label": "neutral",
+      "sentiment_score": 0.9398435950279236
+    },
+    {
+      "title": "SpaceX IPO includes a greenshoe option – here’s what it means",
+      "link": "https://www.thehindubusinessline.com/markets/spacex-ipo-includes-a-greenshoe-option-heres-what-it-means/article71096386.ece",
+      "published": "Sat, 13 Jun 2026 06:13:18 +0530",
+      "source": "Hindu BusinessLine",
+      "sentiment_label": "neutral",
+      "sentiment_score": 0.9462499618530273
+    },
+    {
+      "title": "With flawless SpaceX IPO, Wall Street establishes new standard for mega listings",
+      "link": "https://www.thehindubusinessline.com/markets/with-flawless-spacex-ipo-wall-street-establishes-new-standard-for-mega-listings/article71096382.ece",
+      "published": "Sat, 13 Jun 2026 06:03:19 +0530",
+      "source": "Hindu BusinessLine",
+      "sentiment_label": "positive",
+      "sentiment_score": 0.5309554934501648
+    },
+    {
+      "title": "SpaceX soars 19.2% in blockbuster debut, lifting US markets higher",
+      "link": "https://www.thehindubusinessline.com/markets/spacex-soars-192-in-blockbuster-debut-lifting-us-markets-higher/article71096365.ece",
+      "published": "Sat, 13 Jun 2026 05:53:17 +0530",
+      "source": "Hindu BusinessLine",
+      "sentiment_label": "positive",
+      "sentiment_score": 0.9403270483016968
+    },
+    {
+      "title": "Markets clock biggest two-month gain on US-Iran truce hopes",
+      "link": "https://www.thehindubusinessline.com/markets/markets-clock-biggest-two-month-gain-on-us-iran-truce-hopes/article71094425.ece",
+      "published": "Fri, 12 Jun 2026 22:23:04 +0530",
+      "source": "Hindu BusinessLine",
+      "sentiment_label": "positive",
+      "sentiment_score": 0.8608438968658447
+    }
+  ],
+  "aggregate": "Bullish",
+  "positive_pct": 37.5,
+  "negative_pct": 8.3,
+  "neutral_pct": 54.2,
+  "fetched_at": "2026-06-13T21:24:56.527693+00:00",
+  "n_sources": 3
+}
