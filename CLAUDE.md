@@ -30,7 +30,7 @@ Executed subagent-driven (validator → implementer → reviewer per task; valid
 - ✅ `src/research/series_io.py` — v2 index/commodity/macro/OHLC loaders
 - ✅ `src/risk/performance.py` (Sharpe/Treynor/Jensen), `src/risk/ewma.py`, `src/risk/evt.py` (POT/GPD), `src/risk/extreme_value_vol.py` (Parkinson/GK/RS)
 - ✅ `src/portfolio/frontier.py` (Markowitz), `src/research/tar.py` (TAR + bootstrap test), `src/research/cointegration.py` (Johansen/VECM), `src/research/credit.py` (Altman), `src/research/liquidity.py` (Amihud)
-- ✅ Notebooks `08`–`15` (growth, risk/perf, covariance, frontier, TAR regime, advanced Box-Jenkins/GARCH ×17 series, spillover/connectedness, credit/liquidity) — all run headless, all reviewed
+- ✅ Notebooks `08`–`15` (growth, risk/perf, covariance, frontier, TAR regime, advanced Box-Jenkins/GARCH ×17 series, spillover/connectedness, credit/liquidity) — all run headless, all reviewed. **Authoritative format is `.ipynb`, executed headless via `nbconvert` on the v2 cache** (`python -m nbconvert --to notebook --execute notebooks/NN.ipynb`; needs `nbconvert`/`nbclient`/`ipykernel` + a `python3` kernelspec). The paired `08`–`15` `.md` files are readable exports **without** `## Cell [CODE]` markers, so `run_notebook_md.py` runs only the `01`–`07` spec notebooks, not these. Re-verified end-to-end on v2 2026-06-15 (8/8 pass).
 - ✅ `notebooks/README.md` syllabus-coverage matrix; `docs/methodology.html` extended to 39 sections; README v3 section
 - ✅ Test suite: **163 passing** (122 baseline + 41 new); all 8 notebooks verified headless
 
