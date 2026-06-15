@@ -50,14 +50,16 @@ Executed subagent-driven (validator → implementer → reviewer per task; valid
 - ✅ OHLC pulled at FRTL and copied to `data/cache/bloomberg_v2/ohlc/` (29 indices + 433 equities + 15 commodities, ~2000→2026, gitignored) — notebook 13 range-based volatility (Parkinson/GK/RS) now computes live (NIFTY ≈ 0.19 annualized)
 - ✅ Merged to `main` (superseded by Track H, 2026-06-15)
 
-### Previous active branch
-`feature/v2-expansion` — merged to main (PR #8)
+### Merged branches (history)
+`feature/v2-expansion` (PR #8) · `feature/v3-findings-notebooks` (PR #10, Track G) · `fix/v2-unification` (Track H, 2026-06-15) — all merged to `main` and deleted.
 
 ### Pre-demo checklist (presentation: 2026-06-16 Mon)
-- [ ] `pip install transformers torch` — required for FinBERT sentiment panel (~2 GB, one-time)
-- [ ] `pip install imbalanced-learn` — only needed if retraining breach classifier
-- [ ] Commit `docs/methodology.html` + `data/cache/research_artifacts_v2/` + `scripts/pull_drishti_v2_fallback.py`
-- [ ] Merge `feature/v2-expansion` → `main`
+- [x] Commit `docs/methodology.html` + `data/cache/research_artifacts_v2/` + `scripts/pull_drishti_v2_fallback.py` — done (all tracked).
+- [x] Merge `feature/v2-expansion` → `main` — done (PR #8); Tracks G + H also merged.
+- [x] Unify data on v2 — `DRISHTI_DATA_VERSION` removed; the app runs with no env var (Track H).
+- [ ] `pip install transformers torch` — optional, only for the FinBERT sentiment panel (~2 GB, one-time).
+- [ ] `pip install imbalanced-learn` — optional, only if retraining the breach classifier.
+- Note: notebook-execution deps (`seaborn`/`nbconvert`/`nbclient`/`ipykernel`) are in `requirements.txt`; needed only to run notebooks 08–15 live.
 
 ### Frontend code guide (read before any frontend work — saves token context)
 `docs/frontend/code.md` — **exists — read before any frontend work**
@@ -417,6 +419,7 @@ Theme logic is split across `theme.js`, `components.css`, and `layout.css`.
 - **Session 6:** v2 expansion — ADCC, diagnostics ladder, weekly Granger, universe module, expanded spillover study, market shock events, bull/bear regimes, IPO truncation fix, unified safety filter, news dry-run, pull_drishti_v2.py + verify_v2_cache.py, v2 data version switch, 122 tests
 - **Session 7:** v2 data import (433 equities, 29 indices, 15 commodities), v2 artifact builds (spillover/events/regime), IS/IN Equity cache fallback fix, 2 new event labels (FII outflow 2024 + tariff shock 2026), Events + Regimes frontend tabs, docs/methodology.html (30-section math reference)
 - **Session 8:** v3 findings notebooks (PR #10) — 9 tested analytics helpers (performance ratios, EWMA, EVT-VaR, range volatility, Markowitz frontier, TAR, Johansen/VECM, Altman, Amihud), notebook execution harness, OHLC pull script, notebooks 08–15 (all run headless + reviewed), notebooks/README coverage matrix. Subagent-driven (validator→implementer→reviewer; validator caught 6 real defects). 163 tests. docs/methodology.html extended to 39 sections; README v3 section. Remaining: OHLC pull at FRTL + merge PR #10.
+- **Session 9:** v2 unification + audit remediation (Track H) — full-repo audit, then **deleted the `DRISHTI_DATA_VERSION` env var** and pinned everything to the v2 source (v1 cache archived to `../drishti_v1_archive/`); **surfaced the orphaned spillover study** (route + Spillover-tab UI); **wired the header badge to v2 artifacts**; fixed the **stress GICS sector-override mapping** (overrides were silently never firing); **normalized Bloomberg BICS→GICS sectors** (no more `Financial` vs `Financials`); **blended large+mid in the combined spillover panel** (was collapsing to large-only); gsec10y/breach-feature-name/statsmodels-deprecation cleanups. Subagent-driven (6 sonnet implementers, disjoint file ownership). Notebooks 08–15 re-verified headless on v2 via `nbconvert`. **175 tests.** Merged to `main` (`605c729`); branch deleted. Audit docs: `docs/audit-2026-06-15-*.md`.
 
 ---
 
