@@ -8,7 +8,13 @@ Drishti is a local-first quant risk research platform for Indian equity portfoli
 
 ---
 
-## Current status (as of 2026-06-15)
+## Current status (as of 2026-07-02)
+
+**Final presentation DELIVERED 2026-06-16 ✅** — market-risk + spillover narrative (see `presentation/`).
+**NEXT FOCUS: dashboard audit & fixes** — reconcile what the dashboard *shows* vs what actually *works*, fix/document features. Not yet started. Read `docs/frontend/code.md` before any frontend work.
+
+### Sibling experiment — US S&P 500 pull (outside this repo)
+`../pull_spx_data.py` (in the parent `Financial Risk Management/` folder, NOT in this repo) is a standalone US analogue of `scripts/pull_drishti_v2.py`. **Fully self-contained** — it embeds its own BLPAPI plumbing (the v2 scripts imported it from `pull_drishti_data.py`, which Track H deleted) and writes to its own `../sp500_data/` (gitignore-equivalent: never commit; same Bloomberg licensing). Survivorship-free **S&P 500 + S&P MidCap 400** via `INDX_MWEIGHT_HIST`; prices + constituents from **1990**. Flags: `--validate/--discover/--indices/--commodities/--crypto/--macro/--equities/--ohlc/--sectors/--annual/--retry-failed`. Covers GICS sector sub-indices (S5INFT…), US macro (full Treasury curve, 2s10s, HY/IG credit, VIX/VXN/SKEW/MOVE, ES1), spot gold/silver (XAU/XAG), and crypto (XBTUSD/XETUSD/BGCI, short history). Not wired into the dashboard/notebooks — purely a data-pull script for now.
 
 **Track A — Frontend overhaul: COMPLETE ✅**
 **Track B — Data layer: COMPLETE ✅**
@@ -53,13 +59,20 @@ Executed subagent-driven (validator → implementer → reviewer per task; valid
 ### Merged branches (history)
 `feature/v2-expansion` (PR #8) · `feature/v3-findings-notebooks` (PR #10, Track G) · `fix/v2-unification` (Track H, 2026-06-15) — all merged to `main` and deleted.
 
-### Pre-demo checklist (presentation: 2026-06-16 Mon)
+### Pre-demo checklist (presentation: 2026-06-16 Mon) — DELIVERED ✅ (went well)
+- Deck + assets live in `presentation/` (figures, .pptx decks, `explainer.md`) — **gitignored, kept local only** (user decision 2026-07-02). See "Presentation deck" below.
 - [x] Commit `docs/methodology.html` + `data/cache/research_artifacts_v2/` + `scripts/pull_drishti_v2_fallback.py` — done (all tracked).
 - [x] Merge `feature/v2-expansion` → `main` — done (PR #8); Tracks G + H also merged.
 - [x] Unify data on v2 — `DRISHTI_DATA_VERSION` removed; the app runs with no env var (Track H).
 - [ ] `pip install transformers torch` — optional, only for the FinBERT sentiment panel (~2 GB, one-time).
 - [ ] `pip install imbalanced-learn` — optional, only if retraining the breach classifier.
 - Note: notebook-execution deps (`seaborn`/`nbconvert`/`nbclient`/`ipykernel`) are in `requirements.txt`; needed only to run notebooks 08–15 live.
+
+### Presentation deck (`presentation/`) — toolchain for regenerating
+- **Numbers/figures**: all computed live from the v2 cache with the **venv python** (`.venv/bin/python` — has `pyarrow`; system python3 does NOT). Figures are matplotlib PNGs in `presentation/figures/slideNN/`, light theme (BG `#F6F3EC`, navy `#1F3A93`, gold `#B8860B`).
+- **Decks**: built with **`python-pptx`** which lives in **system python3 only** (not the venv). Native shapes/tables + embedded PNGs → fully editable .pptx.
+- **Previews**: `soffice --headless --convert-to pdf …` then rasterize with **`pymupdf` (installed in the venv)** — `soffice --convert-to png` only exports slide 1.
+- **Content/answers**: `presentation/explainer.md` is the authoritative Q&A reference (spillover/Granger/Diebold-Yilmaz methodology, indices+commodities glossary, survivorship/synchronization, etc.).
 
 ### Frontend code guide (read before any frontend work — saves token context)
 `docs/frontend/code.md` — **exists — read before any frontend work**
@@ -85,8 +98,7 @@ Executed subagent-driven (validator → implementer → reviewer per task; valid
 - ✅ Time-series IC + Granger causality + BH FDR correction
 - ✅ Deterministic risk memo (no LLM required)
 - ✅ FastAPI backend + Plotly.js single-page dashboard (5 tabs)
-- ✅ 122 unit tests passing
-- ✅ `pull_drishti_data.py` — production Bloomberg pull script (tqdm, resumable, --validate)
+- ✅ 175 unit tests passing
 - ✅ 7 BQuant research notebook specs (`notebooks/01-07.md`)
 - ✅ `lessons.md` — all FRTL/methodology/engineering learnings documented
 - ✅ **Dashboard dark theme redesign** — Playfair Display + DM Sans + JetBrains Mono; deep navy-black bg (#07090E), gold accent (#C9A227); all Plotly charts updated to dark palette
@@ -125,8 +137,6 @@ Executed subagent-driven (validator → implementer → reviewer per task; valid
 ### What's left to build
 
 Nothing planned for v2. Three optional REVISIT items in docs/design-choices.md (FinBERT download speed, news refresh latency, RSS reliability) — only relevant if the demo machine is slow.
-
-**Pending before merge:** install `transformers` + `torch` for FinBERT; commit methodology.html + artifacts; merge to main.
 
 ---
 
@@ -190,8 +200,10 @@ Walk-forward IC/Granger              →    served via FastAPI
 ├── notebooks/                     # BQuant research notebook specs (01-07.md)
 ├── scripts/
 │   ├── generate_synthetic_cache.py  # Offline demo: 5yr synthetic correlated prices
-│   ├── pull_drishti_data.py         # FRTL Bloomberg pull v1 (50 equities + indices + factors)
-│   ├── pull_drishti_v2.py           # FRTL Bloomberg pull v2 (survivorship-free Nifty100+Midcap150 since 2000)
+│   ├── pull_drishti_v2.py           # FRTL Bloomberg pull v2 (survivorship-free Nifty100+Midcap150 since 2000; v1 pull_drishti_data.py deleted in Track H)
+│   ├── pull_ohlc_frtl.py            # FRTL OHLC pull for v2 universe (range-based volatility)
+│   ├── pull_public_data.py          # yfinance + FRED gap-fill into data/cache/public/
+│   ├── run_notebook_md.py           # Executes [CODE] cells of spec notebooks 01–07
 │   ├── pull_drishti_v2_fallback.py  # Variant with INDX_MWEIGHT fallback for entitlement-limited FRTL
 │   ├── verify_v2_cache.py           # Post-pull sanity report for bloomberg_v2/
 │   ├── build_spillover_study.py     # Builds research_artifacts_v2/spillover_study.json
@@ -226,9 +238,13 @@ Walk-forward IC/Granger              →    served via FastAPI
 │       │   └── latest.json          # FinBERT-scored headlines cache (created by POST /api/research/news/refresh)
 │       └── models/
 │           └── breach_classifier.pkl  # Trained XGBoost model (created by scripts/train_breach_classifier.py)
-├── tests/                           # pytest — 122 tests passing
+├── tests/                           # pytest — 175 tests passing
 ├── design/                          # PRD, specs, high/low-level design (HTML)
 ├── docs/                            # design-choices.md, lessons.md, audit-remediation-plan.md, frontend/code.md, methodology.html
+├── presentation/                    # Final FRM deck (delivered 2026-06-16; gitignored — kept local only)
+│   ├── explainer.md                 # Viva/concept Q&A reference (all doubts + exam-ready answers)
+│   ├── figures/slideNN/             # Light-theme matplotlib PNGs per slide (regenerable via .venv python)
+│   └── pptx/                        # Native editable .pptx decks (slide4, 5to7, 8to9, 10to13b) + previews
 ├── requirements.txt
 ├── .env.example
 ├── README.md
@@ -258,11 +274,11 @@ uvicorn src.dashboard.app:app --reload
 ```bat
 cd C:\Users\User\Pranav\drishti
 .venv\Scripts\activate
-python scripts\pull_drishti_data.py --validate          # test fields first
-python scripts\pull_drishti_data.py --skip-equities     # fast first pass (~5 min)
-python scripts\pull_drishti_data.py                     # full pull (~60 min)
+python scripts\pull_drishti_v2.py --validate            # test fields first
+python scripts\pull_drishti_v2.py                       # full v2 pull (resumable)
+python scripts\pull_ohlc_frtl.py                        # OHLC for range-based vol
 ```
-Copy `data\cache\bloomberg\` to Mac at `data/cache/bloomberg/` after pull.
+Copy `data\cache\bloomberg_v2\` to Mac at `data/cache/bloomberg_v2/` after pull. (v1 `pull_drishti_data.py` was deleted in Track H.)
 
 **Risk MCP server (standalone):**
 ```bash
@@ -420,6 +436,7 @@ Theme logic is split across `theme.js`, `components.css`, and `layout.css`.
 - **Session 7:** v2 data import (433 equities, 29 indices, 15 commodities), v2 artifact builds (spillover/events/regime), IS/IN Equity cache fallback fix, 2 new event labels (FII outflow 2024 + tariff shock 2026), Events + Regimes frontend tabs, docs/methodology.html (30-section math reference)
 - **Session 8:** v3 findings notebooks (PR #10) — 9 tested analytics helpers (performance ratios, EWMA, EVT-VaR, range volatility, Markowitz frontier, TAR, Johansen/VECM, Altman, Amihud), notebook execution harness, OHLC pull script, notebooks 08–15 (all run headless + reviewed), notebooks/README coverage matrix. Subagent-driven (validator→implementer→reviewer; validator caught 6 real defects). 163 tests. docs/methodology.html extended to 39 sections; README v3 section. Remaining: OHLC pull at FRTL + merge PR #10.
 - **Session 9:** v2 unification + audit remediation (Track H) — full-repo audit, then **deleted the `DRISHTI_DATA_VERSION` env var** and pinned everything to the v2 source (v1 cache archived to `../drishti_v1_archive/`); **surfaced the orphaned spillover study** (route + Spillover-tab UI); **wired the header badge to v2 artifacts**; fixed the **stress GICS sector-override mapping** (overrides were silently never firing); **normalized Bloomberg BICS→GICS sectors** (no more `Financial` vs `Financials`); **blended large+mid in the combined spillover panel** (was collapsing to large-only); gsec10y/breach-feature-name/statsmodels-deprecation cleanups. Subagent-driven (6 sonnet implementers, disjoint file ownership). Notebooks 08–15 re-verified headless on v2 via `nbconvert`. **175 tests.** Merged to `main` (`605c729`); branch deleted. Audit docs: `docs/audit-2026-06-15-*.md`.
+- **Session 10 (2026-07-02):** US extension spike — built `../pull_spx_data.py` (parent folder, **outside this repo**), a standalone Bloomberg pull mirroring `pull_drishti_v2.py` for the US market. Survivorship-free **S&P 500 + S&P MidCap 400** via `INDX_MWEIGHT_HIST`, prices + constituents from **1990**; embeds its own BLPAPI plumbing (Track H had deleted the shared `pull_drishti_data.py`); writes to its own `../sp500_data/`. Adds OHLC, spot gold/silver (XAU/XAG), crypto (XBTUSD/XETUSD/BGCI), GICS sector sub-indices, and US macro (full Treasury curve, 2s10s, HY/IG credit, VIX/VXN/SKEW/MOVE, ES1). Not wired into the dashboard/notebooks — data-pull only. See "Sibling experiment" note under Current status.
 
 ---
 
