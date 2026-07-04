@@ -298,7 +298,6 @@ async function loadWalkForward() {
   }
 }
 
-
 // ── Model Diagnostics Ladder ───────────────────────────────────────────────
 
 const _DIAG_LABELS = {
@@ -307,32 +306,46 @@ const _DIAG_LABELS = {
   arch_lm: "ARCH effects (ARCH-LM)",
 };
 
+// Backend emits nan for failed fits; clean_json turns nan → JSON null.
+// Every numeric cell goes through this so one failed model can't blank the panel.
+const _diagNum = (v, d) =>
+  (typeof v !== "number" || Number.isNaN(v)) ? "—" : v.toFixed(d);
+
+function _diagModelLabel(key) {
+  // "garch_12" → "GARCH(1,2)", "gjr_11" → "GJR(1,1)"
+  const [family, order] = key.split("_");
+  if (!order) return family.toUpperCase();
+  return `${family.toUpperCase()}(${order.split("").join(",")})`;
+}
+
 function _diagTestRow(label, t) {
   return `
     <tr>
       <td>${label}</td>
-      <td style="font-family:'JetBrains Mono',monospace">${t.statistic.toFixed(4)}</td>
-      <td style="font-family:'JetBrains Mono',monospace">${t.p_value.toFixed(4)}</td>
-      <td>${t.conclusion}</td>
+      <td style="font-family:'JetBrains Mono',monospace">${_diagNum(t.statistic, 4)}</td>
+      <td style="font-family:'JetBrains Mono',monospace">${_diagNum(t.p_value, 4)}</td>
+      <td>${t.conclusion || "—"}</td>
     </tr>`;
 }
 
 function _diagOrderScanTable(orderScan) {
   const rows = Object.entries(orderScan).map(([model, m]) => {
-    const gamma = (m.gamma !== undefined)
-      ? `${m.gamma.toFixed(4)} (p=${m.gamma_p.toFixed(4)})`
-      : "—";
+    const note = m.error
+      ? `<span style="color:var(--muted)">fit failed: ${m.error}</span>`
+      : (m.gamma != null
+          ? `${_diagNum(m.gamma, 4)} (p=${_diagNum(m.gamma_p, 4)})`
+          : "—");
     return `
       <tr>
-        <td style="font-family:'JetBrains Mono',monospace">${model.replace("_", "(") + ")"}</td>
-        <td style="font-family:'JetBrains Mono',monospace">${m.bic.toFixed(2)}</td>
-        <td style="font-family:'JetBrains Mono',monospace">${m.aic.toFixed(2)}</td>
-        <td style="font-family:'JetBrains Mono',monospace">${gamma}</td>
+        <td style="font-family:'JetBrains Mono',monospace">${_diagModelLabel(model)}</td>
+        <td style="font-family:'JetBrains Mono',monospace">${_diagNum(m.bic, 2)}</td>
+        <td style="font-family:'JetBrains Mono',monospace">${_diagNum(m.aic, 2)}</td>
+        <td style="font-family:'JetBrains Mono',monospace">${note}</td>
       </tr>`;
   }).join("");
   return `
     <table>
-      <tr><th>Model</th><th>BIC</th><th>AIC</th><th>Asymmetry γ (GJR only)</th></tr>
+      <tr><th>Model</th><th>BIC</th><th>AIC</th><th>Asymmetry γ (GJR only) / note</th></tr>
       ${rows}
     </table>`;
 }
@@ -365,17 +378,17 @@ async function loadDiagnostics() {
       <h3 style="margin-top:12px">GARCH order scan (best BIC wins)</h3>
       ${_diagOrderScanTable(u.order_scan)}` : "";
 
-    const residRows = (u.std_resid_lb_p !== undefined) ? `
+    const residRows = ("std_resid_lb_p" in u || "std_resid_sq_lb_p" in u) ? `
       <h3 style="margin-top:12px">Standardized residual checks (fitted GARCH)</h3>
       <table>
         <tr><th>Check</th><th>p-value</th></tr>
         <tr>
           <td>Std. residuals — Ljung-Box(10)</td>
-          <td style="font-family:'JetBrains Mono',monospace">${u.std_resid_lb_p.toFixed(4)}</td>
+          <td style="font-family:'JetBrains Mono',monospace">${_diagNum(u.std_resid_lb_p, 4)}</td>
         </tr>
         <tr>
           <td>Std. residuals² — Ljung-Box(10) (remaining ARCH)</td>
-          <td style="font-family:'JetBrains Mono',monospace">${u.std_resid_sq_lb_p.toFixed(4)}</td>
+          <td style="font-family:'JetBrains Mono',monospace">${_diagNum(u.std_resid_sq_lb_p, 4)}</td>
         </tr>
       </table>` : "";
 
