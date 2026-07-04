@@ -21,6 +21,16 @@ OVERRIDES = {
     "BAF": "BAJFINANCE", "HUVR": "HINDUNILVR", "HCLT": "HCLTECH", "WPRO": "WIPRO",
     "NEST": "NESTLEIND", "APNT": "ASIANPAINT", "TTMT": "TATAMOTORS", "HNDL": "HINDALCO",
     "PWGR": "POWERGRID", "TATA": "TATASTEEL", "TTAN": "TITAN", "MSIL": "MARUTI",
+    # Recovered from the pre-v2 hand-curated map (git show d15a004~1) — codes that
+    # still exist unchanged in the v2 universe but diverge from the NSE symbol.
+    "AXSB": "AXISBANK", "MM": "M&M", "BJAUT": "BAJAJ-AUTO", "DRRD": "DRREDDY",
+    "SUNP": "SUNPHARMA", "BRIT": "BRITANNIA", "COAL": "COALINDIA",
+    # Newly-covered v2 names using shortened Bloomberg IS Equity codes.
+    "BJFIN": "BAJAJFINSV", "EIM": "EICHERMOT", "HMCL": "HEROMOTOCO", "SRCM": "SHREECEM",
+    "IOCL": "IOC", "JSTL": "JSWSTEEL", "ADANI": "ADANIENT", "DIVI": "DIVISLAB",
+    # v2 universe key contains a slash (share-class suffix); split() alone would
+    # yield the invalid candidate "TTMT/A.NS".
+    "TTMT/A": "TATAMOTORS",
 }
 
 
@@ -31,6 +41,17 @@ def yahoo_candidate(bbg_ticker: str) -> str:
 
 def build_equity_map(tickers) -> dict[str, str]:
     return {t: yahoo_candidate(t) for t in sorted(tickers)}
+
+
+def warn_unresolved_slashes(equity_map: dict[str, str]) -> list[str]:
+    """Flag any final candidate still containing '/' — not auto-substituted,
+    these need manual triage (see TTMT/A -> TATAMOTORS as the resolved example)."""
+    bad = [f"{k} -> {v}" for k, v in equity_map.items() if "/" in v]
+    if bad:
+        print(f"WARNING: {len(bad)} candidate(s) still contain '/' — manual triage needed:")
+        for entry in bad:
+            print("  ", entry)
+    return bad
 
 
 def validate(equity_map: dict[str, str]) -> list[str]:
@@ -53,6 +74,7 @@ def main() -> None:
 
     mapping = json.loads(MAPPING_PATH.read_text())
     mapping["equities"] = build_equity_map(universe.keys())
+    warn_unresolved_slashes(mapping["equities"])
     MAPPING_PATH.write_text(json.dumps(mapping, indent=2) + "\n")
     print(f"Wrote {len(mapping['equities'])} equity mappings to {MAPPING_PATH}")
 
