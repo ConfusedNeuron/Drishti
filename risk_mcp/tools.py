@@ -38,11 +38,22 @@ def _load_portfolio(holdings: list[dict] | None = None):
     from src.portfolio.importer import snapshot_from_rows, load_sample
     if holdings:
         return snapshot_from_rows(holdings)
+    from fastapi import HTTPException
+    from src.dashboard.routes.portfolio import get_snapshot
     try:
-        from src.dashboard.routes.portfolio import get_snapshot
         return get_snapshot()
-    except Exception:
+    except HTTPException:
+        # Only "no portfolio loaded" falls back to the sample; real errors propagate.
         return load_sample()
+
+
+def _resolve_portfolio(holdings: list[dict] | None):
+    """Return (snapshot, None), or (None, error_dict) when caller-supplied
+    holdings are malformed — a structured error instead of a raw traceback."""
+    try:
+        return _load_portfolio(holdings), None
+    except (ValueError, KeyError, TypeError) as e:
+        return None, {"error": f"Invalid holdings: {e}"}
 
 
 def _load_returns(snap):
@@ -77,7 +88,9 @@ def calculate_portfolio_risk(confidence: float = 0.99, horizon_days: int = 10,
     holdings: optional list of {"symbol","quantity","average_price","last_price"?,"exchange"?}
     dicts — e.g. as returned by a broker MCP (Zerodha Kite MCP).
     """
-    snap = _load_portfolio(holdings)
+    snap, err = _resolve_portfolio(holdings)
+    if err:
+        return err
     port_ret, w_arr, common, cov, missing = _load_returns(snap)
 
     from src.risk.var import all_var_methods
@@ -91,6 +104,8 @@ def calculate_portfolio_risk(confidence: float = 0.99, horizon_days: int = 10,
     dd = max_drawdown(port_ret)
 
     return {
+        "portfolio_id": snap.portfolio_id,
+        "portfolio_source": snap.source,
         "portfolio_value": snap.total_value,
         "n_holdings_modeled": len(common),
         "missing_symbols": missing,
@@ -124,7 +139,9 @@ def get_var_backtest(confidence: float = 0.99, holdings: list[dict] | None = Non
     holdings: optional list of {"symbol","quantity","average_price","last_price"?,"exchange"?}
     dicts — e.g. as returned by a broker MCP (Zerodha Kite MCP).
     """
-    snap = _load_portfolio(holdings)
+    snap, err = _resolve_portfolio(holdings)
+    if err:
+        return err
     port_ret, _, _, _, _ = _load_returns(snap)
 
     from src.risk.backtest import run_var_backtest
@@ -136,6 +153,8 @@ def get_var_backtest(confidence: float = 0.99, holdings: list[dict] | None = Non
     kup = bt.kupiec
     chr_ = bt.christoffersen
     return {
+        "portfolio_id": snap.portfolio_id,
+        "portfolio_source": snap.source,
         "confidence": bt.confidence,
         "obs": bt.obs,
         "violations": bt.violations,
@@ -166,7 +185,9 @@ def get_current_regime(holdings: list[dict] | None = None) -> dict:
     holdings: optional list of {"symbol","quantity","average_price","last_price"?,"exchange"?}
     dicts — e.g. as returned by a broker MCP (Zerodha Kite MCP).
     """
-    snap = _load_portfolio(holdings)
+    snap, err = _resolve_portfolio(holdings)
+    if err:
+        return err
     port_ret, _, _, _, _ = _load_returns(snap)
 
     start, end = _default_dates()
@@ -186,6 +207,8 @@ def get_current_regime(holdings: list[dict] | None = None) -> dict:
     rcv = regime_conditioned_var(port_ret, regime_hist, snap.total_value)
 
     return {
+        "portfolio_id": snap.portfolio_id,
+        "portfolio_source": snap.source,
         "current_regime": rcv["current_regime"],
         "current_label": rcv["current_label"],
         "consecutive_days": rcv["consecutive_days"],
@@ -235,7 +258,9 @@ def run_stress_test(scenario_id: str | None = None, holdings: list[dict] | None 
     holdings: optional list of {"symbol","quantity","average_price","last_price"?,"exchange"?}
     dicts — e.g. as returned by a broker MCP (Zerodha Kite MCP).
     """
-    snap = _load_portfolio(holdings)
+    snap, err = _resolve_portfolio(holdings)
+    if err:
+        return err
     from src.risk.stress import run_stress_scenario, run_all_scenarios
 
     if scenario_id:
@@ -247,6 +272,8 @@ def run_stress_test(scenario_id: str | None = None, holdings: list[dict] | None 
         results = run_all_scenarios(snap)
 
     return {
+        "portfolio_id": snap.portfolio_id,
+        "portfolio_source": snap.source,
         "portfolio_value": snap.total_value,
         "scenarios": [
             {
@@ -271,7 +298,9 @@ def generate_risk_memo(holdings: list[dict] | None = None) -> dict:
     holdings: optional list of {"symbol","quantity","average_price","last_price"?,"exchange"?}
     dicts — e.g. as returned by a broker MCP (Zerodha Kite MCP).
     """
-    snap = _load_portfolio(holdings)
+    snap, err = _resolve_portfolio(holdings)
+    if err:
+        return err
     port_ret, w_arr, common, cov, _ = _load_returns(snap)
 
     from src.risk.var import all_var_methods
@@ -342,6 +371,8 @@ def generate_risk_memo(holdings: list[dict] | None = None) -> dict:
     )
 
     return {
+        "portfolio_id": snap.portfolio_id,
+        "portfolio_source": snap.source,
         "memo_markdown": memo,
         "disclaimer": "Educational risk analytics only. Not investment advice.",
     }
