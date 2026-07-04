@@ -112,3 +112,16 @@ function renderOverview(d) {
 
   renderRiskDetail(d);
 }
+
+// Header badge on page load from precomputed artifacts (until live risk data replaces it)
+async function initHeaderBadge() {
+  try {
+    const r = await fetch(window.API + "/api/static-data");
+    if (!r.ok) return;
+    const d = await r.json();
+    const el = document.getElementById("regime-badge");
+    if (!d.regime || !el || el.innerHTML) return;
+    el.innerHTML = `<span class="badge badge-${d.regime}" title="Precomputed market state (NIFTY), data as of ${d.data_as_of || "n/a"}">${d.regime}</span>`;
+  } catch (e) { /* badge is decorative — stay silent */ }
+}
+document.addEventListener("DOMContentLoaded", initHeaderBadge);

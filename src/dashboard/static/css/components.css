@@ -14,6 +14,8 @@
 .badge::before{ content:'●'; font-size:8px; }
 .badge-low{background:rgba(63,185,80,0.14);color:var(--ok);border:1px solid rgba(63,185,80,0.3)}
 .badge-high{background:rgba(248,81,73,0.14);color:var(--danger);border:1px solid rgba(248,81,73,0.3)}
+.badge-bull{background:color-mix(in srgb, var(--ok) 18%, transparent);color:var(--ok);border:1px solid var(--ok)}
+.badge-bear{background:color-mix(in srgb, var(--danger) 18%, transparent);color:var(--danger);border:1px solid var(--danger)}
 
 /* ── KPI CARDS */
 .card{
