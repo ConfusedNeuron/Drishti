@@ -23,6 +23,13 @@ _MODEL_PATH: Path = DATA_DIR / "cache" / "models" / "breach_classifier.pkl"
 @router.get("/regime")
 async def regime_endpoint():
     snap = get_snapshot()
+
+    from src.dashboard import route_cache
+    cache_key = ("regime", snap.portfolio_id, snap.as_of)
+    cached = route_cache.get(cache_key)
+    if cached is not None:
+        return cached
+
     start, end = _default_dates()
     returns_df, _ = build_return_matrix(snap, start, end)
     if returns_df.empty:
@@ -48,7 +55,9 @@ async def regime_endpoint():
         "regime": regime_hist["regime"].tolist(),
         "prob_high_vol": regime_hist["prob_high_vol"].tolist(),
     }
-    return clean_json(rcv)
+    payload = clean_json(rcv)
+    route_cache.put(cache_key, payload)
+    return payload
 
 
 @router.get("/ic")
@@ -361,6 +370,13 @@ async def breach_endpoint():
         ))
 
     snap = get_snapshot()
+
+    from src.dashboard import route_cache
+    cache_key = ("breach", snap.portfolio_id, snap.as_of)
+    cached = route_cache.get(cache_key)
+    if cached is not None:
+        return cached
+
     start, end = _default_dates()
     returns_df, _ = build_return_matrix(snap, start, end)
     if returns_df.empty:
@@ -402,4 +418,6 @@ async def breach_endpoint():
     today_features = feat_df[feature_cols].iloc[-1]
 
     prediction = predict_breach(model, today_features)
-    return dc.asdict(prediction)
+    payload = dc.asdict(prediction)
+    route_cache.put(cache_key, payload)
+    return payload
