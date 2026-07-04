@@ -5,6 +5,7 @@ let _newsLoaded = false;
 let _breachLoaded = false;
 let _eventsLoaded = false;
 let _regimesStudyLoaded = false;
+let _diagLoaded = false;
 
 function showTab(name, btn) {
   document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
@@ -16,6 +17,7 @@ function showTab(name, btn) {
     if (!_newsLoaded)   loadNews();
     if (!_breachLoaded) loadBreach();
     if (!_icLoaded)     loadIC();
+    if (!_diagLoaded)   loadDiagnostics();
   }
   if (name === "spillover") { loadDY(); loadDCC(); loadRollingSpillover(); }
   if (name === "events") {

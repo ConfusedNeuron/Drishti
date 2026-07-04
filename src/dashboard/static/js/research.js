@@ -297,3 +297,102 @@ async function loadWalkForward() {
     spinner.style.display = "none";
   }
 }
+
+
+// ── Model Diagnostics Ladder ───────────────────────────────────────────────
+
+const _DIAG_LABELS = {
+  adf: "Stationarity (ADF)",
+  returns_lb: "Autocorrelation (Ljung-Box)",
+  arch_lm: "ARCH effects (ARCH-LM)",
+};
+
+function _diagTestRow(label, t) {
+  return `
+    <tr>
+      <td>${label}</td>
+      <td style="font-family:'JetBrains Mono',monospace">${t.statistic.toFixed(4)}</td>
+      <td style="font-family:'JetBrains Mono',monospace">${t.p_value.toFixed(4)}</td>
+      <td>${t.conclusion}</td>
+    </tr>`;
+}
+
+function _diagOrderScanTable(orderScan) {
+  const rows = Object.entries(orderScan).map(([model, m]) => {
+    const gamma = (m.gamma !== undefined)
+      ? `${m.gamma.toFixed(4)} (p=${m.gamma_p.toFixed(4)})`
+      : "—";
+    return `
+      <tr>
+        <td style="font-family:'JetBrains Mono',monospace">${model.replace("_", "(") + ")"}</td>
+        <td style="font-family:'JetBrains Mono',monospace">${m.bic.toFixed(2)}</td>
+        <td style="font-family:'JetBrains Mono',monospace">${m.aic.toFixed(2)}</td>
+        <td style="font-family:'JetBrains Mono',monospace">${gamma}</td>
+      </tr>`;
+  }).join("");
+  return `
+    <table>
+      <tr><th>Model</th><th>BIC</th><th>AIC</th><th>Asymmetry γ (GJR only)</th></tr>
+      ${rows}
+    </table>`;
+}
+
+async function loadDiagnostics() {
+  const spin = document.getElementById("diag-spinner");
+  spin.style.display = "block";
+  try {
+    const r = await fetch(window.API + "/api/research/diagnostics");
+    if (!r.ok) {
+      document.getElementById("diag-tables").textContent = "Diagnostics unavailable — cached data required.";
+      return;
+    }
+    const d = await r.json();
+    const u = d.univariate;
+
+    const ladderRows = Object.keys(_DIAG_LABELS)
+      .filter(k => u[k])
+      .map(k => _diagTestRow(_DIAG_LABELS[k], u[k]))
+      .join("");
+
+    const ladderTable = `
+      <h3 style="margin-top:12px">Univariate ladder (portfolio returns)</h3>
+      <table>
+        <tr><th>Test</th><th>Statistic</th><th>p-value</th><th>Conclusion</th></tr>
+        ${ladderRows}
+      </table>`;
+
+    const orderScanBlock = u.order_scan ? `
+      <h3 style="margin-top:12px">GARCH order scan (best BIC wins)</h3>
+      ${_diagOrderScanTable(u.order_scan)}` : "";
+
+    const residRows = (u.std_resid_lb_p !== undefined) ? `
+      <h3 style="margin-top:12px">Standardized residual checks (fitted GARCH)</h3>
+      <table>
+        <tr><th>Check</th><th>p-value</th></tr>
+        <tr>
+          <td>Std. residuals — Ljung-Box(10)</td>
+          <td style="font-family:'JetBrains Mono',monospace">${u.std_resid_lb_p.toFixed(4)}</td>
+        </tr>
+        <tr>
+          <td>Std. residuals² — Ljung-Box(10) (remaining ARCH)</td>
+          <td style="font-family:'JetBrains Mono',monospace">${u.std_resid_sq_lb_p.toFixed(4)}</td>
+        </tr>
+      </table>` : "";
+
+    const m = d.multivariate;
+    const multiTable = m ? `
+      <h3 style="margin-top:12px">Multivariate — constant-correlation test (sector panel)</h3>
+      <table>
+        <tr><th>Test</th><th>Statistic</th><th>p-value</th><th>Conclusion</th></tr>
+        ${_diagTestRow(m.name || "Engle-Sheppard CCC", m)}
+      </table>` : "";
+
+    document.getElementById("diag-tables").innerHTML =
+      ladderTable + orderScanBlock + residRows + multiTable;
+    _diagLoaded = true;
+  } catch (e) {
+    document.getElementById("diag-tables").textContent = "Diagnostics error: " + e;
+  } finally {
+    spin.style.display = "none";
+  }
+}
