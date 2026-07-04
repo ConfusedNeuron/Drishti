@@ -17,7 +17,7 @@ Drishti is a local-first quant risk research platform for Indian equity portfoli
 ### Fix sprint — 2026-07-04 (branch `fix/audit-2026-07-04-sprint`)
 Seven tasks (T1–T7) closing gaps found in the dashboard audit. T1–T6 are code/test fixes; T7 is this documentation pass.
 - ✅ **T1 — Copilot safety without LLM key** — safety filter now runs even with no Anthropic key configured; honest `source` labels (`llm` / `deterministic_memo` / `safety_filter` / `llm_error`) surfaced as a mode badge in the Copilot tab; `anthropic` added to `requirements.txt`.
-- ✅ **T2 — Header badge fix** — now loads from `/api/static-data` on page load (was previously wired to a dead endpoint per Track H's badge fix — root cause was a live-badge CSS class mismatch: `badge-low_vol`/`badge-high_vol` now match the JS-generated class names).
+- ✅ **T2 — Header badge fixes (two independent bugs)** — (1) `/api/static-data` was dead code: Track H built the backend correctly but no JS ever called it; `portfolio.js` now fetches it on page load (`1a78844`). (2) Separately, the already-live badge (fed by `/api/risk/summary` + `/api/research/regime`) had a CSS class-name mismatch — CSS defined `.badge-low`/`.badge-high` while JS generated `badge-low_vol`/`badge-high_vol`; selectors renamed to match (`89115ff`).
 - ✅ **T3 — Diagnostics ladder surfaced** — the `/api/research/diagnostics` route existed with no UI; added a Research-tab panel (`loadDiagnostics`, `_diagLoaded` flag, null-tolerant `_diagNum` renderer) + first test for the route.
 - ✅ **T4 — Route-level TTL cache** — `src/dashboard/route_cache.py`; caches regime + breach endpoints keyed on `(portfolio_id, as_of)` (7.8s/6.5s cold → ~0.004s repeat); TTL only bounds memory, `as_of` reset on every import prevents stale reads.
 - ✅ **T5 — MCP tools accept caller-supplied holdings** — `snapshot_from_rows()` in `src/portfolio/importer.py`; three-tier fallback (caller holdings → dashboard snapshot → sample); `portfolio_source`/`portfolio_id` labels in MCP tool outputs — enables Zerodha Kite MCP interop without going through the dashboard first.
@@ -109,7 +109,7 @@ Executed subagent-driven (validator → implementer → reviewer per task; valid
 - ✅ Diebold-Yilmaz connectedness (VAR + Pesaran-Shin GFEVD)
 - ✅ Time-series IC + Granger causality + BH FDR correction
 - ✅ Deterministic risk memo (no LLM required)
-- ✅ FastAPI backend + Plotly.js dashboard (7 tabs: Portfolio/Overview, Risk, Research, Spillover, Events, Regimes, Copilot)
+- ✅ FastAPI backend + Plotly.js dashboard (7 tabs: Overview, Risk Detail, Factor Research, Spillover, Events, Regimes, Copilot)
 - ✅ 193 unit tests passing
 - ✅ 7 BQuant research notebook specs (`notebooks/01-07.md`)
 - ✅ `lessons.md` — all FRTL/methodology/engineering learnings documented
