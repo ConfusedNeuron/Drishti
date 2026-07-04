@@ -61,6 +61,7 @@ mcp = FastMCP(
 def calculate_portfolio_risk_tool(
     confidence: float = 0.99,
     horizon_days: int = 10,
+    holdings: list[dict] | None = None,
 ) -> dict:
     """
     Compute Value at Risk (historical, parametric, GARCH-FHS), Expected Shortfall,
@@ -72,14 +73,16 @@ def calculate_portfolio_risk_tool(
     Args:
         confidence:   VaR confidence level (default 0.99 = 99%).
         horizon_days: Holding period in trading days (default 10).
+        holdings: optional list of {"symbol","quantity","average_price","last_price"?,"exchange"?}
+            dicts — e.g. as returned by a broker MCP (Zerodha Kite MCP).
     """
-    return calculate_portfolio_risk(confidence=confidence, horizon_days=horizon_days)
+    return calculate_portfolio_risk(confidence=confidence, horizon_days=horizon_days, holdings=holdings)
 
 
 # ── Tool 2 ─────────────────────────────────────────────────────────────────────
 
 @mcp.tool()
-def get_var_backtest_tool(confidence: float = 0.99) -> dict:
+def get_var_backtest_tool(confidence: float = 0.99, holdings: list[dict] | None = None) -> dict:
     """
     Run Kupiec unconditional-coverage and Christoffersen independence backtests
     on a rolling 252-day historical VaR for the current portfolio.
@@ -88,22 +91,28 @@ def get_var_backtest_tool(confidence: float = 0.99) -> dict:
 
     Args:
         confidence: VaR confidence level to backtest (default 0.99).
+        holdings: optional list of {"symbol","quantity","average_price","last_price"?,"exchange"?}
+            dicts — e.g. as returned by a broker MCP (Zerodha Kite MCP).
     """
-    return get_var_backtest(confidence=confidence)
+    return get_var_backtest(confidence=confidence, holdings=holdings)
 
 
 # ── Tool 3 ─────────────────────────────────────────────────────────────────────
 
 @mcp.tool()
-def get_current_regime_tool() -> dict:
+def get_current_regime_tool(holdings: list[dict] | None = None) -> dict:
     """
     Detect the current HMM 2-state volatility regime (low-vol / high-vol) using
     a walk-forward Gaussian HMM fitted on portfolio returns.
 
     Returns: current regime label, posterior probability, consecutive days in regime,
     and regime-conditioned historical VaR for both states.
+
+    Args:
+        holdings: optional list of {"symbol","quantity","average_price","last_price"?,"exchange"?}
+            dicts — e.g. as returned by a broker MCP (Zerodha Kite MCP).
     """
-    return get_current_regime()
+    return get_current_regime(holdings=holdings)
 
 
 # ── Tool 4 ─────────────────────────────────────────────────────────────────────
@@ -133,7 +142,7 @@ def get_factor_signals_tool(
 # ── Tool 5 ─────────────────────────────────────────────────────────────────────
 
 @mcp.tool()
-def run_stress_test_tool(scenario_id: str = "") -> dict:
+def run_stress_test_tool(scenario_id: str = "", holdings: list[dict] | None = None) -> dict:
     """
     Apply historical stress scenarios to the portfolio and report estimated losses.
 
@@ -144,15 +153,17 @@ def run_stress_test_tool(scenario_id: str = "") -> dict:
 
     Args:
         scenario_id: Scenario key (leave empty for all five).
+        holdings: optional list of {"symbol","quantity","average_price","last_price"?,"exchange"?}
+            dicts — e.g. as returned by a broker MCP (Zerodha Kite MCP).
     """
     sid = scenario_id.strip() or None
-    return run_stress_test(scenario_id=sid)
+    return run_stress_test(scenario_id=sid, holdings=holdings)
 
 
 # ── Tool 6 ─────────────────────────────────────────────────────────────────────
 
 @mcp.tool()
-def generate_risk_memo_tool(prompt: str = "") -> dict:
+def generate_risk_memo_tool(prompt: str = "", holdings: list[dict] | None = None) -> dict:
     """
     Generate a deterministic Markdown risk memo aggregating all available analytics:
     VaR, ES, backtest, regime, component contributions, stress scenarios, IC signals,
@@ -162,12 +173,14 @@ def generate_risk_memo_tool(prompt: str = "") -> dict:
 
     Args:
         prompt: Optional natural-language question to check for advisory content.
+        holdings: optional list of {"symbol","quantity","average_price","last_price"?,"exchange"?}
+            dicts — e.g. as returned by a broker MCP (Zerodha Kite MCP).
     """
     if prompt:
         safe = _check_prompt(prompt)
         if safe:
             return {"error": safe}
-    return generate_risk_memo()
+    return generate_risk_memo(holdings=holdings)
 
 
 # ── Entry point ────────────────────────────────────────────────────────────────

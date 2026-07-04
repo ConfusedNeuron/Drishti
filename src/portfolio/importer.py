@@ -135,6 +135,26 @@ def load_zerodha(access_token: str, api_key: str) -> PortfolioSnapshot:
     return _finalize(holdings, "zerodha-live", source="zerodha")
 
 
+def snapshot_from_rows(rows: list[dict], portfolio_id: str = "mcp-adhoc",
+                       source: str = "mcp") -> PortfolioSnapshot:
+    """Build a snapshot from plain dicts — the shape an MCP client passes
+    after fetching holdings from a broker (e.g. Zerodha Kite MCP).
+    Row: {"symbol", "quantity", "average_price", "last_price"?, "exchange"?}."""
+    holdings = []
+    for row in rows:
+        sym = str(row["symbol"]).strip().upper()
+        if not sym:
+            continue
+        qty = float(row["quantity"])
+        avg = float(row["average_price"])
+        last = float(row.get("last_price") or avg)
+        exch = str(row.get("exchange", "NSE")).strip().upper()
+        holdings.append(_make_holding(sym, exch, qty, avg, last))
+    if not holdings:
+        raise ValueError("No valid holdings rows supplied")
+    return _finalize(holdings, portfolio_id, source)
+
+
 def _finalize(holdings: list[Holding], portfolio_id: str, source: str) -> PortfolioSnapshot:
     total_mv = sum(h.market_value for h in holdings)
     for h in holdings:

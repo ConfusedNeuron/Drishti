@@ -31,10 +31,18 @@ def _check_prompt(text: str) -> str | None:
 from src.config import default_dates as _default_dates
 
 
-def _load_portfolio():
-    """Load the current in-memory portfolio snapshot (or sample if none set)."""
-    from src.dashboard.routes.portfolio import get_snapshot
-    return get_snapshot()
+def _load_portfolio(holdings: list[dict] | None = None):
+    """Caller-supplied holdings win; else the dashboard's in-process snapshot;
+    else the bundled sample (MCP runs in its own process — the dashboard's
+    memory is invisible to it)."""
+    from src.portfolio.importer import snapshot_from_rows, load_sample
+    if holdings:
+        return snapshot_from_rows(holdings)
+    try:
+        from src.dashboard.routes.portfolio import get_snapshot
+        return get_snapshot()
+    except Exception:
+        return load_sample()
 
 
 def _load_returns(snap):
@@ -58,14 +66,18 @@ def _load_returns(snap):
 
 # ── Tool implementations ───────────────────────────────────────────────────────
 
-def calculate_portfolio_risk(confidence: float = 0.99, horizon_days: int = 10) -> dict:
+def calculate_portfolio_risk(confidence: float = 0.99, horizon_days: int = 10,
+                              holdings: list[dict] | None = None) -> dict:
     """
     Compute VaR (three methods), ES, component contributions, and drawdown
     for the currently loaded portfolio.
 
     Returns only computed risk metrics — no raw prices or holdings.
+
+    holdings: optional list of {"symbol","quantity","average_price","last_price"?,"exchange"?}
+    dicts — e.g. as returned by a broker MCP (Zerodha Kite MCP).
     """
-    snap = _load_portfolio()
+    snap = _load_portfolio(holdings)
     port_ret, w_arr, common, cov, missing = _load_returns(snap)
 
     from src.risk.var import all_var_methods
@@ -104,12 +116,15 @@ def calculate_portfolio_risk(confidence: float = 0.99, horizon_days: int = 10) -
     }
 
 
-def get_var_backtest(confidence: float = 0.99) -> dict:
+def get_var_backtest(confidence: float = 0.99, holdings: list[dict] | None = None) -> dict:
     """
     Run Kupiec unconditional-coverage and Christoffersen independence backtests
     on the rolling historical VaR for the current portfolio.
+
+    holdings: optional list of {"symbol","quantity","average_price","last_price"?,"exchange"?}
+    dicts — e.g. as returned by a broker MCP (Zerodha Kite MCP).
     """
-    snap = _load_portfolio()
+    snap = _load_portfolio(holdings)
     port_ret, _, _, _, _ = _load_returns(snap)
 
     from src.risk.backtest import run_var_backtest
@@ -142,13 +157,16 @@ def get_var_backtest(confidence: float = 0.99) -> dict:
     }
 
 
-def get_current_regime() -> dict:
+def get_current_regime(holdings: list[dict] | None = None) -> dict:
     """
     Detect the current HMM volatility regime (low-vol / high-vol) via
     walk-forward fitting on the portfolio return series.
     Returns regime label, posterior probability, and regime-conditioned VaR.
+
+    holdings: optional list of {"symbol","quantity","average_price","last_price"?,"exchange"?}
+    dicts — e.g. as returned by a broker MCP (Zerodha Kite MCP).
     """
-    snap = _load_portfolio()
+    snap = _load_portfolio(holdings)
     port_ret, _, _, _, _ = _load_returns(snap)
 
     start, end = _default_dates()
@@ -208,13 +226,16 @@ def get_factor_signals(lags: str = "1,2,3,5,10") -> dict:
     }
 
 
-def run_stress_test(scenario_id: str | None = None) -> dict:
+def run_stress_test(scenario_id: str | None = None, holdings: list[dict] | None = None) -> dict:
     """
     Apply historical stress scenarios to the portfolio.
     If scenario_id is provided, runs that scenario only; otherwise runs all five.
     Returns loss amounts and percentage losses — no raw holdings returned.
+
+    holdings: optional list of {"symbol","quantity","average_price","last_price"?,"exchange"?}
+    dicts — e.g. as returned by a broker MCP (Zerodha Kite MCP).
     """
-    snap = _load_portfolio()
+    snap = _load_portfolio(holdings)
     from src.risk.stress import run_stress_scenario, run_all_scenarios
 
     if scenario_id:
@@ -241,13 +262,16 @@ def run_stress_test(scenario_id: str | None = None) -> dict:
     }
 
 
-def generate_risk_memo() -> dict:
+def generate_risk_memo(holdings: list[dict] | None = None) -> dict:
     """
     Generate a deterministic Markdown risk memo from structured analytics.
     The memo includes VaR, ES, backtest, regime, contributions, stress,
     IC highlights, and spillover. No raw holdings or prices are included.
+
+    holdings: optional list of {"symbol","quantity","average_price","last_price"?,"exchange"?}
+    dicts — e.g. as returned by a broker MCP (Zerodha Kite MCP).
     """
-    snap = _load_portfolio()
+    snap = _load_portfolio(holdings)
     port_ret, w_arr, common, cov, _ = _load_returns(snap)
 
     from src.risk.var import all_var_methods
