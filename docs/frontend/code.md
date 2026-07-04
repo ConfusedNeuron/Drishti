@@ -1,6 +1,6 @@
 # Drishti Frontend Code Guide
 
-Claude reads this file before any frontend work. Updated: 2026-06-09.
+Claude reads this file before any frontend work. Updated: 2026-07-04.
 
 ## Directory Tree (canonical)
 
@@ -9,7 +9,7 @@ src/dashboard/
 ├── app.py                        ← StaticFiles + Jinja2 + /learn route + static_data router
 ├── templates/
 │   ├── base.html                 ← shared header (Learn link + home logo), CSS/JS links, blocks: nav/content/scripts/extra_head/title
-│   ├── index.html                ← extends base; 5 dashboard tab panels + {% block scripts %}
+│   ├── index.html                ← extends base; 7 dashboard tab panels (Portfolio/Overview, Risk, Research, Spillover, Events, Regimes, Copilot) + {% block scripts %}
 │   └── learn.html                ← extends base; 7 static sections with KaTeX
 ├── static/
 │   ├── css/
@@ -23,18 +23,22 @@ src/dashboard/
 │   │   ├── theme.js              ← PRESETS, ACCENTS, applyTheme(), initTheme() called at bottom
 │   │   ├── api.js                ← window.API = "" (only this line)
 │   │   ├── charts.js             ← CL, CONF, COLORS, fmt(), pct()
-│   │   ├── portfolio.js          ← riskData, _regimeLoaded, _icLoaded, showTab, importSample, importCSV, runRisk, renderOverview
+│   │   ├── portfolio.js          ← riskData, _regimeLoaded, _icLoaded, _newsLoaded, _breachLoaded, _eventsLoaded,
+│   │   │                            _regimesStudyLoaded, _diagLoaded, showTab, importSample, importCSV, runRisk, renderOverview
 │   │   ├── risk.js               ← renderRiskDetail, loadDrawdown, loadRegime
-│   │   ├── research.js           ← loadIC
-│   │   ├── spillover.js          ← loadDY, loadDCC
-│   │   ├── copilot.js            ← loadMemo, askCopilot
+│   │   ├── research.js           ← loadIC, loadNews, loadBreach, loadDiagnostics (diagnostics ladder panel)
+│   │   ├── spillover.js          ← loadDY, loadDCC, spillover-tab study/rolling charts
+│   │   ├── events.js             ← Events tab (drawdown episodes, statistical levels)
+│   │   ├── regimes.js            ← Regimes tab (bull/bear classification, HMM overlay)
+│   │   ├── copilot.js            ← loadMemo, askCopilot, mode badge (llm/deterministic_memo/safety_filter/llm_error)
 │   │   └── tooltip.js            ← interactive hover-bridge tooltip (180ms hideTimer); popover stays open
 │   │                                so "Read more →" link is clickable; fetches glossary.json on DOMContentLoaded
 │   └── data/
 │       └── glossary.json         ← tooltip content keyed by string ID; 12 entries
+├── route_cache.py                ← in-process TTL cache wrapping regime + breach endpoints, keyed on (portfolio_id, as_of)
 └── routes/
     ├── portfolio.py, risk.py, research.py, copilot.py
-    └── static_data.py            ← /api/static-data (lru_cached Bloomberg stats)
+    └── static_data.py            ← /api/static-data (loads header badge: regime + connectedness from v2 artifacts)
 ```
 
 ## JS Load Order (base.html — strict, do not reorder)
@@ -43,7 +47,7 @@ src/dashboard/
 2. `/static/js/theme.js` — CSS vars before any render; `initTheme()` runs immediately
 3. `/static/js/api.js` — `window.API` available
 4. `/static/js/charts.js` — `CL`/`CONF`/`COLORS`/`fmt`/`pct` available
-5. `{% block scripts %}` — page-specific JS (index.html loads portfolio.js → copilot.js here)
+5. `{% block scripts %}` — page-specific JS, in this order: `portfolio.js` → `risk.js` → `research.js` → `spillover.js` → `events.js` → `regimes.js` → `copilot.js`
 6. `/static/js/tooltip.js` — attaches on DOMContentLoaded, must be last
 
 ## CSS Load Order (base.html — strict)
@@ -55,13 +59,15 @@ src/dashboard/
 | Symbol | Declared in | Used by |
 |--------|-------------|---------|
 | `window.API` | api.js | all fetch() calls |
-| `riskData`, `_regimeLoaded`, `_icLoaded` | portfolio.js | risk.js, research.js |
-| `CL`, `CONF`, `COLORS`, `fmt`, `pct` | charts.js | portfolio.js, risk.js, spillover.js, research.js |
+| `riskData`, `_regimeLoaded`, `_icLoaded`, `_newsLoaded`, `_breachLoaded`, `_eventsLoaded`, `_regimesStudyLoaded`, `_diagLoaded` | portfolio.js | risk.js, research.js, events.js, regimes.js |
+| `CL`, `CONF`, `COLORS`, `fmt`, `pct` | charts.js | portfolio.js, risk.js, spillover.js, research.js, events.js, regimes.js |
 | `PRESETS`, `ACCENTS`, `_theme` | theme.js | rendered picker |
 | `renderRiskDetail` | risk.js | called from portfolio.js:renderOverview |
-| `loadIC` | research.js | called from portfolio.js:showTab |
+| `loadIC`, `loadNews`, `loadBreach`, `loadDiagnostics` | research.js | called from portfolio.js:showTab |
 | `loadDY`, `loadDCC` | spillover.js | called from portfolio.js:showTab |
 | `loadRegime` | risk.js | called from portfolio.js:showTab |
+| `loadEvents` | events.js | called from portfolio.js:showTab (sets `_eventsLoaded`) |
+| `loadRegimesStudy` | regimes.js | called from portfolio.js:showTab (sets `_regimesStudyLoaded`) |
 
 **Note:** `tooltip.js` is an IIFE with no globals. It uses a module-scoped `hideTimer` to bridge the cursor gap between trigger and popover — do not add `pointer-events:none` to the `#tip-popover` div.
 

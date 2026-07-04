@@ -8,10 +8,22 @@ Drishti is a local-first quant risk research platform for Indian equity portfoli
 
 ---
 
-## Current status (as of 2026-07-02)
+## Current status (as of 2026-07-04)
 
 **Final presentation DELIVERED 2026-06-16 ✅** — market-risk + spillover narrative (see `presentation/`).
-**NEXT FOCUS: dashboard audit & fixes** — reconcile what the dashboard *shows* vs what actually *works*, fix/document features. Not yet started. Read `docs/frontend/code.md` before any frontend work.
+**Dashboard audit: DONE** — `docs/audit-2026-07-04-dashboard.md` (all 25 routes enumerated, endpoint-probed against the real v2 cache; MCP + optional deps inspected). Two v4-direction PRDs drafted alongside it: `design/prd-2026-07-04-current-state.md` (as-built) and `design/prd-2026-07-04-personal-research-platform.md` (proposed personal-research-platform pivot); discussion notes in `design/discussion-2026-07-04-vision-notes.md`.
+**NEXT FOCUS: fix sprint executed** on branch `fix/audit-2026-07-04-sprint` (plan: `docs/superpowers/plans/2026-07-04-fix-sprint.md`, gitignored/local) — see "Fix sprint" below. After this branch merges, next decision point is **which v4 PRD direction to pursue** (see the two PRDs above). Read `docs/frontend/code.md` before any frontend work.
+
+### Fix sprint — 2026-07-04 (branch `fix/audit-2026-07-04-sprint`)
+Seven tasks (T1–T7) closing gaps found in the dashboard audit. T1–T6 are code/test fixes; T7 is this documentation pass.
+- ✅ **T1 — Copilot safety without LLM key** — safety filter now runs even with no Anthropic key configured; honest `source` labels (`llm` / `deterministic_memo` / `safety_filter` / `llm_error`) surfaced as a mode badge in the Copilot tab; `anthropic` added to `requirements.txt`.
+- ✅ **T2 — Header badge fix** — now loads from `/api/static-data` on page load (was previously wired to a dead endpoint per Track H's badge fix — root cause was a live-badge CSS class mismatch: `badge-low_vol`/`badge-high_vol` now match the JS-generated class names).
+- ✅ **T3 — Diagnostics ladder surfaced** — the `/api/research/diagnostics` route existed with no UI; added a Research-tab panel (`loadDiagnostics`, `_diagLoaded` flag, null-tolerant `_diagNum` renderer) + first test for the route.
+- ✅ **T4 — Route-level TTL cache** — `src/dashboard/route_cache.py`; caches regime + breach endpoints keyed on `(portfolio_id, as_of)` (7.8s/6.5s cold → ~0.004s repeat); TTL only bounds memory, `as_of` reset on every import prevents stale reads.
+- ✅ **T5 — MCP tools accept caller-supplied holdings** — `snapshot_from_rows()` in `src/portfolio/importer.py`; three-tier fallback (caller holdings → dashboard snapshot → sample); `portfolio_source`/`portfolio_id` labels in MCP tool outputs — enables Zerodha Kite MCP interop without going through the dashboard first.
+- ✅ **T6 — Yahoo ticker map completed** — `scripts/build_yahoo_map_v2.py` + regenerated `yahoo_tickers.json` equities coverage 48 → 433 (32 hand-curated overrides preserved).
+- ✅ **T7 — This documentation pass** (CLAUDE.md + `docs/frontend/code.md` truth-up).
+- **Test suite: 193 passing** (175 at sprint start + 18 new).
 
 ### Sibling experiment — US S&P 500 pull (outside this repo)
 `../pull_spx_data.py` (in the parent `Financial Risk Management/` folder, NOT in this repo) is a standalone US analogue of `scripts/pull_drishti_v2.py`. **Fully self-contained** — it embeds its own BLPAPI plumbing (the v2 scripts imported it from `pull_drishti_data.py`, which Track H deleted) and writes to its own `../sp500_data/` (gitignore-equivalent: never commit; same Bloomberg licensing). Survivorship-free **S&P 500 + S&P MidCap 400** via `INDX_MWEIGHT_HIST`; prices + constituents from **1990**. Flags: `--validate/--discover/--indices/--commodities/--crypto/--macro/--equities/--ohlc/--sectors/--annual/--retry-failed`. Covers GICS sector sub-indices (S5INFT…), US macro (full Treasury curve, 2s10s, HY/IG credit, VIX/VXN/SKEW/MOVE, ES1), spot gold/silver (XAU/XAG), and crypto (XBTUSD/XETUSD/BGCI, short history). Not wired into the dashboard/notebooks — purely a data-pull script for now.
@@ -26,7 +38,7 @@ Drishti is a local-first quant risk research platform for Indian equity portfoli
 **Track H — v2 Unification + Audit Remediation: COMPLETE ✅** (merged to `main` 2026-06-15)
 
 ### Active branch
-None — all work is on `main`. `fix/v2-unification` (Track H) was merged 2026-06-15 (merge commit `605c729`) and the branch deleted. **Test suite: 175 passing.**
+`fix/audit-2026-07-04-sprint` — the 2026-07-04 fix sprint (T1–T7, see above), not yet merged to `main`. `fix/v2-unification` (Track H) was merged 2026-06-15 (merge commit `605c729`) and the branch deleted. **Test suite: 193 passing** (was 175 before this branch).
 
 ### Track H — v2 unification + audit remediation (2026-06-15)
 Full-repo audit → subagent-driven fixes (sonnet implementers). See `docs/audit-2026-06-15-data-version.md` (findings) + `docs/audit-2026-06-15-fix-plan.md` (plan).
@@ -64,7 +76,7 @@ Executed subagent-driven (validator → implementer → reviewer per task; valid
 - [x] Commit `docs/methodology.html` + `data/cache/research_artifacts_v2/` + `scripts/pull_drishti_v2_fallback.py` — done (all tracked).
 - [x] Merge `feature/v2-expansion` → `main` — done (PR #8); Tracks G + H also merged.
 - [x] Unify data on v2 — `DRISHTI_DATA_VERSION` removed; the app runs with no env var (Track H).
-- [ ] `pip install transformers torch` — optional, only for the FinBERT sentiment panel (~2 GB, one-time).
+- [x] `pip install transformers torch` — installed in `.venv` (verified 2026-07-04); FinBERT sentiment panel dependency satisfied.
 - [ ] `pip install imbalanced-learn` — optional, only if retraining the breach classifier.
 - Note: notebook-execution deps (`seaborn`/`nbconvert`/`nbclient`/`ipykernel`) are in `requirements.txt`; needed only to run notebooks 08–15 live.
 
@@ -97,8 +109,8 @@ Executed subagent-driven (validator → implementer → reviewer per task; valid
 - ✅ Diebold-Yilmaz connectedness (VAR + Pesaran-Shin GFEVD)
 - ✅ Time-series IC + Granger causality + BH FDR correction
 - ✅ Deterministic risk memo (no LLM required)
-- ✅ FastAPI backend + Plotly.js single-page dashboard (5 tabs)
-- ✅ 175 unit tests passing
+- ✅ FastAPI backend + Plotly.js dashboard (7 tabs: Portfolio/Overview, Risk, Research, Spillover, Events, Regimes, Copilot)
+- ✅ 193 unit tests passing
 - ✅ 7 BQuant research notebook specs (`notebooks/01-07.md`)
 - ✅ `lessons.md` — all FRTL/methodology/engineering learnings documented
 - ✅ **Dashboard dark theme redesign** — Playfair Display + DM Sans + JetBrains Mono; deep navy-black bg (#07090E), gold accent (#C9A227); all Plotly charts updated to dark palette
@@ -192,8 +204,10 @@ Walk-forward IC/Granger              →    served via FastAPI
 │   │   └── memo.py                # Deterministic risk memo (no LLM required)
 │   └── dashboard/
 │       ├── app.py                 # FastAPI app entry point
+│       ├── route_cache.py         # In-process TTL cache for expensive research endpoints (regime/breach); keyed on (portfolio_id, as_of)
 │       ├── routes/                # portfolio / risk / research / copilot routes
-│       └── static/index.html      # Single-page Plotly.js dashboard (5 tabs)
+│       ├── templates/             # Jinja2: base.html, index.html (7 tab panels), learn.html — see docs/frontend/code.md
+│       └── static/                # css/ (theme/layout/components/tooltip) + js/ (per-tab files) + data/glossary.json
 ├── risk_mcp/                      # Risk MCP server (named risk_mcp/ to avoid shadowing the mcp PyPI package)
 │   ├── server.py                  # FastMCP server; boot with: python risk_mcp/server.py
 │   └── tools.py                   # 6 tools wrapping src/risk/ + src/research/; word-boundary safety filter
@@ -238,9 +252,9 @@ Walk-forward IC/Granger              →    served via FastAPI
 │       │   └── latest.json          # FinBERT-scored headlines cache (created by POST /api/research/news/refresh)
 │       └── models/
 │           └── breach_classifier.pkl  # Trained XGBoost model (created by scripts/train_breach_classifier.py)
-├── tests/                           # pytest — 175 tests passing
-├── design/                          # PRD, specs, high/low-level design (HTML)
-├── docs/                            # design-choices.md, lessons.md, audit-remediation-plan.md, frontend/code.md, methodology.html
+├── tests/                           # pytest — 193 tests passing
+├── design/                          # PRD, specs, high/low-level design (HTML); prd-2026-07-04-current-state.md (as-built), prd-2026-07-04-personal-research-platform.md (proposed v4 pivot), discussion-2026-07-04-vision-notes.md
+├── docs/                            # design-choices.md, lessons.md, audit-remediation-plan.md, frontend/code.md, methodology.html, audit-2026-07-04-dashboard.md
 ├── presentation/                    # Final FRM deck (delivered 2026-06-16; gitignored — kept local only)
 │   ├── explainer.md                 # Viva/concept Q&A reference (all doubts + exam-ready answers)
 │   ├── figures/slideNN/             # Light-theme matplotlib PNGs per slide (regenerable via .venv python)
@@ -437,6 +451,7 @@ Theme logic is split across `theme.js`, `components.css`, and `layout.css`.
 - **Session 8:** v3 findings notebooks (PR #10) — 9 tested analytics helpers (performance ratios, EWMA, EVT-VaR, range volatility, Markowitz frontier, TAR, Johansen/VECM, Altman, Amihud), notebook execution harness, OHLC pull script, notebooks 08–15 (all run headless + reviewed), notebooks/README coverage matrix. Subagent-driven (validator→implementer→reviewer; validator caught 6 real defects). 163 tests. docs/methodology.html extended to 39 sections; README v3 section. Remaining: OHLC pull at FRTL + merge PR #10.
 - **Session 9:** v2 unification + audit remediation (Track H) — full-repo audit, then **deleted the `DRISHTI_DATA_VERSION` env var** and pinned everything to the v2 source (v1 cache archived to `../drishti_v1_archive/`); **surfaced the orphaned spillover study** (route + Spillover-tab UI); **wired the header badge to v2 artifacts**; fixed the **stress GICS sector-override mapping** (overrides were silently never firing); **normalized Bloomberg BICS→GICS sectors** (no more `Financial` vs `Financials`); **blended large+mid in the combined spillover panel** (was collapsing to large-only); gsec10y/breach-feature-name/statsmodels-deprecation cleanups. Subagent-driven (6 sonnet implementers, disjoint file ownership). Notebooks 08–15 re-verified headless on v2 via `nbconvert`. **175 tests.** Merged to `main` (`605c729`); branch deleted. Audit docs: `docs/audit-2026-06-15-*.md`.
 - **Session 10 (2026-07-02):** US extension spike — built `../pull_spx_data.py` (parent folder, **outside this repo**), a standalone Bloomberg pull mirroring `pull_drishti_v2.py` for the US market. Survivorship-free **S&P 500 + S&P MidCap 400** via `INDX_MWEIGHT_HIST`, prices + constituents from **1990**; embeds its own BLPAPI plumbing (Track H had deleted the shared `pull_drishti_data.py`); writes to its own `../sp500_data/`. Adds OHLC, spot gold/silver (XAU/XAG), crypto (XBTUSD/XETUSD/BGCI), GICS sector sub-indices, and US macro (full Treasury curve, 2s10s, HY/IG credit, VIX/VXN/SKEW/MOVE, ES1). Not wired into the dashboard/notebooks — data-pull only. See "Sibling experiment" note under Current status.
+- **Session 11 (2026-07-04):** Dashboard audit + fix sprint + v4 direction-setting. Wrote two v4 PRDs (`design/prd-2026-07-04-current-state.md` as-built, `design/prd-2026-07-04-personal-research-platform.md` proposed pivot) and discussion notes (`design/discussion-2026-07-04-vision-notes.md`); ran a full dashboard audit — enumerated all 25 routes, endpoint-probed all 19 against the real v2 cache, cross-referenced every `/api/` call in templates/JS, inspected MCP + optional-dep plumbing (`docs/audit-2026-07-04-dashboard.md`). Executed a 7-task fix sprint on `fix/audit-2026-07-04-sprint` (plan: `docs/superpowers/plans/2026-07-04-fix-sprint.md`, gitignored): **T1** copilot safety filter runs without an LLM key + honest source labels (`llm`/`deterministic_memo`/`safety_filter`/`llm_error`) + mode badge; **T2** header badge now loads from `/api/static-data` on page load + live-badge CSS class fix (`badge-low_vol`/`badge-high_vol`); **T3** diagnostics ladder surfaced in the Research tab (route existed, no UI); **T4** `src/dashboard/route_cache.py` TTL cache on regime + breach endpoints (7.8s/6.5s → ~0.004s repeat); **T5** MCP tools accept caller-supplied holdings (`snapshot_from_rows()`, three-tier fallback, portfolio source/id labels) — enables Zerodha Kite MCP interop; **T6** Yahoo ticker map completed 48 → 433 equities (`scripts/build_yahoo_map_v2.py`); **T7** this documentation truth pass. `transformers`/`torch` confirmed installed. **193 tests** (was 175). Branch not yet merged to `main`; next decision is which v4 PRD to pursue.
 
 ---
 
