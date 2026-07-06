@@ -344,6 +344,42 @@ def test_risk_presets_weights_sum_to_one():
 # weight_gap
 # ---------------------------------------------------------------------------
 
+# ---------------------------------------------------------------------------
+# frequency_returns
+# ---------------------------------------------------------------------------
+
+def test_frequency_returns_5y_weekly_length_and_factor():
+    df = _random_daily_frame(n_days=1400, n_assets=4, seed=11)
+    frame, factor = fs.frequency_returns(df, "5y")
+
+    lookback, freq = fs.HORIZONS["5y"]
+    assert freq == "W"
+    assert factor == fs.ANNUALIZE["W"]
+    assert factor == 52
+
+    manual_slice = df.iloc[-lookback:]
+    manual_weekly = fs.to_weekly_frame(manual_slice).dropna()
+    assert len(frame) == len(manual_weekly)
+    assert list(frame.columns) == list(df.columns)
+
+
+def test_frequency_returns_1y_daily_passthrough_and_factor():
+    df = _random_daily_frame(n_days=300, n_assets=4, seed=12)
+    frame, factor = fs.frequency_returns(df, "1y")
+
+    lookback, freq = fs.HORIZONS["1y"]
+    assert freq == "D"
+    assert factor == 252
+
+    assert len(frame) == min(lookback, len(df))
+
+
+def test_frequency_returns_bad_horizon_raises():
+    df = _random_daily_frame(n_days=300, n_assets=4, seed=13)
+    with pytest.raises(ValueError, match="unknown horizon"):
+        fs.frequency_returns(df, "bogus")
+
+
 def test_weight_gap_union_delta_and_sort_order():
     current = {"A": 0.5, "B": 0.3, "C": 0.0005}
     target = {"B": 0.3, "C": 0.0005, "D": 0.2}

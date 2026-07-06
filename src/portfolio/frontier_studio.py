@@ -100,6 +100,28 @@ def estimate_inputs(
     return mu, cov, symbols, meta
 
 
+def frequency_returns(returns_daily: pd.DataFrame, horizon: str) -> tuple[pd.DataFrame, int]:
+    """Slice the last `lookback` daily rows and compound to the horizon's frequency.
+
+    Returns (frequency_frame_dropna, annualization_factor). Pure; no guards (the
+    /compute route already validated the horizon and the surviving columns via
+    estimate_inputs before calling this for the resampled-band step)."""
+    if horizon not in HORIZONS:
+        raise ValueError(f"unknown horizon '{horizon}'; valid: {list(HORIZONS)}")
+
+    lookback, freq = HORIZONS[horizon]
+    sliced = returns_daily.iloc[-lookback:]
+
+    if freq == "D":
+        frame = sliced
+    elif freq == "W":
+        frame = to_weekly_frame(sliced)
+    else:
+        frame = to_monthly(sliced)
+
+    return frame.dropna(), ANNUALIZE[freq]
+
+
 def portfolio_point(
     weights: dict[str, float], symbols: list[str], mu: np.ndarray, cov: np.ndarray
 ) -> dict:

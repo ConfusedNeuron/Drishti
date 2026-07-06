@@ -5,7 +5,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pathlib import Path
 
-from src.dashboard.routes import portfolio, risk, research, copilot
+from src.dashboard.routes import portfolio, risk, research, copilot, frontier
 from src.dashboard.routes import static_data
 
 app = FastAPI(
@@ -25,6 +25,7 @@ app.include_router(portfolio.router, prefix="/api/portfolio", tags=["portfolio"]
 app.include_router(risk.router,      prefix="/api/risk",      tags=["risk"])
 app.include_router(research.router,  prefix="/api/research",  tags=["research"])
 app.include_router(copilot.router,   prefix="/api/copilot",   tags=["copilot"])
+app.include_router(frontier.router,  prefix="/api/frontier",  tags=["frontier"])
 app.include_router(static_data.router, tags=["static"])
 
 _STATIC = Path(__file__).parent / "static"
