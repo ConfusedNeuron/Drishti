@@ -11,6 +11,8 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
+from src.portfolio.frontier import efficient_frontier
+
 HORIZONS: dict[str, tuple[int, str]] = {
     "6m": (126, "D"),
     "1y": (252, "D"),
@@ -119,3 +121,118 @@ def portfolio_point(
     ret = float(w @ mu)
     vol = float(np.sqrt(w @ cov @ w))
     return {"vol": vol, "ret": ret, "coverage": float(coverage)}
+
+
+def _round_weights(weights: np.ndarray, symbols: list[str]) -> dict[str, float]:
+    """Payload weight convention: round to 6dp, drop entries with |w| < 1e-4."""
+    return {
+        symbols[j]: round(float(weights[j]), 6)
+        for j in range(len(symbols))
+        if abs(weights[j]) >= 1e-4
+    }
+
+
+def resampled_band(
+    returns_freq: pd.DataFrame,
+    ret_grid: np.ndarray,
+    rf: float,
+    long_only: bool,
+    factor: int,
+    n_boot: int = 50,
+    seed: int = 42,
+) -> dict:
+    """Estimation-uncertainty band around the frontier via iid row-bootstrap.
+
+    NOTE (deviation from design): the design's parameter list omits an
+    annualization factor, but `returns_freq` here is per-period (not
+    annualized) and the caller-side frequency->factor mapping (252/52/12)
+    cannot be recovered from the frame alone — so `factor` is an added,
+    required parameter (caller passes ANNUALIZE[meta["frequency"]]).
+    """
+    n_boot = min(n_boot, 100)
+    rng = np.random.default_rng(seed)
+    values = returns_freq.values
+    n = len(values)
+
+    rows = []
+    for _ in range(n_boot):
+        idx = rng.integers(0, n, size=n)
+        sample = values[idx]
+
+        mu_b = sample.mean(axis=0) * factor
+        try:
+            from sklearn.covariance import LedoitWolf
+
+            cov_b = LedoitWolf().fit(sample).covariance_ * factor
+        except Exception:
+            cov_b = np.cov(sample, rowvar=False) * factor
+
+        fr = efficient_frontier(mu_b, cov_b, n_points=len(ret_grid), long_only=long_only)
+        risk_row = np.interp(ret_grid, fr["ret"], fr["risk"], left=np.nan, right=np.nan)
+        out_of_range = (ret_grid < fr["ret"].min()) | (ret_grid > fr["ret"].max())
+        risk_row = np.where(out_of_range, np.nan, risk_row)
+        rows.append(risk_row)
+
+    stack = np.vstack(rows)
+    with np.errstate(invalid="ignore"):
+        risk_lo = np.nanpercentile(stack, 10, axis=0)
+        risk_hi = np.nanpercentile(stack, 90, axis=0)
+
+    return {
+        "ret": np.asarray(ret_grid),
+        "risk_lo": risk_lo,
+        "risk_hi": risk_hi,
+        "n_boot": int(n_boot),
+        "note": "iid row bootstrap; ignores return autocorrelation (a documented limitation)",
+    }
+
+
+def risk_presets(frontier: dict, tang_vol: float, symbols: list[str]) -> list[dict]:
+    """Three risk-level anchor points (conservative/balanced/aggressive) located
+    on the frontier by nearest-vol match to 0.6x/1.0x/1.4x tangency vol.
+
+    NOTE (deviation from design): `symbols` is an added required parameter —
+    the design's signature had no way to translate `frontier["weights"]` (bare
+    arrays) into a symbol->weight dict without it.
+    """
+    risk = frontier["risk"]
+    ret = frontier["ret"]
+    weights = frontier["weights"]
+    lo_r, hi_r = float(risk.min()), float(risk.max())
+
+    labels = ["conservative", "balanced", "aggressive"]
+    targets = [min(max(m * tang_vol, lo_r), hi_r) for m in (0.6, 1.0, 1.4)]
+
+    presets = []
+    for label, target in zip(labels, targets):
+        idx = int(np.argmin(np.abs(risk - target)))
+        presets.append({
+            "label": label,
+            "vol": float(risk[idx]),
+            "ret": float(ret[idx]),
+            "weights": _round_weights(weights[idx], symbols),
+        })
+    return presets
+
+
+def weight_gap(current: dict[str, float], target: dict[str, float]) -> list[dict]:
+    """Diagnostic comparison of current vs target weight maps — reports the
+    gap vs the optimizer's point, not a trade recommendation."""
+    symbols = {
+        s for s in set(current) | set(target)
+        if abs(current.get(s, 0.0)) > 0.001 or abs(target.get(s, 0.0)) > 0.001
+    }
+
+    rows = []
+    for s in symbols:
+        c = float(current.get(s, 0.0))
+        t = float(target.get(s, 0.0))
+        rows.append({
+            "symbol": s,
+            "current": round(c, 6),
+            "target": round(t, 6),
+            "delta": round(t - c, 6),
+        })
+
+    rows.sort(key=lambda r: abs(r["delta"]), reverse=True)
+    return rows

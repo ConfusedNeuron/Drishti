@@ -4,6 +4,7 @@ import pandas as pd
 import pytest
 
 from src.portfolio import frontier_studio as fs
+from src.portfolio.frontier import efficient_frontier, tangency
 
 
 def _random_daily_frame(n_days=300, n_assets=4, seed=0, columns=None):
@@ -226,3 +227,143 @@ def test_portfolio_point_empty_intersection():
     result = fs.portfolio_point(weights, symbols, mu, cov)
 
     assert result == {"vol": None, "ret": None, "coverage": 0.0}
+
+
+# ---------------------------------------------------------------------------
+# resampled_band
+# ---------------------------------------------------------------------------
+
+def _band_inputs(seed=0, n_days=150, n_assets=3, n_points=5):
+    """Small daily return frame + a real frontier (for a ret_grid) — kept tiny so
+    the n_boot=250->100 cap test doesn't take forever (each boot iter re-solves
+    a full mini-frontier)."""
+    returns_freq = _random_daily_frame(n_days=n_days, n_assets=n_assets, seed=seed)
+    factor = 252
+    values = returns_freq.values
+    mu = values.mean(axis=0) * factor
+    cov = np.cov(values, rowvar=False) * factor
+    frontier = efficient_frontier(mu, cov, n_points=n_points, long_only=True)
+    return returns_freq, frontier["ret"], factor
+
+
+def test_resampled_band_deterministic_same_seed():
+    returns_freq, ret_grid, factor = _band_inputs()
+
+    band1 = fs.resampled_band(returns_freq, ret_grid, rf=0.0, long_only=True,
+                               factor=factor, n_boot=5, seed=42)
+    band2 = fs.resampled_band(returns_freq, ret_grid, rf=0.0, long_only=True,
+                               factor=factor, n_boot=5, seed=42)
+
+    np.testing.assert_array_equal(band1["risk_lo"], band2["risk_lo"])
+    np.testing.assert_array_equal(band1["risk_hi"], band2["risk_hi"])
+
+
+def test_resampled_band_different_seed_differs():
+    returns_freq, ret_grid, factor = _band_inputs()
+
+    band1 = fs.resampled_band(returns_freq, ret_grid, rf=0.0, long_only=True,
+                               factor=factor, n_boot=5, seed=42)
+    band2 = fs.resampled_band(returns_freq, ret_grid, rf=0.0, long_only=True,
+                               factor=factor, n_boot=5, seed=7)
+
+    lo_diff = not np.allclose(band1["risk_lo"], band2["risk_lo"], equal_nan=True)
+    hi_diff = not np.allclose(band1["risk_hi"], band2["risk_hi"], equal_nan=True)
+    assert lo_diff or hi_diff
+
+
+def test_resampled_band_shapes_and_n_boot_echo():
+    returns_freq, ret_grid, factor = _band_inputs()
+
+    band = fs.resampled_band(returns_freq, ret_grid, rf=0.0, long_only=True,
+                              factor=factor, n_boot=5, seed=1)
+
+    assert len(band["risk_lo"]) == len(ret_grid)
+    assert len(band["risk_hi"]) == len(ret_grid)
+    assert len(band["ret"]) == len(ret_grid)
+    assert band["n_boot"] == 5
+
+
+def test_resampled_band_n_boot_capped_at_100():
+    returns_freq, ret_grid, factor = _band_inputs()
+
+    band = fs.resampled_band(returns_freq, ret_grid, rf=0.0, long_only=True,
+                              factor=factor, n_boot=250, seed=1)
+
+    assert band["n_boot"] == 100
+
+
+def test_resampled_band_lo_le_hi():
+    returns_freq, ret_grid, factor = _band_inputs()
+
+    band = fs.resampled_band(returns_freq, ret_grid, rf=0.0, long_only=True,
+                              factor=factor, n_boot=8, seed=3)
+
+    lo, hi = band["risk_lo"], band["risk_hi"]
+    both_finite = ~np.isnan(lo) & ~np.isnan(hi)
+    assert both_finite.any()
+    assert np.all(lo[both_finite] <= hi[both_finite] + 1e-9)
+
+
+# ---------------------------------------------------------------------------
+# risk_presets
+# ---------------------------------------------------------------------------
+
+def _frontier_and_tangency(seed=0, n_days=250, n_assets=4, n_points=15):
+    df = _random_daily_frame(n_days=n_days, n_assets=n_assets, seed=seed)
+    mu, cov, symbols, meta = fs.estimate_inputs(df, "1y")
+    frontier = efficient_frontier(mu, cov, n_points=n_points, long_only=True)
+    w_tan = tangency(mu, cov, rf=0.0, long_only=True)
+    tang_vol = float(np.sqrt(w_tan @ cov @ w_tan))
+    return frontier, tang_vol, symbols
+
+
+def test_risk_presets_three_in_order_and_clamped():
+    frontier, tang_vol, symbols = _frontier_and_tangency()
+
+    presets = fs.risk_presets(frontier, tang_vol, symbols)
+
+    assert len(presets) == 3
+    assert [p["label"] for p in presets] == ["conservative", "balanced", "aggressive"]
+
+    lo_r, hi_r = float(frontier["risk"].min()), float(frontier["risk"].max())
+    for p in presets:
+        assert lo_r - 1e-9 <= p["vol"] <= hi_r + 1e-9
+
+
+def test_risk_presets_weights_sum_to_one():
+    frontier, tang_vol, symbols = _frontier_and_tangency()
+
+    presets = fs.risk_presets(frontier, tang_vol, symbols)
+
+    for p in presets:
+        total = sum(p["weights"].values())
+        assert total == pytest.approx(1.0, abs=1e-3)
+
+
+# ---------------------------------------------------------------------------
+# weight_gap
+# ---------------------------------------------------------------------------
+
+def test_weight_gap_union_delta_and_sort_order():
+    current = {"A": 0.5, "B": 0.3, "C": 0.0005}
+    target = {"B": 0.3, "C": 0.0005, "D": 0.2}
+
+    rows = fs.weight_gap(current, target)
+
+    symbols_in_rows = {r["symbol"] for r in rows}
+    assert symbols_in_rows == {"A", "B", "D"}  # C excluded — below 0.001 in both
+    assert "C" not in symbols_in_rows
+
+    by_symbol = {r["symbol"]: r for r in rows}
+    assert by_symbol["A"]["current"] == pytest.approx(0.5)
+    assert by_symbol["A"]["target"] == pytest.approx(0.0)
+    assert by_symbol["A"]["delta"] == pytest.approx(-0.5)
+
+    assert by_symbol["D"]["current"] == pytest.approx(0.0)
+    assert by_symbol["D"]["target"] == pytest.approx(0.2)
+    assert by_symbol["D"]["delta"] == pytest.approx(0.2)
+
+    assert by_symbol["B"]["delta"] == pytest.approx(0.0)
+
+    deltas = [abs(r["delta"]) for r in rows]
+    assert deltas == sorted(deltas, reverse=True)
