@@ -1,4 +1,7 @@
 """Tests for src/portfolio/frontier_studio.py — pure-function core (diagnostic only)."""
+import math
+from datetime import date, timedelta
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -403,3 +406,47 @@ def test_weight_gap_union_delta_and_sort_order():
 
     deltas = [abs(r["delta"]) for r in rows]
     assert deltas == sorted(deltas, reverse=True)
+
+
+# ---------------------------------------------------------------------------
+# start_for_horizon
+# ---------------------------------------------------------------------------
+
+def test_start_for_horizon_exact_dates_for_all_horizons():
+    end = date(2026, 7, 6)
+    for h in fs.HORIZONS:
+        lookback, _ = fs.HORIZONS[h]
+        expected = end - timedelta(days=math.ceil(lookback * 1.6))
+        assert fs.start_for_horizon(h, end) == expected
+
+
+def test_start_for_horizon_expected_day_spans():
+    end = date(2026, 7, 6)
+    expected_spans = {
+        "6m": 202,
+        "1y": 404,
+        "5y": 2016,
+        "10y": 4032,
+        "20y": 8064,
+    }
+    for h, span in expected_spans.items():
+        assert fs.start_for_horizon(h, end) == end - timedelta(days=span)
+
+
+def test_start_for_horizon_strict_monotonicity():
+    end = date(2026, 7, 6)
+    order = ["6m", "1y", "5y", "10y", "20y"]
+    starts = [fs.start_for_horizon(h, end) for h in order]
+    for earlier, later in zip(starts, starts[1:]):
+        assert later < earlier  # each longer horizon starts strictly earlier
+
+
+def test_start_for_horizon_bad_horizon_raises_with_valid_keys_listed():
+    end = date(2026, 7, 6)
+    with pytest.raises(ValueError, match="unknown horizon"):
+        fs.start_for_horizon("bogus", end)
+    try:
+        fs.start_for_horizon("bogus", end)
+    except ValueError as e:
+        for key in fs.HORIZONS:
+            assert key in str(e)

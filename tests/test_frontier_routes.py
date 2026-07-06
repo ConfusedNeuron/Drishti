@@ -1,12 +1,18 @@
 """Tests for GET /api/frontier/universe and POST /api/frontier/compute
 (Efficient Frontier Studio route layer). Diagnostic only — not investment advice."""
+import math
+from datetime import timedelta
+
+import pandas as pd
 import pytest
 from fastapi.testclient import TestClient
 
+from src.config import default_dates
 from src.dashboard.app import app
 import src.dashboard.routes.portfolio as pmod
 import src.dashboard.routes.frontier as frontier
 from src.dashboard import route_cache
+from src.portfolio.frontier_studio import HORIZONS
 from src.portfolio.importer import load_sample
 from src.research.universe import load_universe
 
@@ -152,3 +158,48 @@ def test_compute_cache_hit_skips_recompute(monkeypatch):
     assert r1.status_code == 200
     assert r2.status_code == 200
     assert counter["n"] == 1
+
+
+# ---------------------------------------------------------------------------
+# POST /compute — horizon-derived data window (Fable-gate fix)
+# ---------------------------------------------------------------------------
+
+def test_compute_data_window_derived_from_horizon(monkeypatch):
+    """10y/20y horizons must fetch a window that extends well past the 5y-capped
+    default_dates() start; 1y must stay AT LEAST as wide as that default (the route
+    clamps to min(horizon_start, default_start) so a short horizon's narrower
+    window never replaces the safe 5y default — see frontier.py for why: a
+    narrower fetch would starve build_return_matrix's MIN_HISTORY_DAYS filter).
+    Empty-frame fake return makes the route 503 right after build_return_matrix —
+    that's expected and asserted; what matters is the captured (start, end)."""
+    _load_sample_snapshot()
+
+    captured = []
+
+    def fake_build_return_matrix(snap, start, end):
+        captured.append((snap, start, end))
+        return pd.DataFrame(), []
+
+    monkeypatch.setattr(frontier, "build_return_matrix", fake_build_return_matrix)
+
+    r20 = client.post("/api/frontier/compute", json={"horizon": "20y"})
+    r1 = client.post("/api/frontier/compute", json={"horizon": "1y"})
+
+    assert r20.status_code == 503
+    assert r1.status_code == 503
+    assert len(captured) == 2
+
+    _, start_20, end_20 = captured[0]
+    _, start_1, end_1 = captured[1]
+
+    default_start, default_end = default_dates()
+
+    assert end_20 == default_end
+    assert end_1 == default_end
+
+    lookback_20y = HORIZONS["20y"][0]
+    assert start_20 == end_20 - timedelta(days=math.ceil(lookback_20y * 1.6))
+    assert start_20 < default_start
+    # 1y's own horizon-derived start (end - ~404 days) is narrower than the 5y
+    # default, so the clamp keeps the default — start must equal it, not exceed it.
+    assert start_1 == default_start

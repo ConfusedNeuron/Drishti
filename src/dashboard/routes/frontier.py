@@ -21,6 +21,7 @@ from src.portfolio.frontier_studio import (
     portfolio_point,
     resampled_band,
     risk_presets,
+    start_for_horizon,
     weight_gap,
 )
 from src.research.series_io import load_macro_prices
@@ -75,7 +76,17 @@ def _wdict(w_arr: np.ndarray, symbols: list[str]) -> dict[str, float]:
 @router.post("/compute")
 async def compute(body: ComputeBody):
     snap = get_snapshot()
-    start, end = _default_dates()
+    default_start, end = _default_dates()
+    try:
+        horizon_start = start_for_horizon(body.horizon, end)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    # Only ever WIDEN the fetch vs. the 5y default, never narrow it: build_return_matrix's
+    # MIN_HISTORY_DAYS filter (src/risk/returns.py, 756 obs) is applied to whatever window is
+    # fetched, so a horizon-derived window narrower than ~756 calendar days (6m/1y) would zero
+    # out every column outright. estimate_inputs slices the exact trading-day lookback afterwards
+    # regardless of how much extra history is fetched, so over-fetching stays harmless.
+    start = min(horizon_start, default_start)
     daily, missing = build_return_matrix(snap, start, end)
     if daily.empty:
         raise HTTPException(status_code=503, detail="No cached price data for the loaded portfolio.")

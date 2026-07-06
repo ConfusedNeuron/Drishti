@@ -8,6 +8,9 @@ consistent with the diagnostic horizon being examined.
 """
 from __future__ import annotations
 
+import math
+from datetime import date, timedelta
+
 import numpy as np
 import pandas as pd
 
@@ -32,6 +35,17 @@ def to_monthly(returns: pd.DataFrame | pd.Series) -> pd.DataFrame | pd.Series:
 def to_weekly_frame(returns: pd.DataFrame) -> pd.DataFrame:
     """Compound daily simple returns into W-FRI weekly buckets (frame form)."""
     return (1 + returns).resample("W-FRI").prod().dropna() - 1
+
+
+def start_for_horizon(horizon: str, end: date) -> date:
+    """Calendar start date wide enough to cover the horizon's trading-day lookback
+    (×1.6 cushion over the ~1.45 calendar/trading ratio). estimate_inputs slices the
+    exact trading-day window afterwards, so overshooting is harmless."""
+    if horizon not in HORIZONS:
+        raise ValueError(f"unknown horizon '{horizon}'; valid: {list(HORIZONS)}")
+
+    lookback, _ = HORIZONS[horizon]
+    return end - timedelta(days=math.ceil(lookback * 1.6))
 
 
 def estimate_inputs(
