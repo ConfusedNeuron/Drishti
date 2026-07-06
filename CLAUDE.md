@@ -109,7 +109,7 @@ Executed subagent-driven (validator → implementer → reviewer per task; valid
 - ✅ Diebold-Yilmaz connectedness (VAR + Pesaran-Shin GFEVD)
 - ✅ Time-series IC + Granger causality + BH FDR correction
 - ✅ Deterministic risk memo (no LLM required)
-- ✅ FastAPI backend + Plotly.js dashboard (7 tabs: Overview, Risk Detail, Factor Research, Spillover, Events, Regimes, Copilot)
+- ✅ FastAPI backend + Plotly.js dashboard (8 tabs: Overview, Risk Detail, Factor Research, Spillover, Events, Regimes, Frontier, Copilot)
 - ✅ 298 unit tests passing on `feature/v4-f4-spillover-lab` (not yet merged to `main`, which is separately at its own, lower count)
 - ✅ 7 BQuant research notebook specs (`notebooks/01-07.md`)
 - ✅ `lessons.md` — all FRTL/methodology/engineering learnings documented
