@@ -18,7 +18,8 @@ src/dashboard/
 │   │   ├── components.css        ← cards, tables, buttons, badges, callouts, memo, spinners, theme picker,
 │   │   │                            .header-link (Learn pill), .section-sub (panel subtitle), .chart-note (↳ reading note),
 │   │   │                            #theme-btn (labeled "⬡ Theme" flex button), .pill-group/.pill-active (Frontier
-│   │   │                            horizon/point buttons), .chip + .chip .x (Frontier candidate tags, removable)
+│   │   │                            horizon/point buttons), .chip + .chip .x (Frontier candidate tags, removable;
+│   │   │                            reused by Spillover Lab's series chips)
 │   │   └── tooltip.css           ← .tip-icon, .tip-popover styles
 │   ├── js/
 │   │   ├── theme.js              ← PRESETS, ACCENTS, applyTheme(), initTheme() called at bottom
@@ -29,7 +30,9 @@ src/dashboard/
 │   │   │                            connectZerodha, submitZerodhaToken, loadPnl
 │   │   ├── risk.js               ← renderRiskDetail, loadDrawdown, loadRegime
 │   │   ├── research.js           ← loadIC, loadNews, loadBreach, loadDiagnostics (diagnostics ladder panel)
-│   │   ├── spillover.js          ← loadDY, loadDCC, spillover-tab study/rolling charts
+│   │   ├── spillover.js          ← loadDY, loadDCC, spillover-tab study/rolling charts; Spillover Lab section
+│   │   │                            (loadSpilloverCatalog, onLabCategoryChange, addLabSeries, removeLabSeries,
+│   │   │                            renderLabChips, runSpilloverLab, renderLabResults, showLabError/hideLabError)
 │   │   ├── events.js             ← Events tab (drawdown episodes, statistical levels)
 │   │   ├── regimes.js            ← Regimes tab (bull/bear classification, HMM overlay)
 │   │   ├── frontier.js           ← Frontier tab (horizon-matched efficient frontier, bootstrap band, tangency/CML, weight-gap diagnostic)
@@ -62,12 +65,15 @@ src/dashboard/
 | Symbol | Declared in | Used by |
 |--------|-------------|---------|
 | `window.API` | api.js | all fetch() calls |
-| `riskData`, `_regimeLoaded`, `_icLoaded`, `_newsLoaded`, `_breachLoaded`, `_eventsLoaded`, `_regimesStudyLoaded`, `_diagLoaded`, `_frontierUniverseLoaded` | portfolio.js | risk.js, research.js, events.js, regimes.js, frontier.js |
+| `riskData`, `_regimeLoaded`, `_icLoaded`, `_newsLoaded`, `_breachLoaded`, `_eventsLoaded`, `_regimesStudyLoaded`, `_diagLoaded`, `_frontierUniverseLoaded`, `_spilloverLabLoaded` | portfolio.js | risk.js, research.js, events.js, regimes.js, frontier.js, spillover.js |
 | `CL`, `CONF`, `COLORS`, `fmt`, `pct` | charts.js | portfolio.js, risk.js, spillover.js, research.js, events.js, regimes.js, frontier.js |
 | `PRESETS`, `ACCENTS`, `_theme` | theme.js | rendered picker |
 | `renderRiskDetail` | risk.js | called from portfolio.js:renderOverview |
 | `loadIC`, `loadNews`, `loadBreach`, `loadDiagnostics` | research.js | called from portfolio.js:showTab |
 | `loadDY`, `loadDCC` | spillover.js | called from portfolio.js:showTab |
+| `loadSpilloverCatalog` | spillover.js | called from portfolio.js:showTab (sets `_spilloverLabLoaded`, synchronously — see note below) |
+| `onLabCategoryChange`, `addLabSeries`, `removeLabSeries`, `runSpilloverLab` | spillover.js | called from inline `onclick`/`onchange` in index.html (Spillover Lab category select, Add button, chip ✕, Run button) |
+| `renderLabChips`, `renderLabResults`, `showLabError`, `hideLabError` | spillover.js | internal — called from the above and from `runSpilloverLab()`'s success/error paths |
 | `loadRegime` | risk.js | called from portfolio.js:showTab |
 | `loadEvents` | events.js | called from portfolio.js:showTab (sets `_eventsLoaded`) |
 | `loadRegimesStudy` | regimes.js | called from portfolio.js:showTab (sets `_regimesStudyLoaded`) |
@@ -75,7 +81,9 @@ src/dashboard/
 | `frontierData`, `loadFrontierUniverse`, `runFrontier`, `selectFrontierHorizon`, `selectFrontierPoint`, `addFrontierCandidate`/`removeFrontierCandidate` | frontier.js | `loadFrontierUniverse` called from portfolio.js:showTab (sets `_frontierUniverseLoaded`, see note below); the rest called from inline `onclick` in index.html (horizon pills, Run button, point-selector buttons, candidate add/remove) |
 | `renderFrontierChart`, `renderFrontierGap` | frontier.js | internal — called from `runFrontier()`'s success path only |
 
-**Note:** unlike every other `_xLoaded` flag (set inside the async success path — see `portfolio.js` header comment), `_frontierUniverseLoaded` is set **synchronously** in `showTab()` before `loadFrontierUniverse()` even resolves. This is deliberate: a failed universe fetch shows an inline note in `#frontier-meta` instead of leaving the flag `false`, which would otherwise retry-fetch (and re-fail) every time the user re-clicks the Frontier tab.
+**Note:** unlike every other `_xLoaded` flag (set inside the async success path — see `portfolio.js` header comment), `_frontierUniverseLoaded` is set **synchronously** in `showTab()` before `loadFrontierUniverse()` even resolves. This is deliberate: a failed universe fetch shows an inline note in `#frontier-meta` instead of leaving the flag `false`, which would otherwise retry-fetch (and re-fail) every time the user re-clicks the Frontier tab. `_spilloverLabLoaded` follows the same synchronous pattern for the same reason (failed catalog fetch → inline `#lab-error`, not a retry loop).
+
+**Note:** Spillover Lab (`#spillover-lab` `.section` in the Spillover tab) is a portfolio-independent, user-driven Diebold-Yilmaz computation on any 3–12 series picked from `GET /api/research/spillover/catalog` (equities/indices/commodities/macro/sector composites), run via `POST /api/research/spillover/custom`. It is additive to, and does not modify, the existing precomputed spillover study/routes (`loadDY`/`loadDCC`, `/api/research/spillover`, `/spillover/rolling`, `/spillover/study`).
 
 **Note:** `tooltip.js` is an IIFE with no globals. It uses a module-scoped `hideTimer` to bridge the cursor gap between trigger and popover — do not add `pointer-events:none` to the `#tip-popover` div.
 
