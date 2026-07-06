@@ -6,6 +6,7 @@ let _breachLoaded = false;
 let _eventsLoaded = false;
 let _regimesStudyLoaded = false;
 let _diagLoaded = false;
+let _frontierUniverseLoaded = false;
 
 function showTab(name, btn) {
   document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
@@ -29,6 +30,12 @@ function showTab(name, btn) {
   if (name === "risk") {
     if (riskData) renderRiskDetail(riskData);
     if (!_regimeLoaded) loadRegime();
+  }
+  if (name === "frontier") {
+    // Set synchronously (not in the async success path like other _xLoaded flags) —
+    // a failed universe fetch shows an inline note in #frontier-meta and must not
+    // retry-loop every time the user re-clicks the Frontier tab.
+    if (!_frontierUniverseLoaded) { _frontierUniverseLoaded = true; loadFrontierUniverse(); }
   }
 }
 

@@ -323,6 +323,39 @@ button.btn{
 }
 .header-link:hover{color:var(--primary);border-color:var(--primary)}
 
+/* ── PILL GROUP (Frontier horizon / optimizer-point selectors) */
+.pill-group{display:flex;gap:8px;flex-wrap:wrap}
+.pill-group button{
+  padding:6px 14px;
+  border-radius:999px;
+  border:1px solid var(--line-2);
+  background:var(--surface-2);
+  color:var(--ink-2);
+  font-family:'JetBrains Mono',monospace;
+  font-size:11.5px;
+  cursor:pointer;
+  transition:.15s;
+}
+.pill-group button:hover{border-color:var(--primary)}
+.pill-group button.pill-active{border-color:var(--primary);color:var(--primary)}
+
+/* ── CHIPS (Frontier candidate symbols) */
+.chip{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  background:var(--surface-2);
+  border:1px solid var(--line);
+  border-radius:999px;
+  padding:4px 10px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:11.5px;
+  color:var(--ink-2);
+  margin:2px 4px 2px 0;
+}
+.chip .x{cursor:pointer;color:var(--muted)}
+.chip .x:hover{color:var(--danger)}
+
 /* ── SECTION SUBTITLE + CHART READING NOTE */
 .section-sub{
   font-size:12px;
