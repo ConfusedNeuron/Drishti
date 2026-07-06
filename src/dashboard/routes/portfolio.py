@@ -6,6 +6,7 @@ from src.portfolio.importer import load_sample, load_csv, load_zerodha
 from src.models import PortfolioSnapshot
 from src.config import settings
 from src.portfolio import kite_auth
+from src.dashboard.json_safe import clean_json
 import dataclasses, json
 
 router = APIRouter()
@@ -110,3 +111,46 @@ def get_snapshot() -> PortfolioSnapshot:
     if _current_snapshot is None:
         raise HTTPException(status_code=400, detail="No portfolio loaded.")
     return _current_snapshot
+
+
+@router.get("/pnl")
+async def get_pnl():
+    """Per-holding unrealized P&L (invested vs current market value). Educational/diagnostic only."""
+    snap = get_snapshot()
+
+    rows = []
+    for h in snap.holdings:
+        invested = h.quantity * h.average_price
+        pnl = h.market_value - invested
+        pnl_pct = pnl / invested if invested != 0 else None
+        rows.append({
+            "symbol": h.symbol,
+            "sector": h.sector,
+            "quantity": h.quantity,
+            "average_price": h.average_price,
+            "last_price": h.last_price,
+            "invested": invested,
+            "market_value": h.market_value,
+            "pnl": pnl,
+            "pnl_pct": pnl_pct,
+            "weight": h.weight,
+        })
+
+    rows.sort(key=lambda r: r["market_value"], reverse=True)
+
+    total_invested = sum(r["invested"] for r in rows)
+    total_market_value = sum(r["market_value"] for r in rows)
+    total_pnl = total_market_value - total_invested
+    total_pnl_pct = total_pnl / total_invested if total_invested != 0 else None
+
+    return clean_json({
+        "rows": rows,
+        "totals": {
+            "invested": total_invested,
+            "market_value": total_market_value,
+            "pnl": total_pnl,
+            "pnl_pct": total_pnl_pct,
+        },
+        "source": snap.source,
+        "as_of": snap.as_of,
+    })
