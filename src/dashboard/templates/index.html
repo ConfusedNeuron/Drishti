@@ -23,6 +23,15 @@
       Upload CSV <input type="file" accept=".csv" style="display:none" onchange="importCSV(this)">
     </label>
     <button class="btn btn-outline" onclick="runRisk()" id="run-btn" disabled>Run Risk Analysis</button>
+    <button class="btn btn-outline" onclick="connectZerodha()">⚡ Connect Zerodha</button>
+  </div>
+
+  <div id="zerodha-manual" style="display:none;margin-top:10px">
+    <p class="section-sub" id="zerodha-manual-hint" style="margin:0 0 6px 0"></p>
+    <input id="zerodha-token-input" type="text" placeholder="Paste request_token"
+           style="padding:8px;background:var(--surface-2);border:1px solid var(--line);
+                  border-radius:6px;color:var(--ink);min-width:280px">
+    <button class="btn btn-outline" onclick="submitZerodhaToken()">Submit token</button>
   </div>
 
   <div class="grid-4" id="kpi-row">
@@ -30,6 +39,28 @@
     <div class="card"><h3><span data-tip="var-historical">Historical VaR 99% <i class="tip-icon">ⓘ</i></span></h3><div class="big" id="kpi-var">—</div><div class="sub">10-day, empirical</div></div>
     <div class="card"><h3><span data-tip="expected-shortfall">Expected Shortfall <i class="tip-icon">ⓘ</i></span></h3><div class="big" id="kpi-es">—</div><div class="sub">Tail beyond VaR</div></div>
     <div class="card"><h3><span data-tip="backtest">VaR Backtest <i class="tip-icon">ⓘ</i></span></h3><div class="big" id="kpi-bt">—</div><div class="sub" id="kpi-bt-sub">Kupiec + Christoffersen</div></div>
+  </div>
+
+  <div class="section" id="pnl-panel" style="display:none;margin-top:16px">
+    <h2>Holdings P&amp;L</h2>
+    <p class="section-sub">Unrealized P&amp;L per holding — last price is from the local data
+      cache (≤1 trading day stale), not a live quote.</p>
+    <div style="overflow-x:auto">
+      <table id="pnl-table">
+        <thead><tr>
+          <th>Symbol</th><th>Sector</th><th style="text-align:right">Qty</th>
+          <th style="text-align:right">Avg</th><th style="text-align:right">Last</th>
+          <th style="text-align:right">Invested</th><th style="text-align:right">Mkt Value</th>
+          <th style="text-align:right">P&amp;L</th><th style="text-align:right">P&amp;L %</th>
+          <th style="text-align:right">Weight</th>
+        </tr></thead>
+        <tbody id="pnl-tbody"></tbody>
+        <tfoot id="pnl-tfoot"></tfoot>
+      </table>
+    </div>
+    <p class="chart-note">↳ How to read: green rows are trading above your average cost, red
+      below. "Invested" is quantity × average price; P&amp;L is a diagnostic mark-to-cache figure,
+      not a realized or live-quote value.</p>
   </div>
 
   <div class="grid-2" style="margin-top:16px">

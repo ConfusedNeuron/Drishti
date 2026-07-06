@@ -37,6 +37,7 @@ async function importSample() {
   if (!r.ok) { alert("Sample import failed: " + (await r.text())); return; }
   document.getElementById("kpi-source").textContent = "Sample portfolio loaded";
   document.getElementById("run-btn").disabled = false;
+  loadPnl();
 }
 
 async function importCSV(input) {
@@ -46,6 +47,79 @@ async function importCSV(input) {
   if (!r.ok) { alert("CSV import failed: " + (await r.text())); return; }
   document.getElementById("kpi-source").textContent = "CSV portfolio loaded";
   document.getElementById("run-btn").disabled = false;
+  loadPnl();
+}
+
+async function connectZerodha() {
+  const r = await fetch(window.API + "/api/portfolio/zerodha/login");
+  if (!r.ok) {
+    let msg = "Zerodha login unavailable.";
+    try { msg = (await r.json()).detail || msg; } catch (e) {}
+    alert(msg);
+    return;
+  }
+  const d = await r.json();
+  window.open(d.login_url, "_blank");
+  const row = document.getElementById("zerodha-manual");
+  document.getElementById("zerodha-manual-hint").textContent =
+    "If the Kite app's redirect URL points back here you'll return automatically. " +
+    "Otherwise copy the request_token from the redirected URL and paste it below.";
+  row.style.display = "block";
+}
+
+async function submitZerodhaToken() {
+  const tok = document.getElementById("zerodha-token-input").value.trim();
+  if (!tok) { alert("Paste the request_token first."); return; }
+  const r = await fetch(window.API + "/api/portfolio/zerodha/token", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ request_token: tok }),
+  });
+  if (!r.ok) {
+    let msg = "Token exchange failed.";
+    try { msg = (await r.json()).detail || msg; } catch (e) {}
+    alert(msg);
+    return;
+  }
+  const snap = await r.json();
+  const n = (snap.holdings || []).length;
+  document.getElementById("kpi-source").textContent = "Zerodha (" + n + " holdings)";
+  document.getElementById("run-btn").disabled = false;
+  document.getElementById("zerodha-manual").style.display = "none";
+  loadPnl();
+}
+
+async function loadPnl() {
+  const r = await fetch(window.API + "/api/portfolio/pnl");
+  if (!r.ok) return;
+  const d = await r.json();
+  const tbody = document.getElementById("pnl-tbody");
+  const tfoot = document.getElementById("pnl-tfoot");
+  tbody.innerHTML = (d.rows || []).map(row => {
+    const cls = row.pnl >= 0 ? "ok" : "danger";
+    const pnlPct = row.pnl_pct == null ? "—" : pct(row.pnl_pct);
+    return `<tr>
+      <td>${row.symbol}</td><td>${row.sector || "—"}</td>
+      <td style="text-align:right">${fmt(row.quantity)}</td>
+      <td style="text-align:right">₹${fmt(row.average_price, 2)}</td>
+      <td style="text-align:right">₹${fmt(row.last_price, 2)}</td>
+      <td style="text-align:right">₹${fmt(row.invested)}</td>
+      <td style="text-align:right">₹${fmt(row.market_value)}</td>
+      <td style="text-align:right;color:var(--${cls})">₹${fmt(row.pnl)}</td>
+      <td style="text-align:right;color:var(--${cls})">${pnlPct}</td>
+      <td style="text-align:right">${pct(row.weight)}</td>
+    </tr>`;
+  }).join("");
+  const t = d.totals || {};
+  const tcls = (t.pnl || 0) >= 0 ? "ok" : "danger";
+  const tPct = t.pnl_pct == null ? "—" : pct(t.pnl_pct);
+  tfoot.innerHTML = `<tr style="font-weight:600;border-top:1px solid var(--line-2)">
+    <td>Total</td><td></td><td></td><td></td><td></td>
+    <td style="text-align:right">₹${fmt(t.invested)}</td>
+    <td style="text-align:right">₹${fmt(t.market_value)}</td>
+    <td style="text-align:right;color:var(--${tcls})">₹${fmt(t.pnl)}</td>
+    <td style="text-align:right;color:var(--${tcls})">${tPct}</td>
+    <td></td></tr>`;
+  document.getElementById("pnl-panel").style.display = "block";
 }
 
 async function runRisk() {
@@ -127,3 +201,21 @@ async function initHeaderBadge() {
   } catch (e) { /* badge is decorative — stay silent */ }
 }
 document.addEventListener("DOMContentLoaded", initHeaderBadge);
+
+document.addEventListener("DOMContentLoaded", () => {
+  const params = new URLSearchParams(location.search);
+  const z = params.get("zerodha");
+  if (z === "connected") {
+    fetch(window.API + "/api/portfolio/current").then(r => r.ok ? r.json() : null).then(snap => {
+      if (!snap) return;
+      const n = (snap.holdings || []).length;
+      document.getElementById("kpi-source").textContent = "Zerodha (" + n + " holdings)";
+      document.getElementById("run-btn").disabled = false;
+      loadPnl();
+    });
+    history.replaceState({}, "", location.pathname);
+  } else if (z === "error") {
+    alert("Zerodha connection failed: " + (params.get("reason") || "unknown error"));
+    history.replaceState({}, "", location.pathname);
+  }
+});
