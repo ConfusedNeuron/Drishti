@@ -38,3 +38,22 @@ def test_frontier_script_load_order():
     idx_frontier = text.index("frontier.js")
     idx_copilot = text.index("copilot.js")
     assert idx_regimes < idx_frontier < idx_copilot
+
+
+def test_compute_payload_matches_renderer_contract():
+    """Pins the JS<->payload contract consumed by renderFrontierChart/renderFrontierGap
+    (Task 5, frontier.js). Backend (Task 1-4) already implements this — this test is
+    not RED/GREEN on behavior, it is a contract pin against regressions in the payload
+    shape the frontend renderers depend on."""
+    client.post("/api/portfolio/import/sample?sample_id=nifty-demo-2026")
+    r = client.post("/api/frontier/compute", json={"horizon": "1y"})
+    assert r.status_code == 200
+    d = r.json()
+
+    assert isinstance(d["frontier"]["risk"], list)
+    assert isinstance(d["band"]["risk_lo"], list)
+    assert "rf" in d["cml"]
+    assert d["presets"][0]["vol"] is not None
+    assert d["selected"]["kind"] in ("tangency", "minvar", "target_vol")
+    assert isinstance(d["gap"], list)
+    assert "coverage" in d["current"]

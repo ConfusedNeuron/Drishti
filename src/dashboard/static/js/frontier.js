@@ -106,8 +106,7 @@ async function runFrontier(point) {
 }
 
 function selectFrontierPoint(btn) {
-  document.querySelectorAll("#frontier-point-btns button").forEach(b => b.classList.remove("pill-active"));
-  btn.classList.add("pill-active");
+  syncPointButtons(btn.dataset.point);
 
   const kind = btn.dataset.point;
   let mapped = kind;
@@ -119,8 +118,164 @@ function selectFrontierPoint(btn) {
   runFrontier(mapped);
 }
 
-// Task 5 renders the Plotly frontier/CML/current-position chart here
-function renderFrontierChart(d) {}
+// Click handler is bound once because the #frontier-chart div persists across
+// Plotly.newPlot() re-renders (newPlot reuses the existing DOM node) — binding
+// on every render would stack duplicate "plotly_click" listeners.
+let _frontierClickBound = false;
 
-// Task 5 renders the weight-gap table here
-function renderFrontierGap(d) {}
+function syncPointButtons(kindOrLabel) {
+  document.querySelectorAll("#frontier-point-btns button").forEach(b => {
+    b.classList.toggle("pill-active", b.dataset.point === kindOrLabel);
+  });
+}
+
+function renderFrontierChart(d) {
+  const bandLo = {
+    type: "scatter", mode: "lines",
+    x: d.band.risk_lo, y: d.band.ret,
+    line: { width: 0 }, hoverinfo: "skip", showlegend: false, name: "band-lo",
+  };
+  const bandHi = {
+    type: "scatter", mode: "lines",
+    x: d.band.risk_hi, y: d.band.ret,
+    line: { width: 0 }, fill: "tonextx", fillcolor: "rgba(125,133,144,0.18)",
+    name: "Bootstrap band (P10–P90)",
+    hovertemplate: "vol %{x:.1%} · ret %{y:.1%}<extra>band</extra>",
+  };
+  const frontierLine = {
+    type: "scatter", mode: "lines",
+    x: d.frontier.risk, y: d.frontier.ret,
+    line: { color: COLORS.gold, width: 2.2 },
+    name: "Efficient frontier",
+    hovertemplate: "vol %{x:.1%} · ret %{y:.1%}<extra>frontier</extra>",
+  };
+
+  const xMax = 1.2 * Math.max(...d.frontier.risk);
+  const slope = (d.cml.ret - d.cml.rf) / d.cml.vol;
+  const cml = {
+    type: "scatter", mode: "lines",
+    x: [0, xMax], y: [d.cml.rf, d.cml.rf + slope * xMax],
+    line: { color: COLORS.muted, width: 1.4, dash: "dash" },
+    name: "CML", hoverinfo: "skip",
+  };
+
+  const presetDots = {
+    type: "scatter", mode: "markers+text",
+    x: d.presets.map(p => p.vol), y: d.presets.map(p => p.ret),
+    text: d.presets.map(p => p.label), textposition: "top center",
+    textfont: { size: 9, color: COLORS.muted },
+    marker: { size: 7, color: COLORS.palette[4] },
+    customdata: d.presets.map(p => p.label),
+    name: "Presets",
+    hovertemplate: "%{customdata}<br>vol %{x:.1%} · ret %{y:.1%}<extra></extra>",
+  };
+
+  const minvarStar = {
+    type: "scatter", mode: "markers",
+    x: [d.minvar.vol], y: [d.minvar.ret],
+    marker: { symbol: "star", size: 12, color: COLORS.palette[1] },
+    name: "Min-variance",
+    hovertemplate: "vol %{x:.1%} · ret %{y:.1%}<extra>min-variance</extra>",
+  };
+
+  const tangSharpe = (d.tangency.sharpe != null) ? d.tangency.sharpe.toFixed(2) : "n/a";
+  const tangencyStar = {
+    type: "scatter", mode: "markers",
+    x: [d.tangency.vol], y: [d.tangency.ret],
+    marker: { symbol: "star", size: 14, color: COLORS.ok },
+    name: "Tangency (max Sharpe)",
+    hovertemplate: `vol %{x:.1%} · ret %{y:.1%} · Sharpe ${tangSharpe}<extra>tangency</extra>`,
+  };
+
+  const traces = [bandLo, bandHi, frontierLine, cml, presetDots, minvarStar, tangencyStar];
+
+  if (d.current.vol != null) {
+    const cov = (d.current.coverage != null) ? (d.current.coverage * 100).toFixed(0) : "n/a";
+    traces.push({
+      type: "scatter", mode: "markers",
+      x: [d.current.vol], y: [d.current.ret],
+      marker: { symbol: "diamond", size: 12, color: COLORS.teal, line: { width: 1, color: COLORS.teal } },
+      name: "Current portfolio",
+      hovertemplate: `vol %{x:.1%} · ret %{y:.1%} · coverage ${cov}%<extra>current</extra>`,
+    });
+  }
+
+  Plotly.newPlot("frontier-chart", traces, {
+    ...CL,
+    margin: { t: 10, b: 60, l: 64, r: 16 },
+    xaxis: { ...CL.xaxis, title: { text: "Volatility (ann.)", font: { size: 10 } }, tickformat: ".0%", rangemode: "tozero" },
+    yaxis: { ...CL.yaxis, title: { text: "Expected return (ann.)", font: { size: 10 } }, tickformat: ".0%" },
+    legend: { orientation: "h", y: -0.22, font: { size: 10 } },
+    hovermode: "closest",
+  }, CONF);
+
+  const el = document.getElementById("frontier-chart");
+  if (!_frontierClickBound) {
+    _frontierClickBound = true;
+    el.on("plotly_click", (ev) => {
+      const pt = ev.points[0];
+      const name = pt.data.name;
+      if (name === "Tangency (max Sharpe)") {
+        syncPointButtons("tangency");
+        runFrontier("tangency");
+      } else if (name === "Min-variance") {
+        syncPointButtons("minvar");
+        runFrontier("minvar");
+      } else if (name === "Efficient frontier" || name === "Presets") {
+        const label = pt.customdata;
+        if (name === "Presets" && label) {
+          syncPointButtons(label);
+        } else {
+          syncPointButtons(null); // target_vol has no dedicated button — clear actives
+        }
+        runFrontier(pt.x);
+      }
+      // band/CML/current: ignored
+    });
+  }
+}
+
+function esc(s) {
+  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+function renderFrontierGap(d) {
+  const tableEl = document.getElementById("frontier-gap-table");
+  const noteEl = document.getElementById("frontier-coverage-note");
+
+  if (!d.gap || !d.gap.length) {
+    tableEl.innerHTML = `<p class="chart-note">No weight differences above the 0.1% display threshold.</p>`;
+  } else {
+    const rows = d.gap.map(g => {
+      const deltaPP = g.delta * 100;
+      let color = "var(--muted)";
+      if (Math.abs(g.delta) >= 0.0005) {
+        color = deltaPP > 0 ? "var(--ok)" : "var(--danger)";
+      }
+      const sign = deltaPP > 0 ? "+" : "";
+      return `<tr>
+        <td>${esc(g.symbol)}</td>
+        <td>${(g.current * 100).toFixed(2)}%</td>
+        <td>${(g.target * 100).toFixed(2)}%</td>
+        <td style="color:${color}">${sign}${deltaPP.toFixed(2)} pp</td>
+      </tr>`;
+    }).join("");
+
+    tableEl.innerHTML = `
+      <table class="data-table">
+        <thead><tr><th>Symbol</th><th>Current %</th><th>Target %</th><th>Delta (pp)</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <p class="chart-note">${d.gap.length} symbols · selected point: ${esc(d.selected.kind)}</p>
+    `;
+  }
+
+  if (d.current.coverage != null && d.current.coverage < 0.999) {
+    const cov = (d.current.coverage * 100).toFixed(0);
+    noteEl.textContent = `Note: only ${cov}% of current portfolio weight is covered by the estimation ` +
+      `universe; the current-portfolio marker and gap table are computed on the covered subset.`;
+    noteEl.style.display = "block";
+  } else {
+    noteEl.style.display = "none";
+  }
+}
