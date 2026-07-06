@@ -1,6 +1,6 @@
 # Drishti Frontend Code Guide
 
-Claude reads this file before any frontend work. Updated: 2026-07-04.
+Claude reads this file before any frontend work. Updated: 2026-07-06.
 
 ## Directory Tree (canonical)
 
@@ -9,7 +9,7 @@ src/dashboard/
 ├── app.py                        ← StaticFiles + Jinja2 + /learn route + static_data router
 ├── templates/
 │   ├── base.html                 ← shared header (Learn link + home logo), CSS/JS links, blocks: nav/content/scripts/extra_head/title
-│   ├── index.html                ← extends base; 7 dashboard tab panels (Portfolio/Overview, Risk, Research, Spillover, Events, Regimes, Copilot) + {% block scripts %}
+│   ├── index.html                ← extends base; 8 dashboard tab panels (Portfolio/Overview, Risk, Research, Spillover, Events, Regimes, Frontier, Copilot) + {% block scripts %}
 │   └── learn.html                ← extends base; 7 static sections with KaTeX
 ├── static/
 │   ├── css/
@@ -17,7 +17,8 @@ src/dashboard/
 │   │   ├── layout.css            ← body, header, nav, grid, .page, @media + learn prose
 │   │   ├── components.css        ← cards, tables, buttons, badges, callouts, memo, spinners, theme picker,
 │   │   │                            .header-link (Learn pill), .section-sub (panel subtitle), .chart-note (↳ reading note),
-│   │   │                            #theme-btn (labeled "⬡ Theme" flex button)
+│   │   │                            #theme-btn (labeled "⬡ Theme" flex button), .pill-group/.pill-active (Frontier
+│   │   │                            horizon/point buttons), .chip + .chip .x (Frontier candidate tags, removable)
 │   │   └── tooltip.css           ← .tip-icon, .tip-popover styles
 │   ├── js/
 │   │   ├── theme.js              ← PRESETS, ACCENTS, applyTheme(), initTheme() called at bottom
@@ -31,6 +32,7 @@ src/dashboard/
 │   │   ├── spillover.js          ← loadDY, loadDCC, spillover-tab study/rolling charts
 │   │   ├── events.js             ← Events tab (drawdown episodes, statistical levels)
 │   │   ├── regimes.js            ← Regimes tab (bull/bear classification, HMM overlay)
+│   │   ├── frontier.js           ← Frontier tab (horizon-matched efficient frontier, bootstrap band, tangency/CML, weight-gap diagnostic)
 │   │   ├── copilot.js            ← loadMemo, askCopilot, mode badge (llm/deterministic_memo/safety_filter/llm_error)
 │   │   └── tooltip.js            ← interactive hover-bridge tooltip (180ms hideTimer); popover stays open
 │   │                                so "Read more →" link is clickable; fetches glossary.json on DOMContentLoaded
@@ -48,7 +50,7 @@ src/dashboard/
 2. `/static/js/theme.js` — CSS vars before any render; `initTheme()` runs immediately
 3. `/static/js/api.js` — `window.API` available
 4. `/static/js/charts.js` — `CL`/`CONF`/`COLORS`/`fmt`/`pct` available
-5. `{% block scripts %}` — page-specific JS, in this order: `portfolio.js` → `risk.js` → `research.js` → `spillover.js` → `events.js` → `regimes.js` → `copilot.js`
+5. `{% block scripts %}` — page-specific JS, in this order: `portfolio.js` → `risk.js` → `research.js` → `spillover.js` → `events.js` → `regimes.js` → `frontier.js` → `copilot.js`
 6. `/static/js/tooltip.js` — attaches on DOMContentLoaded, must be last
 
 ## CSS Load Order (base.html — strict)
@@ -60,8 +62,8 @@ src/dashboard/
 | Symbol | Declared in | Used by |
 |--------|-------------|---------|
 | `window.API` | api.js | all fetch() calls |
-| `riskData`, `_regimeLoaded`, `_icLoaded`, `_newsLoaded`, `_breachLoaded`, `_eventsLoaded`, `_regimesStudyLoaded`, `_diagLoaded` | portfolio.js | risk.js, research.js, events.js, regimes.js |
-| `CL`, `CONF`, `COLORS`, `fmt`, `pct` | charts.js | portfolio.js, risk.js, spillover.js, research.js, events.js, regimes.js |
+| `riskData`, `_regimeLoaded`, `_icLoaded`, `_newsLoaded`, `_breachLoaded`, `_eventsLoaded`, `_regimesStudyLoaded`, `_diagLoaded`, `_frontierUniverseLoaded` | portfolio.js | risk.js, research.js, events.js, regimes.js, frontier.js |
+| `CL`, `CONF`, `COLORS`, `fmt`, `pct` | charts.js | portfolio.js, risk.js, spillover.js, research.js, events.js, regimes.js, frontier.js |
 | `PRESETS`, `ACCENTS`, `_theme` | theme.js | rendered picker |
 | `renderRiskDetail` | risk.js | called from portfolio.js:renderOverview |
 | `loadIC`, `loadNews`, `loadBreach`, `loadDiagnostics` | research.js | called from portfolio.js:showTab |
@@ -70,6 +72,10 @@ src/dashboard/
 | `loadEvents` | events.js | called from portfolio.js:showTab (sets `_eventsLoaded`) |
 | `loadRegimesStudy` | regimes.js | called from portfolio.js:showTab (sets `_regimesStudyLoaded`) |
 | `connectZerodha`, `submitZerodhaToken`, `loadPnl` | portfolio.js | called from inline `onclick` in index.html (⚡ Connect Zerodha button, manual-token submit) and internally — `loadPnl()` also runs after `importSample()`/`importCSV()`; no new globals introduced |
+| `frontierData`, `loadFrontierUniverse`, `runFrontier`, `selectFrontierHorizon`, `selectFrontierPoint`, `addFrontierCandidate`/`removeFrontierCandidate` | frontier.js | `loadFrontierUniverse` called from portfolio.js:showTab (sets `_frontierUniverseLoaded`, see note below); the rest called from inline `onclick` in index.html (horizon pills, Run button, point-selector buttons, candidate add/remove) |
+| `renderFrontierChart`, `renderFrontierGap` | frontier.js | internal — called from `runFrontier()`'s success path only |
+
+**Note:** unlike every other `_xLoaded` flag (set inside the async success path — see `portfolio.js` header comment), `_frontierUniverseLoaded` is set **synchronously** in `showTab()` before `loadFrontierUniverse()` even resolves. This is deliberate: a failed universe fetch shows an inline note in `#frontier-meta` instead of leaving the flag `false`, which would otherwise retry-fetch (and re-fail) every time the user re-clicks the Frontier tab.
 
 **Note:** `tooltip.js` is an IIFE with no globals. It uses a module-scoped `hideTimer` to bridge the cursor gap between trigger and popover — do not add `pointer-events:none` to the `#tip-popover` div.
 
