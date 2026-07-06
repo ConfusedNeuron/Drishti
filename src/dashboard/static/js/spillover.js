@@ -301,20 +301,24 @@ function renderLabResults(d) {
     yaxis: { ...CL.yaxis, autorange: "reversed" },
   }, CONF);
 
-  // Pairwise heatmap — d.pairwise is a dict-of-dicts, outer keys = rows, inner = cols.
-  const rows = Object.keys(d.pairwise);
-  const cols = rows.length ? Object.keys(d.pairwise[rows[0]]) : [];
-  const z = rows.map(row => cols.map(col => d.pairwise[row][col]));
+  // Pairwise heatmap. d.pairwise comes from pandas DataFrame.to_dict() (default
+  // orient), so OUTER keys = source markets (j), INNER keys = receiving markets
+  // (i); d.pairwise[source][receiver] = share of the receiver's forecast-error
+  // variance attributable to shocks in the source. Canonical DY layout: y-axis =
+  // receiver, x-axis = source, so a cell reads "receiver ← source".
+  const sources = Object.keys(d.pairwise);
+  const receivers = sources.length ? Object.keys(d.pairwise[sources[0]]) : [];
+  const z = receivers.map(rcv => sources.map(src => d.pairwise[src][rcv]));
   Plotly.newPlot("lab-heatmap", [{
     type: "heatmap",
-    z, x: cols, y: rows,
+    z, x: sources, y: receivers,
     colorscale: "YlOrRd",
     hovertemplate: "%{y} ← %{x}<br>%{z:.1f}%<extra></extra>",
   }], {
     ...CL,
     margin: { t: 10, b: 90, l: 110, r: 16 },
-    xaxis: { ...CL.xaxis, tickfont: { size: 9 } },
-    yaxis: { ...CL.yaxis, tickfont: { size: 9 } },
+    xaxis: { ...CL.xaxis, title: { text: "Shock source", font: { size: 10 } }, tickfont: { size: 9 } },
+    yaxis: { ...CL.yaxis, title: { text: "Receiver", font: { size: 10 } }, tickfont: { size: 9 } },
   }, CONF);
 
   // Rolling connectedness — only when the backend returned it (data long enough).
