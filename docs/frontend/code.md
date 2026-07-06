@@ -24,7 +24,8 @@ src/dashboard/
 │   │   ├── api.js                ← window.API = "" (only this line)
 │   │   ├── charts.js             ← CL, CONF, COLORS, fmt(), pct()
 │   │   ├── portfolio.js          ← riskData, _regimeLoaded, _icLoaded, _newsLoaded, _breachLoaded, _eventsLoaded,
-│   │   │                            _regimesStudyLoaded, _diagLoaded, showTab, importSample, importCSV, runRisk, renderOverview
+│   │   │                            _regimesStudyLoaded, _diagLoaded, showTab, importSample, importCSV, runRisk, renderOverview,
+│   │   │                            connectZerodha, submitZerodhaToken, loadPnl
 │   │   ├── risk.js               ← renderRiskDetail, loadDrawdown, loadRegime
 │   │   ├── research.js           ← loadIC, loadNews, loadBreach, loadDiagnostics (diagnostics ladder panel)
 │   │   ├── spillover.js          ← loadDY, loadDCC, spillover-tab study/rolling charts
@@ -68,8 +69,11 @@ src/dashboard/
 | `loadRegime` | risk.js | called from portfolio.js:showTab |
 | `loadEvents` | events.js | called from portfolio.js:showTab (sets `_eventsLoaded`) |
 | `loadRegimesStudy` | regimes.js | called from portfolio.js:showTab (sets `_regimesStudyLoaded`) |
+| `connectZerodha`, `submitZerodhaToken`, `loadPnl` | portfolio.js | called from inline `onclick` in index.html (⚡ Connect Zerodha button, manual-token submit) and internally — `loadPnl()` also runs after `importSample()`/`importCSV()`; no new globals introduced |
 
 **Note:** `tooltip.js` is an IIFE with no globals. It uses a module-scoped `hideTimer` to bridge the cursor gap between trigger and popover — do not add `pointer-events:none` to the `#tip-popover` div.
+
+**Note:** the Holdings P&L panel (`#pnl-panel`) lives in the Overview tab, hidden until populated — `loadPnl()` fetches `GET /api/portfolio/pnl` and fills it after any import (sample, CSV, or Zerodha).
 
 ## How to Add a New Dashboard Tab
 
