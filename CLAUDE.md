@@ -8,11 +8,11 @@ Drishti is a local-first quant risk research platform for Indian equity portfoli
 
 ---
 
-## Current status (as of 2026-07-04)
+## Current status (as of 2026-07-07)
 
-**Final presentation DELIVERED 2026-06-16 ✅** — market-risk + spillover narrative (see `presentation/`).
-**Dashboard audit: DONE** — `docs/audit-2026-07-04-dashboard.md` (all 25 routes enumerated, endpoint-probed against the real v2 cache; MCP + optional deps inspected). Two v4-direction PRDs drafted alongside it: `design/prd-2026-07-04-current-state.md` (as-built) and `design/prd-2026-07-04-personal-research-platform.md` (proposed personal-research-platform pivot); discussion notes in `design/discussion-2026-07-04-vision-notes.md`.
-**NEXT FOCUS: fix sprint executed** on branch `fix/audit-2026-07-04-sprint` (plan: `docs/superpowers/plans/2026-07-04-fix-sprint.md`, gitignored/local) — see "Fix sprint" below. After this branch merges, next decision point is **which v4 PRD direction to pursue** (see the two PRDs above). Read `docs/frontend/code.md` before any frontend work.
+**READ FIRST: `docs/status-2026-07-07-handoff.md`** — the full handoff: PR merge order, pre-merge manual checks, Zerodha setup steps, deferred items, v5 candidates, process notes.
+**Final presentation DELIVERED 2026-06-16 ✅** — market-risk + spillover narrative (see `presentation/`, gitignored).
+**Dashboard audit DONE** (`docs/audit-2026-07-04-dashboard.md`) → **fix sprint DONE** (PR #12) → **v4 wave 1 DONE 2026-07-06**: F1 Zerodha sync + P&L (PR #13), F2 Efficient Frontier Studio (PR #14), F4 Spillover Lab (PR #15) — a stacked PR chain #12→#13→#14→#15 awaiting merges in that order; top of stack has **298 tests passing**. v4 PRDs: `design/prd-2026-07-04-*.md`; feature design docs: `docs/superpowers/specs/2026-07-06-f{1,2,4}-*-design.md`. **NEXT: merge the chain, 5-min browser eyeball (Frontier tab + Spillover Lab), then pick v5 scope** (F3 watchlist / F5 horizon report / regime-conditioned frontier — see handoff §6). Read `docs/frontend/code.md` before any frontend work.
 
 ### Fix sprint — 2026-07-04 (branch `fix/audit-2026-07-04-sprint`)
 Seven tasks (T1–T7) closing gaps found in the dashboard audit. T1–T6 are code/test fixes; T7 is this documentation pass.
