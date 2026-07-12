@@ -48,7 +48,7 @@ Legend: ✅ done · ⚠️ partial · ⊘ out-of-scope for a buy-side equity too
 | Wk | Topic | Status | Where |
 |----|-------|--------|-------|
 | 1 | Log/simple returns, variance, covariance, diversification | ✅ | 08, 09, 10 |
-| 1 | Mean-variance efficient frontier | ✅ | 11 |
+| 1 | Mean-variance efficient frontier | ✅ | 11 (now interactive in the dashboard Frontier tab) |
 | 1 | Market / size / value factors | ⚠️ | data present; factor portfolios later |
 | 2 | VaR concept | ✅ | 13 |
 | 2 | RAROC, economic capital, Basel | ⊘ | bank capital adequacy |

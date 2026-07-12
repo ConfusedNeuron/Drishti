@@ -9,6 +9,7 @@
   <button onclick="showTab('spillover',this)">Spillover</button>
   <button onclick="showTab('events',this)">Events</button>
   <button onclick="showTab('regimes',this)">Regimes</button>
+  <button onclick="showTab('frontier', this)">Frontier</button>
   <button onclick="showTab('copilot',this)">Copilot</button>
 </nav>
 {% endblock %}
@@ -310,6 +311,71 @@
   <p class="chart-note">↳ How to read: spikes near 100% = HMM classifies high market stress. Compare with the timeline above to see how statistical and rule-based regimes align.</p>
 </div>
 
+<!-- ── FRONTIER ───────────────────────────────────────────────────────────── -->
+<div id="tab-frontier" class="tab-panel">
+  <div class="section" id="frontier-controls">
+    <h2>Efficient Frontier Studio</h2>
+    <p class="section-sub">Markowitz mean-variance analysis of the loaded portfolio across horizons.
+      Estimation uses horizon-matched return frequencies with Ledoit-Wolf covariance shrinkage.
+      Educational/diagnostic only.</p>
+
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+      <div class="pill-group" id="frontier-horizons">
+        <button data-horizon="6m" onclick="selectFrontierHorizon(this)">6m · daily</button>
+        <button class="pill-active" data-horizon="1y" onclick="selectFrontierHorizon(this)">1y · daily</button>
+        <button data-horizon="5y" onclick="selectFrontierHorizon(this)">5y · weekly</button>
+        <button data-horizon="10y" onclick="selectFrontierHorizon(this)">10y · monthly</button>
+        <button data-horizon="20y" onclick="selectFrontierHorizon(this)">20y · monthly</button>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px">
+      <label><input type="checkbox" id="frontier-longonly" checked> Long-only</label>
+
+      <input id="frontier-cand-input" list="frontier-universe-dl" placeholder="Add candidate symbol…"
+             style="padding:8px;background:var(--surface-2);border:1px solid var(--line);
+                    border-radius:6px;color:var(--ink)">
+      <datalist id="frontier-universe-dl"></datalist>
+      <button class="btn btn-outline" onclick="addFrontierCandidate()">Add</button>
+
+      <button class="btn btn-primary" id="frontier-run" onclick="runFrontier()">Run analysis</button>
+    </div>
+
+    <div id="frontier-chips" style="margin-top:10px"></div>
+
+    <p id="frontier-meta" class="chart-note"></p>
+    <p id="frontier-error" style="color:var(--danger);display:none"></p>
+  </div>
+
+  <div class="section" id="frontier-chart-section" style="display:none;margin-top:16px">
+    <h2>Frontier, CML &amp; Portfolio Position</h2>
+    <p class="section-sub">Efficient frontier with a bootstrap estimation-uncertainty band, the Capital
+      Market Line through the tangency portfolio, and the current portfolio's position.</p>
+    <div class="spinner" id="frontier-spinner" style="display:none">Computing frontier</div>
+    <div class="chart-wrap"><div id="frontier-chart" style="height:380px"></div></div>
+    <p class="chart-note">↳ How to read: the shaded band shows 10th–90th percentile frontier risk
+      across bootstrap re-estimations — a wide band means the frontier location is statistically
+      uncertain. The diamond is the loaded portfolio; its distance from the frontier is an
+      estimation-based diagnostic, not a call to action.</p>
+  </div>
+
+  <div class="section" id="frontier-gap-section" style="display:none;margin-top:16px">
+    <h2>Weight Gap vs Selected Optimizer Point</h2>
+    <p class="section-sub">Weight gap vs selected optimizer point — a diagnostic comparison, not a trade
+      recommendation.</p>
+    <div class="pill-group" id="frontier-point-btns">
+      <button class="pill-active" data-point="tangency" onclick="selectFrontierPoint(this)">Tangency</button>
+      <button data-point="minvar" onclick="selectFrontierPoint(this)">Min-Var</button>
+      <button data-point="conservative" onclick="selectFrontierPoint(this)">Conservative</button>
+      <button data-point="balanced" onclick="selectFrontierPoint(this)">Balanced</button>
+      <button data-point="aggressive" onclick="selectFrontierPoint(this)">Aggressive</button>
+    </div>
+    <div id="frontier-gap-table" style="margin-top:12px"></div>
+    <p id="frontier-coverage-note" class="chart-note" style="display:none"></p>
+    <p class="chart-note">For educational risk analytics only. Not investment advice.</p>
+  </div>
+</div>
+
 <!-- ── COPILOT ────────────────────────────────────────────────────────────── -->
 <div id="tab-copilot" class="tab-panel">
   <div class="section">
@@ -339,5 +405,6 @@
 <script src="/static/js/spillover.js"></script>
 <script src="/static/js/events.js"></script>
 <script src="/static/js/regimes.js"></script>
+<script src="/static/js/frontier.js"></script>
 <script src="/static/js/copilot.js"></script>
 {% endblock %}
