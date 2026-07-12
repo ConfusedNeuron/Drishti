@@ -145,6 +145,7 @@ Executed subagent-driven (validator → implementer → reviewer per task; valid
 - ✅ **v2 Bloomberg data imported** — 433 equities (229 NSE100 + 204 NSEMD150), 29 indices, 15 commodities, 4 macro; date range ~2006–2026-06-12
 - ✅ **v2 research artifacts built** — data/cache/research_artifacts_v2/: spillover_study.json, events_study.json, regime_study.json (built via build_*.py scripts)
 - ✅ **docs/methodology.html** — comprehensive 30-section mathematical reference; all VaR methods, ES, backtests, GARCH, HMM, DCC/ADCC, Diebold-Yilmaz, IC, Granger, BH, walk-forward, XGBoost, FinBERT; MathJax equations; dark-themed HTML matching dashboard
+- ✅ **Zerodha one-click sync + P&L** — `src/portfolio/kite_auth.py` (daily Kite login: `login_url` → callback token-exchange → same-date token cache at `data/cache/zerodha/`, gitignored, never logged); `/api/portfolio/zerodha/login|callback|token` + optional-param `import/zerodha` (explicit → cached → settings); `GET /pnl` per-holding unrealized mark-to-cache P&L. Frontend: Connect-Zerodha button + manual-token paste row + Holdings P&L panel (Overview tab); FREE Kite Connect Personal API (holdings only — prices come from the local cache by design; public/Render demo degrades to sample/CSV when keys are absent). Educational/diagnostic only.
 
 ### What's left to build
 
@@ -180,7 +181,8 @@ Walk-forward IC/Granger              →    served via FastAPI
 │   │   ├── client.py              # BLPAPI session + BDH/BDP; falls back to cache
 │   │   └── tickers.py             # Zerodha symbol → Bloomberg ticker mapping
 │   ├── portfolio/
-│   │   └── importer.py            # Load from sample JSON / CSV / Zerodha Kite API
+│   │   ├── importer.py            # Load from sample JSON / CSV / Zerodha Kite API
+│   │   └── kite_auth.py           # Kite Connect daily-login token helpers (login_url/exchange_token/save_token/load_cached_token)
 │   ├── risk/
 │   │   ├── returns.py             # Return matrix builder + factor/sector series loaders
 │   │   ├── var.py                 # Historical (non-overlapping), Parametric, GARCH-FHS VaR

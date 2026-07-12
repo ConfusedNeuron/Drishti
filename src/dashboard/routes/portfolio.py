@@ -1,7 +1,12 @@
-from fastapi import APIRouter, HTTPException, UploadFile, File
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, HTTPException, UploadFile, File, Body
+from fastapi.responses import JSONResponse, RedirectResponse
+from pydantic import BaseModel
+from urllib.parse import quote
 from src.portfolio.importer import load_sample, load_csv, load_zerodha
 from src.models import PortfolioSnapshot
+from src.config import settings
+from src.portfolio import kite_auth
+from src.dashboard.json_safe import clean_json
 import dataclasses, json
 
 router = APIRouter()
@@ -36,11 +41,60 @@ async def import_csv(file: UploadFile = File(...)):
 
 
 @router.post("/import/zerodha")
-async def import_zerodha(api_key: str, access_token: str):
+async def import_zerodha(api_key: str | None = None, access_token: str | None = None):
+    global _current_snapshot
+    resolved_token = access_token or kite_auth.load_cached_token() or settings.zerodha_access_token
+    resolved_key = api_key or settings.zerodha_api_key
+    if not resolved_token:
+        raise HTTPException(
+            status_code=400,
+            detail="No Zerodha access token available. Connect via the login flow or set ZERODHA_ACCESS_TOKEN in .env.",
+        )
+    try:
+        _current_snapshot = load_zerodha(resolved_token, resolved_key)
+        return _snap_to_dict(_current_snapshot)
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=str(e))
+
+
+class ZerodhaTokenBody(BaseModel):
+    request_token: str
+
+
+@router.get("/zerodha/login")
+async def zerodha_login():
+    if not settings.zerodha_api_key or not settings.zerodha_api_secret:
+        raise HTTPException(status_code=400, detail="ZERODHA_API_KEY / ZERODHA_API_SECRET not set in .env")
+    return {"login_url": kite_auth.login_url(settings.zerodha_api_key)}
+
+
+@router.get("/zerodha/callback")
+async def zerodha_callback(request_token: str, status: str = ""):
     global _current_snapshot
     try:
-        _current_snapshot = load_zerodha(access_token, api_key)
-        return _snap_to_dict(_current_snapshot)
+        if not settings.zerodha_api_key or not settings.zerodha_api_secret:
+            raise RuntimeError("ZERODHA_API_KEY / ZERODHA_API_SECRET not set in .env")
+        token = kite_auth.exchange_token(settings.zerodha_api_key, settings.zerodha_api_secret, request_token)
+        kite_auth.save_token(token, cache_dir=kite_auth.TOKEN_DIR)  # re-read TOKEN_DIR at call time (tests monkeypatch it)
+        snap = load_zerodha(token, settings.zerodha_api_key)
+        _current_snapshot = snap
+        return RedirectResponse(url="/?zerodha=connected", status_code=303)
+    except Exception as e:
+        reason = str(e)[:200]  # never let token material reach the redirect URL
+        return RedirectResponse(url=f"/?zerodha=error&reason={quote(reason)}", status_code=303)
+
+
+@router.post("/zerodha/token")
+async def zerodha_token(body: ZerodhaTokenBody):
+    global _current_snapshot
+    if not settings.zerodha_api_key or not settings.zerodha_api_secret:
+        raise HTTPException(status_code=400, detail="ZERODHA_API_KEY / ZERODHA_API_SECRET not set in .env")
+    try:
+        token = kite_auth.exchange_token(settings.zerodha_api_key, settings.zerodha_api_secret, body.request_token)
+        kite_auth.save_token(token, cache_dir=kite_auth.TOKEN_DIR)  # re-read TOKEN_DIR at call time (tests monkeypatch it)
+        snap = load_zerodha(token, settings.zerodha_api_key)
+        _current_snapshot = snap
+        return _snap_to_dict(snap)
     except Exception as e:
         raise HTTPException(status_code=502, detail=str(e))
 
@@ -57,3 +111,46 @@ def get_snapshot() -> PortfolioSnapshot:
     if _current_snapshot is None:
         raise HTTPException(status_code=400, detail="No portfolio loaded.")
     return _current_snapshot
+
+
+@router.get("/pnl")
+async def get_pnl():
+    """Per-holding unrealized P&L (invested vs current market value). Educational/diagnostic only."""
+    snap = get_snapshot()
+
+    rows = []
+    for h in snap.holdings:
+        invested = h.quantity * h.average_price
+        pnl = h.market_value - invested
+        pnl_pct = pnl / invested if invested != 0 else None
+        rows.append({
+            "symbol": h.symbol,
+            "sector": h.sector,
+            "quantity": h.quantity,
+            "average_price": h.average_price,
+            "last_price": h.last_price,
+            "invested": invested,
+            "market_value": h.market_value,
+            "pnl": pnl,
+            "pnl_pct": pnl_pct,
+            "weight": h.weight,
+        })
+
+    rows.sort(key=lambda r: r["market_value"], reverse=True)
+
+    total_invested = sum(r["invested"] for r in rows)
+    total_market_value = sum(r["market_value"] for r in rows)
+    total_pnl = total_market_value - total_invested
+    total_pnl_pct = total_pnl / total_invested if total_invested != 0 else None
+
+    return clean_json({
+        "rows": rows,
+        "totals": {
+            "invested": total_invested,
+            "market_value": total_market_value,
+            "pnl": total_pnl,
+            "pnl_pct": total_pnl_pct,
+        },
+        "source": snap.source,
+        "as_of": snap.as_of,
+    })
