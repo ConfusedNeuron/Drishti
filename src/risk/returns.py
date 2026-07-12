@@ -65,7 +65,7 @@ def build_return_matrix(
     # Align: forward-fill small gaps (max 3 trading days), then drop any remaining NaN rows
     price_df = price_df.ffill(limit=3).dropna()
 
-    returns_df = price_df.pct_change().dropna()
+    returns_df = price_df.pct_change(fill_method=None).dropna()
     return returns_df, missing
 
 
@@ -116,7 +116,7 @@ def load_factor_series(
     df.index = pd.to_datetime(df.index)
     df = df.sort_index().ffill(limit=3).dropna()
 
-    ret = df.pct_change()
+    ret = df.pct_change(fill_method=None)
     if "gsec10y" in df.columns:
         # 10y G-sec is a yield: use level changes (bps move), not percentage returns.
         ret["gsec10y"] = df["gsec10y"].diff()
@@ -146,4 +146,4 @@ def load_sector_returns(
     df = pd.DataFrame(series_dict)
     df.index = pd.to_datetime(df.index)
     df = df.sort_index().ffill(limit=3).dropna()
-    return df.pct_change().dropna()
+    return df.pct_change(fill_method=None).dropna()

@@ -129,7 +129,7 @@ def resolve_series(series_ids: list[str], start, end) -> pd.DataFrame:
         if px is None or px.empty or ticker not in px.columns:
             unknown.append(sid)
             continue
-        columns[ticker] = px[ticker].pct_change().loc[start:end]
+        columns[ticker] = px[ticker].ffill().pct_change(fill_method=None).loc[start:end]
 
     for sid in cmd_ids:
         ticker = sid[len("cmd:"):]
@@ -137,7 +137,7 @@ def resolve_series(series_ids: list[str], start, end) -> pd.DataFrame:
         if px is None or px.empty or ticker not in px.columns:
             unknown.append(sid)
             continue
-        columns[ticker] = px[ticker].pct_change().loc[start:end]
+        columns[ticker] = px[ticker].ffill().pct_change(fill_method=None).loc[start:end]
 
     for sid in mac_ids:
         ticker = sid[len("mac:"):]
@@ -146,7 +146,7 @@ def resolve_series(series_ids: list[str], start, end) -> pd.DataFrame:
             unknown.append(sid)
             continue
         level = px[ticker]
-        ret = level.diff() if ticker in _YIELD_MACRO else level.pct_change()
+        ret = level.diff() if ticker in _YIELD_MACRO else level.ffill().pct_change(fill_method=None)
         columns[ticker] = ret.loc[start:end]
 
     if sec_ids:
