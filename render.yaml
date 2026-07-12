@@ -3,7 +3,10 @@ services:
     name: drishti
     runtime: python
     rootDir: .
-    buildCommand: pip install -r requirements.txt
+    # Real Bloomberg parquets are gitignored, so generate the synthetic cache at
+    # build time — otherwise the deployed demo boots with no data and risk analysis
+    # fails. PYTHONPATH is set inline because envVars apply at runtime, not build.
+    buildCommand: pip install -r requirements.txt && PYTHONPATH=. python scripts/generate_synthetic_cache.py
     startCommand: uvicorn src.dashboard.app:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: FRED_API_KEY
