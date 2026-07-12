@@ -248,6 +248,66 @@
       negative = net receiver. Width reflects how asymmetric a sector's role is in the Indian equity risk network.
       Educational/diagnostic only — not investment advice.</p>
   </div>
+
+  <div class="section" id="spillover-lab" style="margin-top:16px">
+    <h2>Spillover Lab — Build Your Own Connectedness</h2>
+    <p class="section-sub">Pick 3–12 series and measure how much of each one's forecast-error variance comes from
+      shocks to the others (Diebold-Yilmaz, generalized FEVD — order-invariant).</p>
+
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+      <select id="lab-category" onchange="onLabCategoryChange()"
+              style="padding:8px;background:var(--surface-2);border:1px solid var(--line);
+                     border-radius:6px;color:var(--ink)">
+        <option value="equities">Equities</option>
+        <option value="indices">Indices</option>
+        <option value="commodities">Commodities</option>
+        <option value="macro">Macro</option>
+        <option value="sector_composites">Sector composites</option>
+      </select>
+      <input id="lab-series-input" list="lab-series-dl" placeholder="Add series…"
+             style="padding:8px;background:var(--surface-2);border:1px solid var(--line);
+                    border-radius:6px;color:var(--ink)">
+      <datalist id="lab-series-dl"></datalist>
+      <button class="btn btn-outline" onclick="addLabSeries()">Add</button>
+      <span class="chart-note" id="lab-count">0/12 selected</span>
+    </div>
+    <div id="lab-chips" style="margin-top:10px"></div>
+
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px">
+      <label>From <input type="date" id="lab-start"></label>
+      <label>To <input type="date" id="lab-end"></label>
+      <label>FEVD horizon <input type="number" id="lab-horizon" min="5" max="20" value="10" style="width:60px"></label>
+      <span class="chart-note">5–20</span>
+      <label><input type="checkbox" id="lab-rolling"
+                    onchange="document.getElementById('lab-rolling-params').style.display=this.checked?'flex':'none'"> Rolling</label>
+    </div>
+    <div id="lab-rolling-params" style="display:none;gap:10px;flex-wrap:wrap;align-items:center;margin-top:8px">
+      <label>Window <input type="number" id="lab-window" min="100" max="500" value="200" style="width:70px"></label>
+      <span class="chart-note">100–500</span>
+      <label>Step <input type="number" id="lab-step" min="5" max="63" value="21" style="width:60px"></label>
+      <span class="chart-note">5–63</span>
+    </div>
+
+    <div style="margin-top:12px">
+      <button class="btn btn-primary" id="lab-run" onclick="runSpilloverLab()" disabled>Run analysis</button>
+    </div>
+
+    <p id="lab-error" class="chart-note" style="color:var(--danger);display:none"></p>
+
+    <div id="lab-results" style="display:none;margin-top:16px">
+      <div id="lab-total" style="font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700;color:var(--primary);margin:12px 0"></div>
+      <div class="chart-wrap"><div id="lab-net-chart" style="height:300px"></div></div>
+      <div class="chart-wrap" style="margin-top:16px"><div id="lab-heatmap" style="height:340px"></div></div>
+      <div id="lab-rolling-wrap" class="chart-wrap" style="margin-top:16px;display:none">
+        <div id="lab-rolling-chart" style="height:240px"></div>
+      </div>
+      <p id="lab-meta" class="chart-note"></p>
+    </div>
+
+    <p class="chart-note">Source: local v2 cache (Bloomberg Terminal, FRTL, IIM Calcutta).</p>
+    <p class="chart-note">↳ How to read: positive net spillover = net transmitter (sends more shocks than it
+      absorbs); negative = net receiver. Educational/diagnostic only — not investment advice.</p>
+  </div>
 </div>
 
 <!-- ── EVENTS ─────────────────────────────────────────────────────────────── -->

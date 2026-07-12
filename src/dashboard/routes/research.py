@@ -2,13 +2,16 @@
 from __future__ import annotations
 import asyncio
 import dataclasses
+from functools import lru_cache
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
 
 from src.config import default_dates as _default_dates, DATA_DIR
 from src.dashboard.json_safe import clean_json
 from src.dashboard.routes.portfolio import get_snapshot
+from src.research.spillover_lab import run_custom_spillover
 from src.risk.returns import (
     build_return_matrix, portfolio_returns,
     load_factor_series, load_sector_returns,
@@ -345,6 +348,58 @@ async def spillover_study_endpoint():
             detail="Spillover study artifact not built. Run: PYTHONPATH=. python scripts/build_spillover_study.py",
         )
     return json.loads(p.read_text())
+
+
+# ── Spillover Lab: user-driven Diebold-Yilmaz on any 3-12 cached series ────
+# Educational/diagnostic only — not a trading signal.
+
+@lru_cache(maxsize=1)
+def _spillover_catalog() -> dict:
+    from src.research.spillover_lab import build_catalog
+    return build_catalog()
+
+
+@router.get("/spillover/catalog")
+async def spillover_catalog_endpoint():
+    cat = _spillover_catalog()
+    if not any(cat.get(k) for k in cat):        # every category empty
+        raise HTTPException(status_code=503, detail="No cached series available for the spillover catalog.")
+    return cat
+
+
+class SpilloverCustomBody(BaseModel):
+    series: list[str]
+    start: str | None = None
+    end: str | None = None
+    fevd_horizon: int = 10
+    rolling: bool = False
+    window: int = 200
+    step: int = 21
+
+
+@router.post("/spillover/custom")
+async def spillover_custom_endpoint(body: SpilloverCustomBody):
+    from src.dashboard import route_cache
+
+    cache_key = (
+        "spillover_custom", tuple(sorted(body.series)), body.start, body.end,
+        body.fevd_horizon, body.rolling, body.window, body.step,
+    )
+    cached = route_cache.get(cache_key)
+    if cached is not None:
+        return cached
+
+    try:
+        result = await asyncio.to_thread(
+            run_custom_spillover, body.series, body.start, body.end,
+            body.fevd_horizon, body.rolling, body.window, body.step,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+
+    payload = clean_json(result)
+    route_cache.put(cache_key, payload)
+    return payload
 
 
 @router.get("/breach")

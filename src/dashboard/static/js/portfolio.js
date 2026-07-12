@@ -7,6 +7,7 @@ let _eventsLoaded = false;
 let _regimesStudyLoaded = false;
 let _diagLoaded = false;
 let _frontierUniverseLoaded = false;
+let _spilloverLabLoaded = false;
 
 function showTab(name, btn) {
   document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
@@ -20,7 +21,13 @@ function showTab(name, btn) {
     if (!_icLoaded)     loadIC();
     if (!_diagLoaded)   loadDiagnostics();
   }
-  if (name === "spillover") { loadDY(); loadDCC(); loadRollingSpillover(); }
+  if (name === "spillover") {
+    loadDY(); loadDCC(); loadRollingSpillover();
+    // Set synchronously (mirrors the frontier universe flag) — a failed catalog
+    // fetch shows an inline note in #lab-error and must not retry-loop every
+    // time the user re-clicks the Spillover tab.
+    if (!_spilloverLabLoaded) { _spilloverLabLoaded = true; loadSpilloverCatalog(); }
+  }
   if (name === "events") {
     if (!_eventsLoaded) loadEvents();
   }
