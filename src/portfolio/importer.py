@@ -135,6 +135,37 @@ def load_zerodha(access_token: str, api_key: str) -> PortfolioSnapshot:
     return _finalize(holdings, "zerodha-live", source="zerodha")
 
 
+def snapshot_from_rows(rows: list[dict], portfolio_id: str = "mcp-adhoc",
+                       source: str = "mcp") -> PortfolioSnapshot:
+    """Build a snapshot from plain dicts — the shape an MCP client passes
+    after fetching holdings from a broker (e.g. Zerodha Kite MCP).
+    Row: {"symbol", "quantity", "average_price", "last_price"?, "exchange"?}.
+    Raises ValueError with a row-precise message on malformed input."""
+    holdings = []
+    for i, row in enumerate(rows):
+        if not isinstance(row, dict):
+            raise ValueError(f"row {i} is not an object (got {type(row).__name__})")
+        for key in ("symbol", "quantity", "average_price"):
+            if key not in row:
+                raise ValueError(f"row {i} missing key '{key}'")
+        sym = str(row["symbol"]).strip().upper()
+        if not sym:
+            continue
+        try:
+            qty = float(row["quantity"])
+            avg = float(row["average_price"])
+            last = float(row.get("last_price") or avg)
+        except (TypeError, ValueError):
+            raise ValueError(
+                f"row {i} ('{sym}'): quantity/average_price/last_price must be numeric"
+            )
+        exch = str(row.get("exchange", "NSE")).strip().upper()
+        holdings.append(_make_holding(sym, exch, qty, avg, last))
+    if not holdings:
+        raise ValueError("No valid holdings rows supplied")
+    return _finalize(holdings, portfolio_id, source)
+
+
 def _finalize(holdings: list[Holding], portfolio_id: str, source: str) -> PortfolioSnapshot:
     total_mv = sum(h.market_value for h in holdings)
     for h in holdings:

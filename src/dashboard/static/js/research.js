@@ -297,3 +297,115 @@ async function loadWalkForward() {
     spinner.style.display = "none";
   }
 }
+
+// ── Model Diagnostics Ladder ───────────────────────────────────────────────
+
+const _DIAG_LABELS = {
+  adf: "Stationarity (ADF)",
+  returns_lb: "Autocorrelation (Ljung-Box)",
+  arch_lm: "ARCH effects (ARCH-LM)",
+};
+
+// Backend emits nan for failed fits; clean_json turns nan → JSON null.
+// Every numeric cell goes through this so one failed model can't blank the panel.
+const _diagNum = (v, d) =>
+  (typeof v !== "number" || Number.isNaN(v)) ? "—" : v.toFixed(d);
+
+function _diagModelLabel(key) {
+  // "garch_12" → "GARCH(1,2)", "gjr_11" → "GJR(1,1)"
+  const [family, order] = key.split("_");
+  if (!order) return family.toUpperCase();
+  return `${family.toUpperCase()}(${order.split("").join(",")})`;
+}
+
+function _diagTestRow(label, t) {
+  return `
+    <tr>
+      <td>${label}</td>
+      <td style="font-family:'JetBrains Mono',monospace">${_diagNum(t.statistic, 4)}</td>
+      <td style="font-family:'JetBrains Mono',monospace">${_diagNum(t.p_value, 4)}</td>
+      <td>${t.conclusion || "—"}</td>
+    </tr>`;
+}
+
+function _diagOrderScanTable(orderScan) {
+  const rows = Object.entries(orderScan).map(([model, m]) => {
+    const note = m.error
+      ? `<span style="color:var(--muted)">fit failed: ${m.error}</span>`
+      : (m.gamma != null
+          ? `${_diagNum(m.gamma, 4)} (p=${_diagNum(m.gamma_p, 4)})`
+          : "—");
+    return `
+      <tr>
+        <td style="font-family:'JetBrains Mono',monospace">${_diagModelLabel(model)}</td>
+        <td style="font-family:'JetBrains Mono',monospace">${_diagNum(m.bic, 2)}</td>
+        <td style="font-family:'JetBrains Mono',monospace">${_diagNum(m.aic, 2)}</td>
+        <td style="font-family:'JetBrains Mono',monospace">${note}</td>
+      </tr>`;
+  }).join("");
+  return `
+    <table>
+      <tr><th>Model</th><th>BIC</th><th>AIC</th><th>Asymmetry γ (GJR only) / note</th></tr>
+      ${rows}
+    </table>`;
+}
+
+async function loadDiagnostics() {
+  const spin = document.getElementById("diag-spinner");
+  spin.style.display = "block";
+  try {
+    const r = await fetch(window.API + "/api/research/diagnostics");
+    if (!r.ok) {
+      document.getElementById("diag-tables").textContent = "Diagnostics unavailable — cached data required.";
+      return;
+    }
+    const d = await r.json();
+    const u = d.univariate;
+
+    const ladderRows = Object.keys(_DIAG_LABELS)
+      .filter(k => u[k])
+      .map(k => _diagTestRow(_DIAG_LABELS[k], u[k]))
+      .join("");
+
+    const ladderTable = `
+      <h3 style="margin-top:12px">Univariate ladder (portfolio returns)</h3>
+      <table>
+        <tr><th>Test</th><th>Statistic</th><th>p-value</th><th>Conclusion</th></tr>
+        ${ladderRows}
+      </table>`;
+
+    const orderScanBlock = u.order_scan ? `
+      <h3 style="margin-top:12px">GARCH order scan (best BIC wins)</h3>
+      ${_diagOrderScanTable(u.order_scan)}` : "";
+
+    const residRows = ("std_resid_lb_p" in u || "std_resid_sq_lb_p" in u) ? `
+      <h3 style="margin-top:12px">Standardized residual checks (fitted GARCH)</h3>
+      <table>
+        <tr><th>Check</th><th>p-value</th></tr>
+        <tr>
+          <td>Std. residuals — Ljung-Box(10)</td>
+          <td style="font-family:'JetBrains Mono',monospace">${_diagNum(u.std_resid_lb_p, 4)}</td>
+        </tr>
+        <tr>
+          <td>Std. residuals² — Ljung-Box(10) (remaining ARCH)</td>
+          <td style="font-family:'JetBrains Mono',monospace">${_diagNum(u.std_resid_sq_lb_p, 4)}</td>
+        </tr>
+      </table>` : "";
+
+    const m = d.multivariate;
+    const multiTable = m ? `
+      <h3 style="margin-top:12px">Multivariate — constant-correlation test (sector panel)</h3>
+      <table>
+        <tr><th>Test</th><th>Statistic</th><th>p-value</th><th>Conclusion</th></tr>
+        ${_diagTestRow(m.name || "Engle-Sheppard CCC", m)}
+      </table>` : "";
+
+    document.getElementById("diag-tables").innerHTML =
+      ladderTable + orderScanBlock + residRows + multiTable;
+    _diagLoaded = true;
+  } catch (e) {
+    document.getElementById("diag-tables").textContent = "Diagnostics error: " + e;
+  } finally {
+    spin.style.display = "none";
+  }
+}

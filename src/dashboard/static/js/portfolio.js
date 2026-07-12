@@ -5,6 +5,7 @@ let _newsLoaded = false;
 let _breachLoaded = false;
 let _eventsLoaded = false;
 let _regimesStudyLoaded = false;
+let _diagLoaded = false;
 
 function showTab(name, btn) {
   document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
@@ -16,6 +17,7 @@ function showTab(name, btn) {
     if (!_newsLoaded)   loadNews();
     if (!_breachLoaded) loadBreach();
     if (!_icLoaded)     loadIC();
+    if (!_diagLoaded)   loadDiagnostics();
   }
   if (name === "spillover") { loadDY(); loadDCC(); loadRollingSpillover(); }
   if (name === "events") {
@@ -112,3 +114,16 @@ function renderOverview(d) {
 
   renderRiskDetail(d);
 }
+
+// Header badge on page load from precomputed artifacts (until live risk data replaces it)
+async function initHeaderBadge() {
+  try {
+    const r = await fetch(window.API + "/api/static-data");
+    if (!r.ok) return;
+    const d = await r.json();
+    const el = document.getElementById("regime-badge");
+    if (!d.regime || !el || el.innerHTML) return;
+    el.innerHTML = `<span class="badge badge-${d.regime}" title="Precomputed market state (NIFTY), data as of ${d.data_as_of || "n/a"}">${d.regime}</span>`;
+  } catch (e) { /* badge is decorative — stay silent */ }
+}
+document.addEventListener("DOMContentLoaded", initHeaderBadge);

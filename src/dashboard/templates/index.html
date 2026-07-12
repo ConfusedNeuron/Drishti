@@ -114,6 +114,15 @@
     <p class="chart-note">How to read: longer bar = that feature contributes more to the breach prediction.</p>
   </div>
 
+  <!-- Diagnostics ladder -->
+  <div class="section" id="diagnostics-panel" style="margin-top:16px">
+    <h2>Model Diagnostics Ladder</h2>
+    <p class="section-sub">Pre-modelling checks on the portfolio return series: stationarity (ADF) → autocorrelation (Ljung-Box) → ARCH effects (ARCH-LM) → GARCH order scan (BIC) → constant-correlation test (Engle-Sheppard).</p>
+    <div class="spinner" id="diag-spinner" style="display:none">Running diagnostics ladder…</div>
+    <div id="diag-tables"></div>
+    <p class="chart-note">↳ How to read: each test motivates the next modelling step — rejecting "no ARCH effects" is what justifies GARCH; rejecting constant correlation is what justifies DCC.</p>
+  </div>
+
   <!-- IC / Granger -->
   <div class="section" style="margin-top:16px">
     <h2><span data-tip="ic">Commodity Factor Signals (Time-Series IC + Granger) <i class="tip-icon">ⓘ</i></span></h2>
@@ -285,6 +294,7 @@
       <input id="q-input" type="text" placeholder="e.g. What is my biggest risk? Is the VaR model reliable?">
       <button class="btn btn-primary" onclick="askCopilot()">Ask</button>
     </div>
+    <div id="answer-mode" class="chart-note" style="display:none"></div>
     <div id="answer-box"></div>
   </div>
 </div>

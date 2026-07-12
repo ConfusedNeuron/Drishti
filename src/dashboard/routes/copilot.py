@@ -87,6 +87,15 @@ async def ask_endpoint(req: AskRequest):
     memo_resp = await memo_endpoint()
     memo_text = memo_resp["memo"]
 
+    # Refuse investment advice regardless of LLM availability
+    from src.copilot.safety import is_advice_request, REFUSAL
+    if is_advice_request(req.question):
+        return {
+            "answer": REFUSAL,
+            "advice_refused": True,
+            "source": "safety_filter",
+        }
+
     if not settings.llm_api_key:
         return {
             "answer": (
@@ -95,15 +104,6 @@ async def ask_endpoint(req: AskRequest):
             ),
             "advice_refused": False,
             "source": "deterministic_memo",
-        }
-
-    # Refuse investment advice
-    from src.copilot.safety import is_advice_request, REFUSAL
-    if is_advice_request(req.question):
-        return {
-            "answer": REFUSAL,
-            "advice_refused": True,
-            "source": "safety_filter",
         }
 
     # Build prompt from structured memo (not raw holdings)
@@ -122,6 +122,7 @@ async def ask_endpoint(req: AskRequest):
         f"User question: {req.question}"
     )
 
+    source = "llm"
     try:
         import anthropic
         client = anthropic.Anthropic(api_key=settings.llm_api_key)
@@ -134,5 +135,6 @@ async def ask_endpoint(req: AskRequest):
         answer = response.content[0].text
     except Exception as e:
         answer = f"LLM call failed ({e}). Showing deterministic memo:\n\n{memo_text[:1500]}"
+        source = "llm_error"
 
-    return {"answer": answer, "advice_refused": False, "source": "llm"}
+    return {"answer": answer, "advice_refused": False, "source": source}
