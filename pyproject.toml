@@ -1,7 +1,7 @@
 [project]
 name = "drishti"
 version = "0.1.0"
-description = "Add your description here"
+description = "Drishti — local-first quant risk research platform for Indian equity portfolios (IIM Calcutta FRM course project)"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
