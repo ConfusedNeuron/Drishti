@@ -9,7 +9,7 @@ from fastapi import APIRouter, HTTPException
 from src.config import default_dates as _default_dates
 from src.dashboard.routes.portfolio import get_snapshot
 from src.dashboard.json_safe import clean_json
-from src.risk.returns import build_return_matrix, portfolio_returns, covariance_matrix
+from src.risk.returns import build_return_matrix, portfolio_returns, prepare_portfolio_inputs
 from src.risk.var import all_var_methods
 from src.risk.es import expected_shortfall
 from src.risk.backtest import run_var_backtest
@@ -25,23 +25,10 @@ async def risk_summary(confidence: float = 0.99, horizon_days: int = 10):
     snap = get_snapshot()
     start, end = _default_dates()
 
-    returns_df, missing = build_return_matrix(snap, start, end)
-    if returns_df.empty:
-        raise HTTPException(status_code=503,
-                            detail=f"No cached price data. Run data pull first. Missing: {missing}")
-
-    weights_dict = snap.weights
-    common = [s for s in weights_dict if s in returns_df.columns]
-    if not common:
-        raise HTTPException(status_code=503, detail="No overlap between portfolio and cached data.")
-
-    w_series = {s: weights_dict[s] for s in common}
-    total_w = sum(w_series.values())
-    w_norm = {s: v / total_w for s, v in w_series.items()}
-    port_ret = portfolio_returns(returns_df, w_norm)
-
-    w_arr = np.array([w_norm[s] for s in common])
-    cov = covariance_matrix(returns_df[common])
+    try:
+        port_ret, w_arr, common, cov, missing = prepare_portfolio_inputs(snap, start, end)
+    except ValueError as e:
+        raise HTTPException(status_code=503, detail=str(e))
 
     # VaR — all three methods (GARCH-FHS is CPU-heavy; offload to thread)
     var_res = await asyncio.to_thread(

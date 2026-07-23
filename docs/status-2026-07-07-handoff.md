@@ -1,5 +1,7 @@
 # Drishti — Status & Handoff (2026-07-07)
 
+> **STATUS UPDATE 2026-07-23:** §1 is DONE — PRs #12→#13→#14→#15 all merged to `main` (merge commits `653e24e`, `a55a0a7`, `38783fd`, `4d56e1a`); `main` = 298 tests. The four chain branches are deleted locally. Newer work since: **PR #16** (`chore/deprecation-warnings` — deprecation cleanup, frontier axis fix, README screenshots, Render build fix) is open, with `chore/review-fixes` stacked on it (review remediations: dead `main.py` removed, pyproject description, CORS default-localhost via `DRISHTI_CORS_ORIGINS`, logging config, shared `prepare_portfolio_inputs()`). §2's browser eyeball and §3/§4 remain valid to-dos.
+
 Everything you need to know as of the end of v4 wave 1. Written for future-you (or a fresh Claude session) picking this up cold.
 
 ---

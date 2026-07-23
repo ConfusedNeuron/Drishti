@@ -1,4 +1,7 @@
 """FastAPI application entry point."""
+import logging
+import os
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -8,15 +11,30 @@ from pathlib import Path
 from src.dashboard.routes import portfolio, risk, research, copilot, frontier
 from src.dashboard.routes import static_data
 
+logging.basicConfig(
+    level=os.environ.get("DRISHTI_LOG_LEVEL", "INFO"),
+    format="%(asctime)s %(levelname)s %(name)s %(message)s",
+)
+
 app = FastAPI(
     title="Drishti — Portfolio Risk Analytics",
     description="Local-first quant risk platform for Indian equity portfolios.",
     version="1.0.0",
 )
 
+# The dashboard is served same-origin; CORS only matters for external browser
+# clients. Set DRISHTI_CORS_ORIGINS="*" (or a comma-separated list) to widen.
+_cors_origins = [
+    o.strip()
+    for o in os.environ.get(
+        "DRISHTI_CORS_ORIGINS", "http://localhost:8000,http://127.0.0.1:8000"
+    ).split(",")
+    if o.strip()
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=_cors_origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )
