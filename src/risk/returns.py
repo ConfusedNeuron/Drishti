@@ -147,3 +147,26 @@ def load_sector_returns(
     df.index = pd.to_datetime(df.index)
     df = df.sort_index().ffill(limit=3).dropna()
     return df.pct_change(fill_method=None).dropna()
+
+
+def prepare_portfolio_inputs(
+    snap: PortfolioSnapshot, start: date, end: date
+) -> tuple[pd.Series, np.ndarray, list[str], pd.DataFrame, list[str]]:
+    """Build the aligned inputs every VaR/ES consumer needs from a snapshot.
+
+    Returns (port_ret, w_arr, common, cov, missing). Raises ValueError when
+    the cache has no data or no symbols overlap the portfolio.
+    """
+    returns_df, missing = build_return_matrix(snap, start, end)
+    if returns_df.empty:
+        raise ValueError(f"No cached price data. Run data pull first. Missing: {missing}")
+    common = [s for s in snap.weights if s in returns_df.columns]
+    if not common:
+        raise ValueError("No overlap between portfolio symbols and cached data.")
+    w = {s: snap.weights[s] for s in common}
+    total = sum(w.values())
+    w_norm = {s: v / total for s, v in w.items()}
+    port_ret = portfolio_returns(returns_df, w_norm)
+    w_arr = np.array([w_norm[s] for s in common])
+    cov = covariance_matrix(returns_df[common])
+    return port_ret, w_arr, common, cov, missing

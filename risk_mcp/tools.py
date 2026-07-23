@@ -57,22 +57,12 @@ def _resolve_portfolio(holdings: list[dict] | None):
 
 
 def _load_returns(snap):
-    from src.risk.returns import build_return_matrix, portfolio_returns, covariance_matrix
+    from src.risk.returns import prepare_portfolio_inputs
     start, end = _default_dates()
-    returns_df, missing = build_return_matrix(snap, start, end)
-    if returns_df.empty:
-        raise RuntimeError("No cached price data available.")
-    weights = snap.weights
-    common = [s for s in weights if s in returns_df.columns]
-    if not common:
-        raise RuntimeError("No overlap between portfolio symbols and cached data.")
-    w = {s: weights[s] for s in common}
-    w_total = sum(w.values())
-    w_norm = {s: v / w_total for s, v in w.items()}
-    port_ret = portfolio_returns(returns_df, w_norm)
-    w_arr = np.array([w_norm[s] for s in common])
-    cov = covariance_matrix(returns_df[common])
-    return port_ret, w_arr, common, cov, missing
+    try:
+        return prepare_portfolio_inputs(snap, start, end)
+    except ValueError as e:
+        raise RuntimeError(str(e))
 
 
 # ── Tool implementations ───────────────────────────────────────────────────────
