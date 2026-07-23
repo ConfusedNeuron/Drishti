@@ -94,4 +94,4 @@ def load_v2_returns(tickers: list[str], min_days: int | None = None) -> pd.DataF
     px = pd.DataFrame(series)
     px.index = pd.to_datetime(px.index)
     px = filter_min_history(px.sort_index(), min_days or MIN_HISTORY_DAYS)
-    return px.pct_change()
+    return px.ffill().pct_change(fill_method=None)

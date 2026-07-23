@@ -122,7 +122,7 @@ def granger_test(
 
     try:
         gc = grangercausalitytests(df[["target", "factor"]].values,
-                                   maxlag=max_lag, verbose=False)
+                                   maxlag=max_lag)
     except Exception:
         return []
 

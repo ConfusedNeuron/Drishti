@@ -203,8 +203,8 @@ function renderFrontierChart(d) {
   Plotly.newPlot("frontier-chart", traces, {
     ...CL,
     margin: { t: 10, b: 60, l: 64, r: 16 },
-    xaxis: { ...CL.xaxis, title: { text: "Volatility (ann.)", font: { size: 10 } }, tickformat: ".0%", rangemode: "tozero" },
-    yaxis: { ...CL.yaxis, title: { text: "Expected return (ann.)", font: { size: 10 } }, tickformat: ".0%" },
+    xaxis: { ...CL.xaxis, type: "linear", title: { text: "Volatility (ann.)", font: { size: 10 } }, tickformat: ".0%", rangemode: "tozero" },
+    yaxis: { ...CL.yaxis, type: "linear", title: { text: "Expected return (ann.)", font: { size: 10 } }, tickformat: ".0%" },
     legend: { orientation: "h", y: -0.22, font: { size: 10 } },
     hovermode: "closest",
   }, CONF);

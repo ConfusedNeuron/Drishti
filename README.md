@@ -3,6 +3,13 @@
 Local-first quant risk platform for Indian equity portfolios.
 IIM Calcutta PGDBA, Financial Risk Management course project.
 
+![Drishti dashboard — portfolio risk overview](docs/screenshots/drishti-overview.png)
+
+> Historical / Parametric / GARCH-FHS VaR · Kupiec–Christoffersen backtests · HMM regimes ·
+> DCC-GARCH · Diebold-Yilmaz spillover · walk-forward factor IC · Markowitz frontier ·
+> an MCP risk copilot — over a survivorship-free Nifty-100 + Midcap-150 Bloomberg universe.
+> **298 passing tests.**
+
 ---
 
 ## Quick Start (Offline / Synthetic Data)
@@ -82,10 +89,21 @@ python scripts/pull_public_data.py
 
 ## Dashboard
 
-5-tab Plotly.js single-page app rendered from Jinja2 templates
+8-tab Plotly.js single-page app rendered from Jinja2 templates
 (`src/dashboard/templates/base.html` + `index.html` + `learn.html`), with CSS/JS
 split under `static/css/` and `static/js/`, a `/learn` methodology page (KaTeX +
 glossary), and a CSS-variable multi-theme picker.
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/drishti-risk.png" alt="VaR backtest + stress scenarios"><br><sub><b>Risk Detail</b> — Kupiec/Christoffersen VaR backtest + stress scenarios</sub></td>
+    <td width="50%"><img src="docs/screenshots/drishti-spillover.png" alt="Diebold-Yilmaz connectedness"><br><sub><b>Spillover</b> — Diebold-Yilmaz connectedness + rolling contagion</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/drishti-frontier.png" alt="Efficient frontier studio"><br><sub><b>Frontier</b> — Markowitz frontier, bootstrap band, CML, tangency</sub></td>
+    <td width="50%"><img src="docs/screenshots/drishti-copilot.png" alt="Risk copilot memo"><br><sub><b>Copilot</b> — deterministic risk memo (no LLM required)</sub></td>
+  </tr>
+</table>
 
 ## API
 

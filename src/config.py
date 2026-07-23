@@ -1,7 +1,7 @@
 import os
 from datetime import date, timedelta
 from pathlib import Path
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = ROOT / "data"
@@ -30,9 +30,10 @@ class Settings(BaseSettings):
     zerodha_access_token: str = ""
     llm_api_key: str = ""
 
-    class Config:
-        env_file = ROOT / ".env"
-        env_file_encoding = "utf-8"
+    model_config = SettingsConfigDict(
+        env_file=ROOT / ".env",
+        env_file_encoding="utf-8",
+    )
 
 
 settings = Settings()
